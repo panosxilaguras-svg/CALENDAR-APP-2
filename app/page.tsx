@@ -147,6 +147,9 @@ export default function Home() {
                     <button className="secondary" onClick={() => setView("new")}>
                       + Οργάνωσε μία
                     </button>
+                    <a className="secondary authLink" href="/auth">
+                      Σύνδεση
+                    </a>
                   </div>
                 </div>
               </section>
