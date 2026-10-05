@@ -1,21 +1,37 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "../lib/supabase";
 
 type View = "home" | "map" | "new" | "messages" | "profile";
+type Difficulty = "Εύκολη" | "Μέτρια" | "Δύσκολη";
 
 type Hike = {
+  id?: string;
+  organizerId?: string;
   title: string;
   location: string;
   day: string;
   month: string;
-  difficulty: "Εύκολη" | "Μέτρια" | "Δύσκολη";
+  difficulty: Difficulty;
   distance: string;
   people: number;
   start: string;
+  demo?: boolean;
 };
 
-const hikes: Hike[] = [
+type DbHike = {
+  id: string;
+  organizer_id: string;
+  title: string;
+  location_name: string;
+  starts_at: string;
+  difficulty: "easy" | "moderate" | "hard";
+  distance_km: number | null;
+};
+
+const demoHikes: Hike[] = [
   {
     title: "Πάρνηθα — Μπάφι & Φλαμπούρι",
     location: "Πάρνηθα, Αττική",
@@ -24,7 +40,8 @@ const hikes: Hike[] = [
     difficulty: "Μέτρια",
     distance: "9,4 km",
     people: 6,
-    start: "08:30"
+    start: "08:30",
+    demo: true
   },
   {
     title: "Δίρφυς — κορυφή Δέλφι",
@@ -34,7 +51,8 @@ const hikes: Hike[] = [
     difficulty: "Δύσκολη",
     distance: "12,8 km",
     people: 4,
-    start: "07:15"
+    start: "07:15",
+    demo: true
   },
   {
     title: "Υμηττός — Καισαριανή",
@@ -44,7 +62,8 @@ const hikes: Hike[] = [
     difficulty: "Εύκολη",
     distance: "6,2 km",
     people: 8,
-    start: "17:00"
+    start: "17:00",
+    demo: true
   },
   {
     title: "Μαίναλο — Βυτίνα",
@@ -54,7 +73,8 @@ const hikes: Hike[] = [
     difficulty: "Μέτρια",
     distance: "10,1 km",
     people: 5,
-    start: "09:00"
+    start: "09:00",
+    demo: true
   }
 ];
 
@@ -66,25 +86,180 @@ const nav: { id: View; icon: string; label: string }[] = [
   { id: "profile", icon: "◉", label: "Προφίλ" }
 ];
 
+const monthNames = ["ΙΑΝ", "ΦΕΒ", "ΜΑΡ", "ΑΠΡ", "ΜΑΪ", "ΙΟΥΝ", "ΙΟΥΛ", "ΑΥΓ", "ΣΕΠ", "ΟΚΤ", "ΝΟΕ", "ΔΕΚ"];
+
+function mapDifficulty(value: DbHike["difficulty"]): Difficulty {
+  if (value === "easy") return "Εύκολη";
+  if (value === "hard") return "Δύσκολη";
+  return "Μέτρια";
+}
+
+function mapDifficultyToDb(value: string): DbHike["difficulty"] {
+  if (value === "Εύκολη") return "easy";
+  if (value === "Δύσκολη") return "hard";
+  return "moderate";
+}
+
+function dbHikeToCard(hike: DbHike): Hike {
+  const date = new Date(hike.starts_at);
+  return {
+    id: hike.id,
+    organizerId: hike.organizer_id,
+    title: hike.title,
+    location: hike.location_name,
+    day: String(date.getDate()).padStart(2, "0"),
+    month: monthNames[date.getMonth()],
+    difficulty: mapDifficulty(hike.difficulty),
+    distance: hike.distance_km ? `${String(hike.distance_km).replace(".", ",")} km` : "—",
+    people: 1,
+    start: date.toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })
+  };
+}
+
 export default function Home() {
   const [view, setView] = useState<View>("home");
   const [filter, setFilter] = useState("Όλες");
   const [toast, setToast] = useState("");
+  const [user, setUser] = useState<User | null>(null);
+  const [realHikes, setRealHikes] = useState<Hike[]>([]);
+  const [loadingHikes, setLoadingHikes] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    loadHikes();
+
+    return () => authListener.subscription.unsubscribe();
+  }, []);
+
+  async function loadHikes() {
+    setLoadingHikes(true);
+
+    const { data, error } = await supabase
+      .from("hikes")
+      .select("id, organizer_id, title, location_name, starts_at, difficulty, distance_km")
+      .eq("status", "open")
+      .gte("starts_at", new Date().toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(30);
+
+    if (!error && data) {
+      setRealHikes((data as DbHike[]).map(dbHikeToCard));
+    }
+
+    setLoadingHikes(false);
+  }
+
+  const allHikes = useMemo(() => [...realHikes, ...demoHikes], [realHikes]);
 
   const visibleHikes = useMemo(() => {
-    if (filter === "Όλες") return hikes;
-    return hikes.filter((hike) => hike.difficulty === filter);
-  }, [filter]);
+    if (filter === "Όλες") return allHikes;
+    return allHikes.filter((hike) => hike.difficulty === filter);
+  }, [allHikes, filter]);
 
   function showToast(message: string) {
     setToast(message);
-    window.setTimeout(() => setToast(""), 2600);
+    window.setTimeout(() => setToast(""), 3000);
   }
 
-  function submitHike(event: FormEvent<HTMLFormElement>) {
+  function requireLogin() {
+    showToast("Χρειάζεται σύνδεση για αυτή την ενέργεια.");
+    window.setTimeout(() => {
+      window.location.href = "/auth";
+    }, 650);
+  }
+
+  async function submitHike(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    showToast("Η πεζοπορία δημιουργήθηκε στο demo ✓");
+
+    if (!user) {
+      requireLogin();
+      return;
+    }
+
+    const form = new FormData(event.currentTarget);
+    const title = String(form.get("title") ?? "").trim();
+    const date = String(form.get("date") ?? "");
+    const time = String(form.get("time") ?? "");
+    const location = String(form.get("location") ?? "").trim();
+    const difficulty = String(form.get("difficulty") ?? "Μέτρια");
+    const distanceRaw = String(form.get("distance") ?? "").trim();
+    const maxRaw = String(form.get("maxParticipants") ?? "").trim();
+    const description = String(form.get("description") ?? "").trim();
+
+    if (!title || !date || !time || !location) {
+      showToast("Συμπλήρωσε τα βασικά πεδία.");
+      return;
+    }
+
+    const startsAt = new Date(`${date}T${time}:00`);
+    if (Number.isNaN(startsAt.getTime())) {
+      showToast("Η ημερομηνία ή η ώρα δεν είναι σωστή.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    const { error } = await supabase.from("hikes").insert({
+      organizer_id: user.id,
+      title,
+      description: description || null,
+      location_name: location,
+      starts_at: startsAt.toISOString(),
+      difficulty: mapDifficultyToDb(difficulty),
+      distance_km: distanceRaw ? Number(distanceRaw) : null,
+      max_participants: maxRaw ? Number(maxRaw) : null
+    });
+
+    setSubmitting(false);
+
+    if (error) {
+      showToast(`Δεν δημιουργήθηκε: ${error.message}`);
+      return;
+    }
+
+    event.currentTarget.reset();
+    await loadHikes();
     setView("home");
+    showToast("Η πεζοπορία δημοσιεύτηκε κανονικά ✓");
+  }
+
+  async function requestJoin(hike: Hike) {
+    if (hike.demo || !hike.id) {
+      showToast("Αυτό είναι demo πεζοπορία. Οι νέες θα είναι πραγματικές.");
+      return;
+    }
+
+    if (!user) {
+      requireLogin();
+      return;
+    }
+
+    if (hike.organizerId === user.id) {
+      showToast("Αυτή η πεζοπορία είναι δική σου.");
+      return;
+    }
+
+    const { error } = await supabase.from("join_requests").insert({
+      hike_id: hike.id,
+      user_id: user.id
+    });
+
+    if (error) {
+      if (error.code === "23505") {
+        showToast("Έχεις ήδη στείλει αίτημα γι' αυτή την πεζοπορία.");
+      } else {
+        showToast(`Δεν στάλθηκε: ${error.message}`);
+      }
+      return;
+    }
+
+    showToast(`Στάλθηκε πραγματικό αίτημα για «${hike.title}» ✓`);
   }
 
   return (
@@ -113,7 +288,7 @@ export default function Home() {
           </nav>
 
           <div className="sidebarFoot">
-            MVP έκδοση. Στόχος: βρίσκω πεζοπορία, ζητάω συμμετοχή και γνωρίζω την ομάδα.
+            {user ? `Συνδεδεμένος ως ${user.email ?? "χρήστης"}` : "Σύνδεση για δημιουργία πεζοπορίας και αιτήματα συμμετοχής."}
           </div>
         </aside>
 
@@ -128,14 +303,16 @@ export default function Home() {
                   : "Πρώτη λειτουργική έκδοση του hiking community."}
               </p>
             </div>
-            <button className="avatarButton" onClick={() => setView("profile")}>PX</button>
+            <button className="avatarButton" onClick={() => setView("profile")}>
+              {user?.email?.slice(0, 2).toUpperCase() ?? "PX"}
+            </button>
           </header>
 
           {view === "home" && (
             <>
               <section className="hero">
                 <div className="heroCopy">
-                  <div className="eyebrow" style={{ color: "#dbe8cf" }}>Αθήνα · αυτό το Σαββατοκύριακο</div>
+                  <div className="eyebrow" style={{ color: "#dbe8cf" }}>Ελλάδα · νέες παρέες στο βουνό</div>
                   <h2>Δεν έχεις παρέα;<br />Βρες τη στο μονοπάτι.</h2>
                   <p>
                     Δες ποιος οργανώνει πεζοπορία, ζήτα να μπεις στην ομάδα και κανονίστε τα πάντα μαζί.
@@ -148,23 +325,23 @@ export default function Home() {
                       + Οργάνωσε μία
                     </button>
                     <a className="secondary authLink" href="/auth">
-                      Σύνδεση
+                      {user ? "Λογαριασμός" : "Σύνδεση"}
                     </a>
                   </div>
                 </div>
               </section>
 
               <section className="stats">
-                <div className="stat"><strong>12</strong><span>πεζοπορίες κοντά σου</span></div>
-                <div className="stat"><strong>43</strong><span>πεζοπόροι αυτή την εβδομάδα</span></div>
-                <div className="stat"><strong>4.9</strong><span>μέση αξιολόγηση ομάδων</span></div>
+                <div className="stat"><strong>{realHikes.length}</strong><span>πραγματικές ανοιχτές πεζοπορίες</span></div>
+                <div className="stat"><strong>{realHikes.length + demoHikes.length}</strong><span>διαθέσιμες στο MVP</span></div>
+                <div className="stat"><strong>{user ? "✓" : "—"}</strong><span>{user ? "είσαι συνδεδεμένος" : "σύνδεση για συμμετοχή"}</span></div>
               </section>
 
               <section id="hikes">
                 <div className="sectionHeader">
                   <div>
                     <h2>Επόμενες πεζοπορίες</h2>
-                    <p>Διάλεξε επίπεδο και μπες στην ομάδα.</p>
+                    <p>{loadingHikes ? "Φορτώνουμε τις πραγματικές πεζοπορίες..." : "Οι νέες δημοσιεύσεις έρχονται live από το Supabase."}</p>
                   </div>
                   <div className="filters">
                     {["Όλες", "Εύκολη", "Μέτρια", "Δύσκολη"].map((item) => (
@@ -181,9 +358,9 @@ export default function Home() {
 
                 <div className="hikeGrid">
                   {visibleHikes.map((hike, index) => (
-                    <article className="hikeCard" key={hike.title}>
+                    <article className="hikeCard" key={hike.id ?? `demo-${hike.title}`}>
                       <div className="cardVisual" style={{ filter: `hue-rotate(${index * 9}deg)` }}>
-                        <span className="cardBadge">{hike.difficulty}</span>
+                        <span className="cardBadge">{hike.demo ? `Demo · ${hike.difficulty}` : `Live · ${hike.difficulty}`}</span>
                         <span className="cardDate"><strong>{hike.day}</strong>{hike.month}</span>
                       </div>
                       <div className="cardBody">
@@ -195,17 +372,17 @@ export default function Home() {
                         <div className="peopleRow">
                           <div>
                             <div className="avatars">
-                              <span className="miniAvatar">Μ</span>
-                              <span className="miniAvatar">Α</span>
-                              <span className="miniAvatar">Κ</span>
-                              <span className="miniAvatar">+{Math.max(hike.people - 3, 1)}</span>
+                              <span className="miniAvatar">{hike.demo ? "Μ" : "Ο"}</span>
+                              {hike.demo && <span className="miniAvatar">Α</span>}
+                              {hike.demo && <span className="miniAvatar">Κ</span>}
+                              <span className="miniAvatar">+{Math.max(hike.people - (hike.demo ? 3 : 1), 0)}</span>
                             </div>
                           </div>
                           <button
                             className="joinButton"
-                            onClick={() => showToast(`Στάλθηκε αίτημα για «${hike.title}» ✓`)}
+                            onClick={() => requestJoin(hike)}
                           >
-                            Θέλω να μπω
+                            {hike.organizerId === user?.id ? "Δική σου" : "Θέλω να μπω"}
                           </button>
                         </div>
                       </div>
@@ -239,50 +416,60 @@ export default function Home() {
               <div className="sectionHeader" style={{ marginTop: 0 }}>
                 <div>
                   <h2>Οργάνωσε πεζοπορία</h2>
-                  <p>Βάλε τα βασικά. Τα υπόλοιπα τα κανονίζει η ομάδα.</p>
+                  <p>{user ? "Η δημοσίευση θα αποθηκευτεί πραγματικά στη βάση." : "Συνδέσου πρώτα για να δημοσιεύσεις."}</p>
                 </div>
               </div>
-              <form onSubmit={submitHike}>
-                <div className="formGrid">
-                  <div className="field full">
-                    <label>Τίτλος</label>
-                    <input required placeholder="π.χ. Πάρνηθα — Μπάφι & Φλαμπούρι" />
+
+              {!user ? (
+                <>
+                  <p className="emptyNote">Η δημιουργία πεζοπορίας είναι διαθέσιμη μόνο σε συνδεδεμένους χρήστες.</p>
+                  <a className="submit authLink" href="/auth">Σύνδεση / Εγγραφή</a>
+                </>
+              ) : (
+                <form onSubmit={submitHike}>
+                  <div className="formGrid">
+                    <div className="field full">
+                      <label>Τίτλος</label>
+                      <input name="title" required placeholder="π.χ. Πάρνηθα — Μπάφι & Φλαμπούρι" />
+                    </div>
+                    <div className="field">
+                      <label>Ημερομηνία</label>
+                      <input name="date" required type="date" />
+                    </div>
+                    <div className="field">
+                      <label>Ώρα έναρξης</label>
+                      <input name="time" required type="time" />
+                    </div>
+                    <div className="field">
+                      <label>Περιοχή</label>
+                      <input name="location" required placeholder="π.χ. Πάρνηθα" />
+                    </div>
+                    <div className="field">
+                      <label>Δυσκολία</label>
+                      <select name="difficulty" defaultValue="Μέτρια">
+                        <option>Εύκολη</option>
+                        <option>Μέτρια</option>
+                        <option>Δύσκολη</option>
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label>Απόσταση (km)</label>
+                      <input name="distance" type="number" min="0.1" step="0.1" placeholder="9.4" />
+                    </div>
+                    <div className="field">
+                      <label>Μέγιστα άτομα</label>
+                      <input name="maxParticipants" type="number" min="2" max="30" placeholder="8" />
+                    </div>
+                    <div className="field full">
+                      <label>Περιγραφή</label>
+                      <textarea name="description" rows={5} placeholder="Τι πρέπει να ξέρει η ομάδα; Σημείο συνάντησης, εξοπλισμός, ρυθμός..." />
+                    </div>
                   </div>
-                  <div className="field">
-                    <label>Ημερομηνία</label>
-                    <input required type="date" />
-                  </div>
-                  <div className="field">
-                    <label>Ώρα έναρξης</label>
-                    <input required type="time" />
-                  </div>
-                  <div className="field">
-                    <label>Περιοχή</label>
-                    <input required placeholder="π.χ. Πάρνηθα" />
-                  </div>
-                  <div className="field">
-                    <label>Δυσκολία</label>
-                    <select defaultValue="Μέτρια">
-                      <option>Εύκολη</option>
-                      <option>Μέτρια</option>
-                      <option>Δύσκολη</option>
-                    </select>
-                  </div>
-                  <div className="field">
-                    <label>Απόσταση (km)</label>
-                    <input type="number" min="1" step="0.1" placeholder="9.4" />
-                  </div>
-                  <div className="field">
-                    <label>Μέγιστα άτομα</label>
-                    <input type="number" min="2" max="30" placeholder="8" />
-                  </div>
-                  <div className="field full">
-                    <label>Περιγραφή</label>
-                    <textarea rows={5} placeholder="Τι πρέπει να ξέρει η ομάδα; Σημείο συνάντησης, εξοπλισμός, ρυθμός..." />
-                  </div>
-                </div>
-                <button className="submit" type="submit">Δημιουργία πεζοπορίας</button>
-              </form>
+                  <button className="submit" type="submit" disabled={submitting}>
+                    {submitting ? "Δημοσίευση..." : "Δημιουργία πεζοπορίας"}
+                  </button>
+                </form>
+              )}
             </section>
           )}
 
@@ -291,43 +478,27 @@ export default function Home() {
               <div className="sectionHeader" style={{ marginTop: 0 }}>
                 <div>
                   <h2>Ομαδικές συζητήσεις</h2>
-                  <p>Οι συνομιλίες ανοίγουν αφού εγκριθεί η συμμετοχή.</p>
+                  <p>Το chat θα ανοίγει μετά την αποδοχή συμμετοχής.</p>
                 </div>
               </div>
-
-              {[
-                ["Πάρνηθα · 11 Οκτ", "Μ", "Μάριος: Παιδιά, συνάντηση 08:15 στο parking."],
-                ["Υμηττός · 9 Οκτ", "Ε", "Ελένη: Θα έχω δύο έξτρα μπουκάλια νερό."],
-                ["Δίρφυς · 18 Οκτ", "Ν", "Νίκος: Ποιος θέλει carpool από Αθήνα;"]
-              ].map(([title, avatar, message]) => (
-                <div className="messageRow" key={title}>
-                  <div className="messageAvatar">{avatar}</div>
-                  <div className="messageContent">
-                    <strong>{title}</strong>
-                    <p>{message}</p>
-                  </div>
-                </div>
-              ))}
+              <p className="emptyNote">Η βάση για τα messages είναι ήδη έτοιμη. Επόμενο βήμα: accept/reject αιτημάτων και πραγματικό group chat.</p>
             </section>
           )}
 
           {view === "profile" && (
             <section className="profileCard">
               <div className="profileHero">
-                <div className="profileAvatar">PX</div>
+                <div className="profileAvatar">{user?.email?.slice(0, 2).toUpperCase() ?? "PX"}</div>
                 <div>
-                  <h2>Πάνος</h2>
-                  <p>Αθήνα · Μέτριο επίπεδο</p>
+                  <h2>{user ? "Το προφίλ σου" : "Guest"}</h2>
+                  <p>{user?.email ?? "Συνδέσου για να δημιουργήσεις προφίλ"}</p>
                 </div>
               </div>
               <div className="badgeRow">
-                <span className="infoBadge">🥾 7 πεζοπορίες</span>
-                <span className="infoBadge">⭐ 4.9 αξιολόγηση</span>
-                <span className="infoBadge">⛰ 68 km</span>
+                <span className="infoBadge">🥾 {realHikes.filter((hike) => hike.organizerId === user?.id).length} οργανωμένες</span>
+                <span className="infoBadge">⛰ MVP member</span>
               </div>
-              <p className="emptyNote">
-                Στο πραγματικό onboarding ο χρήστης θα συμπληρώνει εμπειρία, περιοχή, φωτογραφία και τι είδους πεζοπορίες προτιμά.
-              </p>
+              {!user && <a className="submit authLink" href="/auth">Σύνδεση / Εγγραφή</a>}
             </section>
           )}
         </main>
