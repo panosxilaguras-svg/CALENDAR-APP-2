@@ -1308,3 +1308,383 @@ h1 {
     max-height: 390px;
   }
 }
+
+
+.avatarButton {
+  overflow: hidden;
+}
+
+.avatarButton img,
+.organizerLine img,
+.publicProfileAvatar img,
+.detailOrganizer img,
+.participantAvatar img,
+.avatarUpload img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardTitleButton {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.cardTitleButton:hover h3 {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.organizerLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 9px 0 10px;
+}
+
+.organizerLine > img,
+.organizerLine > span {
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+}
+
+.organizerLine > span {
+  display: grid;
+  place-items: center;
+  background: #e2eadc;
+  color: var(--forest);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.organizerLine button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 0;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.organizerLine button:not(:disabled):hover {
+  color: var(--forest);
+  text-decoration: underline;
+}
+
+.detailsButton {
+  border: 0;
+  background: transparent;
+  padding: 8px 0;
+  color: var(--forest);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.profileHeroEditable {
+  align-items: center;
+}
+
+.avatarUpload {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  flex: 0 0 88px;
+  border-radius: 28px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--forest);
+  color: white;
+  font-size: 25px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.avatarUpload input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.avatarUpload small {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 5px 4px;
+  text-align: center;
+  background: rgba(14, 42, 29, .78);
+  color: white;
+  font-size: 9px;
+}
+
+.profileForm {
+  margin-top: 26px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.requestProfile {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--forest);
+  border-radius: 11px;
+  padding: 9px 11px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(10, 27, 18, .56);
+  backdrop-filter: blur(7px);
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.profileModal,
+.hikeModal {
+  position: relative;
+  width: min(100%, 560px);
+  max-height: min(88vh, 760px);
+  overflow-y: auto;
+  background: var(--paper);
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: 28px;
+  padding: 27px;
+  box-shadow: 0 28px 70px rgba(7, 28, 18, .32);
+}
+
+.hikeModal {
+  width: min(100%, 680px);
+}
+
+.modalClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  z-index: 2;
+}
+
+.publicProfileHero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-right: 40px;
+}
+
+.publicProfileAvatar {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  border-radius: 24px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--forest);
+  color: white;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.publicProfileHero h2 {
+  margin: 0 0 4px;
+}
+
+.publicProfileHero p,
+.hikeModalTop p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.profileLevel {
+  display: inline-flex;
+  margin-top: 20px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: #e8efe3;
+  color: var(--forest);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.publicProfileBio {
+  margin: 18px 0 0;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.hikeModalTop {
+  padding-right: 40px;
+}
+
+.hikeModalTop h2 {
+  margin: 14px 0 9px;
+  font-size: clamp(27px, 5vw, 40px);
+  line-height: 1.05;
+}
+
+.hikeDetailGrid {
+  display: grid;
+  grid-template-columns: 1.5fr .7fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.hikeDetailGrid > div {
+  background: #f4f5ef;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 14px;
+}
+
+.hikeDetailGrid small {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.hikeDetailGrid strong {
+  font-size: 21px;
+}
+
+.detailOrganizer {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.detailOrganizer > img,
+.detailOrganizer > span {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+
+.detailOrganizer > span {
+  display: grid;
+  place-items: center;
+  background: var(--forest);
+  color: white;
+  font-size: 11px;
+}
+
+.hikeDescription,
+.participantsBlock {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.hikeDescription h3,
+.participantsBlock h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+
+.hikeDescription p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.participantList {
+  display: grid;
+  gap: 8px;
+}
+
+.participantList button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink);
+  border-radius: 14px;
+  padding: 10px;
+  text-align: left;
+}
+
+.participantAvatar {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #e2eadc;
+  color: var(--forest);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.participantList strong,
+.participantList small {
+  display: block;
+}
+
+.participantList small {
+  margin-top: 2px;
+  color: var(--muted);
+}
+
+.hikeModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 26px;
+}
+
+@media (max-width: 560px) {
+  .hikeDetailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileModal,
+  .hikeModal {
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .avatarUpload {
+    width: 72px;
+    height: 72px;
+    flex-basis: 72px;
+    border-radius: 22px;
+  }
+
+  .requestActions {
+    flex-wrap: wrap;
+  }
+
+  .hikeModalActions > button {
+    flex: 1;
+  }
+}
