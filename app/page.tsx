@@ -25,6 +25,8 @@ type Hike = {
   meetingPoint?: string | null;
   organizerName?: string;
   organizerAvatar?: string | null;
+  photoUrls?: string[];
+  coverPhoto?: string | null;
   demo?: boolean;
 };
 
@@ -248,13 +250,16 @@ export default function Home() {
       const hikeIds = dbHikes.map((hike) => hike.id);
       const organizerIds = [...new Set(dbHikes.map((hike) => hike.organizer_id))];
 
-      const [{ data: participants }, { data: organizerProfiles }] = await Promise.all([
+      const [{ data: participants }, { data: organizerProfiles }, { data: hikePhotos }] = await Promise.all([
         hikeIds.length
           ? supabase.from("participants").select("hike_id, user_id").in("hike_id", hikeIds)
           : Promise.resolve({ data: [] as { hike_id: string; user_id: string }[] }),
         organizerIds.length
           ? supabase.from("profiles").select("id, display_name, avatar_url").in("id", organizerIds)
-          : Promise.resolve({ data: [] as { id: string; display_name: string; avatar_url: string | null }[] })
+          : Promise.resolve({ data: [] as { id: string; display_name: string; avatar_url: string | null }[] }),
+        hikeIds.length
+          ? supabase.from("hike_photos").select("hike_id, storage_path, sort_order, created_at").in("hike_id", hikeIds).order("sort_order", { ascending: true }).order("created_at", { ascending: true })
+          : Promise.resolve({ data: [] as { hike_id: string; storage_path: string; sort_order: number; created_at: string }[] })
       ]);
 
       const participantCount = new Map<string, number>();
@@ -269,6 +274,15 @@ export default function Home() {
         ])
       );
 
+      const photoMap = new Map<string, string[]>();
+      for (const item of hikePhotos ?? []) {
+        const url = hikePhotoPublicUrl(item.storage_path);
+        if (!url) continue;
+        const current = photoMap.get(item.hike_id) ?? [];
+        current.push(url);
+        photoMap.set(item.hike_id, current);
+      }
+
       setRealHikes(
         dbHikes.map((item) => {
           const card = dbHikeToCard(item);
@@ -277,7 +291,9 @@ export default function Home() {
             ...card,
             people: 1 + (participantCount.get(item.id) ?? 0),
             organizerName: organizer?.name ?? "Πεζοπόρος",
-            organizerAvatar: organizer?.avatar ?? null
+            organizerAvatar: organizer?.avatar ?? null,
+            photoUrls: photoMap.get(item.id) ?? [],
+            coverPhoto: photoMap.get(item.id)?.[0] ?? null
           };
         })
       );
@@ -305,6 +321,11 @@ export default function Home() {
   }
 
   function avatarPublicUrl(path?: string | null) {
+    if (!path) return null;
+    return supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+  }
+
+  function hikePhotoPublicUrl(path?: string | null) {
     if (!path) return null;
     return supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
   }
@@ -760,6 +781,20 @@ export default function Home() {
       return;
     }
 
+    const photoFiles = form
+      .getAll("photos")
+      .filter((item): item is File => item instanceof File && item.size > 0);
+
+    if (photoFiles.length > 5) {
+      showToast("Μπορείς να ανεβάσεις έως 5 φωτογραφίες.");
+      return;
+    }
+
+    if (photoFiles.some((file) => file.size > 2 * 1024 * 1024)) {
+      showToast("Κάθε φωτογραφία πρέπει να είναι έως 2 MB.");
+      return;
+    }
+
     if (!title || !date || !time || !location) {
       showToast("Συμπλήρωσε τα βασικά πεδία.");
       return;
@@ -792,29 +827,72 @@ export default function Home() {
       updated_at: new Date().toISOString()
     };
 
-    const { error } = editingHike?.id
-      ? await supabase
-          .from("hikes")
-          .update(payload)
-          .eq("id", editingHike.id)
-          .eq("organizer_id", user.id)
-      : await supabase.from("hikes").insert({
+    let hikeId = editingHike?.id ?? null;
+    let saveError: { message: string } | null = null;
+
+    if (editingHike?.id) {
+      const { error } = await supabase
+        .from("hikes")
+        .update(payload)
+        .eq("id", editingHike.id)
+        .eq("organizer_id", user.id);
+      saveError = error;
+    } else {
+      const { data: createdHike, error } = await supabase
+        .from("hikes")
+        .insert({
           organizer_id: user.id,
           ...payload
-        });
+        })
+        .select("id")
+        .single();
+      saveError = error;
+      hikeId = createdHike?.id ?? null;
+    }
 
-    setSubmitting(false);
-
-    if (error) {
-      showToast(`Δεν αποθηκεύτηκε: ${error.message}`);
+    if (saveError || !hikeId) {
+      setSubmitting(false);
+      showToast(`Δεν αποθηκεύτηκε: ${saveError?.message ?? "λείπει το id της πεζοπορίας"}`);
       return;
     }
 
+    let photoUploadFailed = false;
+    for (let index = 0; index < photoFiles.length; index += 1) {
+      const file = photoFiles[index];
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const storagePath = `${user.id}/hikes/${hikeId}/${crypto.randomUUID()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(storagePath, file, { cacheControl: "3600", upsert: false });
+
+      if (uploadError) {
+        photoUploadFailed = true;
+        continue;
+      }
+
+      const { error: photoRowError } = await supabase.from("hike_photos").insert({
+        hike_id: hikeId,
+        storage_path: storagePath,
+        sort_order: index,
+        uploaded_by: user.id
+      });
+
+      if (photoRowError) photoUploadFailed = true;
+    }
+
+    setSubmitting(false);
     formElement.reset();
     const wasEditing = Boolean(editingHike?.id);
     setEditingHike(null);
     setView("home");
-    showToast(wasEditing ? "Οι αλλαγές αποθηκεύτηκαν ✓" : "Η πεζοπορική συνάντηση δημοσιεύτηκε ✓");
+    showToast(
+      photoUploadFailed
+        ? "Η συνάντηση αποθηκεύτηκε, αλλά κάποια φωτογραφία δεν ανέβηκε."
+        : wasEditing
+          ? "Οι αλλαγές αποθηκεύτηκαν ✓"
+          : "Η πεζοπορική συνάντηση δημοσιεύτηκε ✓"
+    );
     void loadHikes();
   }
 
@@ -1150,7 +1228,10 @@ export default function Home() {
                         if (event.key === "Enter" || event.key === " ") openHikeDetails(hike);
                       }}
                     >
-                      <div className="cardVisual">
+                      <div
+                        className="cardVisual"
+                        style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(15,25,18,.06), rgba(15,25,18,.20)), url("${hike.coverPhoto}")` } : undefined}
+                      >
                         <span className="cardBadge">{hike.demo ? `Demo · ${hike.difficulty}` : `Live · ${hike.difficulty}`}</span>
                         <span className="cardDate"><strong>{hike.day}</strong>{hike.month}</span>
                       </div>
@@ -1279,7 +1360,11 @@ export default function Home() {
                       if (event.key === "Enter" || event.key === " ") openHikeDetails(hike);
                     }}
                   >
-                    <div className="exploreThumb" aria-hidden="true">
+                    <div
+                      className="exploreThumb"
+                      aria-hidden="true"
+                      style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(14,25,18,.04), rgba(14,25,18,.14)), url("${hike.coverPhoto}")` } : undefined}
+                    >
                       <span className={`exploreDifficulty difficulty-${hike.difficulty}`}>{hike.difficulty}</span>
                       <span className="exploreHeart">♡</span>
                     </div>
@@ -1329,7 +1414,10 @@ export default function Home() {
 
           {view === "detail" && selectedHike && (
             <section className="detailPage">
-              <div className={`detailHero detailHero-${selectedHike.difficulty}`}>
+              <div
+                className={`detailHero detailHero-${selectedHike.difficulty}`}
+                style={selectedHike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(8,18,12,.08), rgba(8,18,12,.32)), url("${selectedHike.coverPhoto}")` } : undefined}
+              >
                 <div className="detailHeroTop">
                   <button
                     className="detailRoundButton"
@@ -1458,11 +1546,15 @@ export default function Home() {
 
                 <section className="detailSection">
                   <h3>Φωτογραφίες</h3>
-                  <div className="detailPhotoStrip">
-                    <div className="detailPhoto detailPhotoOne" />
-                    <div className="detailPhoto detailPhotoTwo" />
-                    <div className="detailPhoto detailPhotoThree" />
-                  </div>
+                  {selectedHike.photoUrls?.length ? (
+                    <div className="detailPhotoStrip realPhotos">
+                      {selectedHike.photoUrls.map((photo, index) => (
+                        <img key={photo} className="detailPhoto" src={photo} alt={`${selectedHike.title} — φωτογραφία ${index + 1}`} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="detailMuted">Δεν έχουν προστεθεί ακόμη φωτογραφίες.</p>
+                  )}
                 </section>
 
                 <section className="detailRouteSoon">
@@ -1490,7 +1582,7 @@ export default function Home() {
                     Ακύρωση αιτήματος
                   </button>
                 ) : selectedHike.id && myJoinRequests[selectedHike.id]?.status === "accepted" ? (
-                  <button className="detailPrimaryAction" onClick={() => { setSelectedHike(null); setView("messages"); }}>
+                  <button className="detailPrimaryAction" onClick={() => { setSelectedChatId(selectedHike.id ?? null); setSelectedHike(null); setView("messages"); }}>
                     Άνοιγμα group chat
                   </button>
                 ) : (
@@ -1631,12 +1723,28 @@ export default function Home() {
                     </div>
                   </section>
 
-                  <section className="createPhotoPlaceholder">
-                    <div className="createPhotoIcon">＋</div>
+                  <section className="createPhotoUpload">
                     <div>
                       <strong>Φωτογραφίες</strong>
-                      <p>Θα προσθέσουμε upload φωτογραφιών στο επόμενο pass.</p>
+                      <p>Ανέβασε έως 5 πραγματικές φωτογραφίες από τη διαδρομή. Η πρώτη θα γίνει cover.</p>
                     </div>
+                    {editingHike?.photoUrls?.length ? (
+                      <div className="createExistingPhotos">
+                        {editingHike.photoUrls.map((photo) => (
+                          <img src={photo} alt="" key={photo} />
+                        ))}
+                      </div>
+                    ) : null}
+                    <label className="createPhotoPicker">
+                      <span>＋ Επιλογή φωτογραφιών</span>
+                      <input
+                        name="photos"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/heic"
+                        multiple
+                      />
+                    </label>
+                    <small>Μέχρι 2 MB η καθεμία · JPG, PNG, WebP ή HEIC.</small>
                   </section>
 
                   <div className="createActions">
