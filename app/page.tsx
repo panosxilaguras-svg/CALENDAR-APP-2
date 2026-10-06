@@ -1282,7 +1282,7 @@ export default function Home() {
                     >
                       <div
                         className="cardVisual"
-                        style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(15,25,18,.06), rgba(15,25,18,.20)), url("${hike.coverPhoto}")` } : undefined}
+                        style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(15,25,18,.06), rgba(15,25,18,.20)), url("${hike.coverPhoto}")`, backgroundPosition: hike.title === "Δίρφυς — Κορυφή Δέλφη" ? "center 72%" : "center" } : undefined}
                       >
                         <span className="cardBadge">{hike.demo ? `Demo · ${hike.difficulty}` : `Live · ${hike.difficulty}`}</span>
                         <span className="cardDate"><strong>{hike.day}</strong>{hike.month}</span>
@@ -1415,7 +1415,7 @@ export default function Home() {
                     <div
                       className="exploreThumb"
                       aria-hidden="true"
-                      style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(14,25,18,.04), rgba(14,25,18,.14)), url("${hike.coverPhoto}")` } : undefined}
+                      style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(14,25,18,.04), rgba(14,25,18,.14)), url("${hike.coverPhoto}")`, backgroundPosition: hike.title === "Δίρφυς — Κορυφή Δέλφη" ? "center 72%" : "center" } : undefined}
                     >
                       <span className={`exploreDifficulty difficulty-${hike.difficulty}`}>{hike.difficulty}</span>
                       <span className="exploreHeart">♡</span>
@@ -1468,7 +1468,7 @@ export default function Home() {
             <section className="detailPage">
               <div
                 className={`detailHero detailHero-${selectedHike.difficulty}`}
-                style={selectedHike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(8,18,12,.08), rgba(8,18,12,.32)), url("${selectedHike.coverPhoto}")` } : undefined}
+                style={selectedHike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(8,18,12,.08), rgba(8,18,12,.32)), url("${selectedHike.coverPhoto}")`, backgroundPosition: selectedHike.title === "Δίρφυς — Κορυφή Δέλφη" ? "center 72%" : "center" } : undefined}
               >
                 <div className="detailHeroTop">
                   <button
