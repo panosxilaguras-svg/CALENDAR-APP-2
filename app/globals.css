@@ -1716,3 +1716,52 @@ h1 {
 .memberButton:hover {
   background: #d5e6d8;
 }
+
+
+.browseControls {
+  display: grid;
+  gap: 9px;
+  justify-items: end;
+}
+
+.hikeSearch {
+  width: min(100%, 330px);
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink);
+  border-radius: 13px;
+  padding: 10px 12px;
+  outline: none;
+  font-size: 12px;
+}
+
+.hikeSearch:focus {
+  border-color: rgba(23,63,45,.42);
+  box-shadow: 0 0 0 3px rgba(117,163,110,.1);
+}
+
+.emptySearch {
+  grid-column: 1 / -1;
+  padding: 28px;
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  color: var(--muted);
+  text-align: center;
+  background: rgba(255,255,255,.45);
+}
+
+.joinButton:disabled {
+  opacity: .56;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .browseControls {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .hikeSearch {
+    width: 100%;
+  }
+}
