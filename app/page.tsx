@@ -31,6 +31,14 @@ type DbHike = {
   distance_km: number | null;
 };
 
+type IncomingRequest = {
+  id: string;
+  hikeId: string;
+  hikeTitle: string;
+  userId: string;
+  displayName: string;
+};
+
 const demoHikes: Hike[] = [
   {
     title: "Πάρνηθα — Μπάφι & Φλαμπούρι",
@@ -124,12 +132,21 @@ export default function Home() {
   const [realHikes, setRealHikes] = useState<Hike[]>([]);
   const [loadingHikes, setLoadingHikes] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
+  const [handlingRequestId, setHandlingRequestId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+    supabase.auth.getUser().then(({ data }) => {
+      const currentUser = data.user ?? null;
+      setUser(currentUser);
+      if (currentUser) loadIncomingRequests(currentUser.id);
+    });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser) loadIncomingRequests(currentUser.id);
+      else setIncomingRequests([]);
     });
 
     loadHikes();
@@ -153,6 +170,85 @@ export default function Home() {
     }
 
     setLoadingHikes(false);
+  }
+
+  async function loadIncomingRequests(userId: string) {
+    const { data: ownedHikes, error: hikesError } = await supabase
+      .from("hikes")
+      .select("id, title")
+      .eq("organizer_id", userId);
+
+    if (hikesError || !ownedHikes?.length) {
+      setIncomingRequests([]);
+      return;
+    }
+
+    const hikeIds = ownedHikes.map((hike) => hike.id);
+    const titleByHike = new Map(ownedHikes.map((hike) => [hike.id, hike.title]));
+
+    const { data: requests, error: requestsError } = await supabase
+      .from("join_requests")
+      .select("id, hike_id, user_id")
+      .in("hike_id", hikeIds)
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+
+    if (requestsError || !requests?.length) {
+      setIncomingRequests([]);
+      return;
+    }
+
+    const userIds = [...new Set(requests.map((request) => request.user_id))];
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", userIds);
+
+    const nameByUser = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name]));
+
+    setIncomingRequests(
+      requests.map((request) => ({
+        id: request.id,
+        hikeId: request.hike_id,
+        hikeTitle: titleByHike.get(request.hike_id) ?? "Πεζοπορία",
+        userId: request.user_id,
+        displayName: nameByUser.get(request.user_id) || "Πεζοπόρος"
+      }))
+    );
+  }
+
+  async function handleJoinRequest(request: IncomingRequest, action: "accepted" | "rejected") {
+    if (!user) return;
+
+    setHandlingRequestId(request.id);
+
+    const { error: updateError } = await supabase
+      .from("join_requests")
+      .update({ status: action, updated_at: new Date().toISOString() })
+      .eq("id", request.id);
+
+    if (updateError) {
+      showToast(`Δεν ενημερώθηκε το αίτημα: ${updateError.message}`);
+      setHandlingRequestId(null);
+      return;
+    }
+
+    if (action === "accepted") {
+      const { error: participantError } = await supabase
+        .from("participants")
+        .insert({ hike_id: request.hikeId, user_id: request.userId });
+
+      if (participantError && participantError.code !== "23505") {
+        showToast(`Το αίτημα εγκρίθηκε, αλλά υπήρξε θέμα με τον συμμετέχοντα: ${participantError.message}`);
+        setHandlingRequestId(null);
+        await loadIncomingRequests(user.id);
+        return;
+      }
+    }
+
+    await loadIncomingRequests(user.id);
+    setHandlingRequestId(null);
+    showToast(action === "accepted" ? "Ο πεζοπόρος μπήκε στην ομάδα ✓" : "Το αίτημα απορρίφθηκε.");
   }
 
   const allHikes = useMemo(() => [...realHikes, ...demoHikes], [realHikes]);
@@ -496,8 +592,44 @@ export default function Home() {
               </div>
               <div className="badgeRow">
                 <span className="infoBadge">🥾 {realHikes.filter((hike) => hike.organizerId === user?.id).length} οργανωμένες</span>
+                <span className="infoBadge">📨 {incomingRequests.length} νέα αιτήματα</span>
                 <span className="infoBadge">⛰ MVP member</span>
               </div>
+
+              {user && (
+                <div className="requestPanel">
+                  <h3>Αιτήματα συμμετοχής</h3>
+                  {incomingRequests.length === 0 ? (
+                    <p className="emptyNote">Δεν έχεις εκκρεμή αιτήματα αυτή τη στιγμή.</p>
+                  ) : (
+                    incomingRequests.map((request) => (
+                      <div className="requestRow" key={request.id}>
+                        <div>
+                          <strong>{request.displayName}</strong>
+                          <span>θέλει να μπει στο «{request.hikeTitle}»</span>
+                        </div>
+                        <div className="requestActions">
+                          <button
+                            className="requestAccept"
+                            disabled={handlingRequestId === request.id}
+                            onClick={() => handleJoinRequest(request, "accepted")}
+                          >
+                            Αποδοχή
+                          </button>
+                          <button
+                            className="requestReject"
+                            disabled={handlingRequestId === request.id}
+                            onClick={() => handleJoinRequest(request, "rejected")}
+                          >
+                            Απόρριψη
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
               {!user && <a className="submit authLink" href="/auth">Σύνδεση / Εγγραφή</a>}
             </section>
           )}
