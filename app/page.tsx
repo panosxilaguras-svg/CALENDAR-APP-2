@@ -732,6 +732,89 @@ export default function Home() {
     showToast("Η πεζοπορία διαγράφηκε ✓");
   }
 
+  async function saveProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!user) return;
+
+    const form = new FormData(event.currentTarget);
+    const displayName = String(form.get("displayName") ?? "").trim();
+    const city = String(form.get("city") ?? "").trim();
+    const experienceLevel = String(form.get("experienceLevel") ?? "");
+    const bio = String(form.get("bio") ?? "").trim();
+
+    if (!displayName) {
+      showToast("Βάλε ένα όνομα στο προφίλ σου.");
+      return;
+    }
+
+    setSavingProfile(true);
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        display_name: displayName,
+        city: city || null,
+        experience_level: experienceLevel || null,
+        bio: bio || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", user.id);
+
+    setSavingProfile(false);
+
+    if (error) {
+      showToast(`Δεν αποθηκεύτηκε το προφίλ: ${error.message}`);
+      return;
+    }
+
+    await Promise.all([loadCurrentProfile(user.id), loadHikes()]);
+    showToast("Το προφίλ αποθηκεύτηκε ✓");
+  }
+
+  async function uploadAvatar(file?: File) {
+    if (!user || !file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("Διάλεξε αρχείο εικόνας.");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("Η φωτογραφία πρέπει να είναι έως 2 MB.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { cacheControl: "3600", upsert: false });
+
+    if (uploadError) {
+      setUploadingAvatar(false);
+      showToast(`Δεν ανέβηκε η φωτογραφία: ${uploadError.message}`);
+      return;
+    }
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ avatar_url: path, updated_at: new Date().toISOString() })
+      .eq("id", user.id);
+
+    setUploadingAvatar(false);
+
+    if (profileError) {
+      showToast(`Η φωτογραφία ανέβηκε αλλά δεν αποθηκεύτηκε στο προφίλ: ${profileError.message}`);
+      return;
+    }
+
+    await loadCurrentProfile(user.id);
+    showToast("Η φωτογραφία προφίλ άλλαξε ✓");
+  }
+
   async function requestJoin(hike: Hike) {
     if (hike.demo || !hike.id) {
       showToast("Αυτό είναι demo πεζοπορία. Οι νέες θα είναι πραγματικές.");
@@ -807,7 +890,11 @@ export default function Home() {
               </p>
             </div>
             <button className="avatarButton" onClick={() => setView("profile")}>
-              {user?.email?.slice(0, 2).toUpperCase() ?? "PX"}
+              {profile?.avatarUrl ? (
+                <img src={avatarPublicUrl(profile.avatarUrl) ?? ""} alt="" />
+              ) : (
+                initials(profile?.displayName || user?.email?.split("@")[0] || "PX").toUpperCase()
+              )}
             </button>
           </header>
 
@@ -867,20 +954,31 @@ export default function Home() {
                         <span className="cardDate"><strong>{hike.day}</strong>{hike.month}</span>
                       </div>
                       <div className="cardBody">
-                        <h3>{hike.title}</h3>
+                        <button className="cardTitleButton" onClick={() => openHikeDetails(hike)}>
+                          <h3>{hike.title}</h3>
+                        </button>
+                        <div className="organizerLine">
+                          {hike.organizerAvatar ? (
+                            <img src={avatarPublicUrl(hike.organizerAvatar) ?? ""} alt="" />
+                          ) : (
+                            <span>{initials(hike.organizerName || "Ο")}</span>
+                          )}
+                          <button
+                            type="button"
+                            disabled={hike.demo || !hike.organizerId}
+                            onClick={() => hike.organizerId && openPublicProfile(hike.organizerId)}
+                          >
+                            {hike.organizerName || (hike.demo ? "Demo organizer" : "Πεζοπόρος")}
+                          </button>
+                        </div>
                         <div className="cardMeta">
                           📍 {hike.location}<br />
-                          ↗ {hike.distance} · ⏰ {hike.start}
+                          ↗ {hike.distance} · ⏰ {hike.start} · 👥 {hike.people}{hike.maxParticipants ? `/${hike.maxParticipants}` : ""}
                         </div>
                         <div className="peopleRow">
-                          <div>
-                            <div className="avatars">
-                              <span className="miniAvatar">{hike.demo ? "Μ" : "Ο"}</span>
-                              {hike.demo && <span className="miniAvatar">Α</span>}
-                              {hike.demo && <span className="miniAvatar">Κ</span>}
-                              <span className="miniAvatar">+{Math.max(hike.people - (hike.demo ? 3 : 1), 0)}</span>
-                            </div>
-                          </div>
+                          <button className="detailsButton" onClick={() => openHikeDetails(hike)}>
+                            Λεπτομέρειες
+                          </button>
                           {hike.organizerId === user?.id && hike.id ? (
                             <div className="ownerActions">
                               <button
@@ -1084,56 +1182,120 @@ export default function Home() {
 
           {view === "profile" && (
             <section className="profileCard">
-              <div className="profileHero">
-                <div className="profileAvatar">{user?.email?.slice(0, 2).toUpperCase() ?? "PX"}</div>
-                <div>
-                  <h2>{user ? "Το προφίλ σου" : "Guest"}</h2>
-                  <p>{user?.email ?? "Συνδέσου για να δημιουργήσεις προφίλ"}</p>
-                </div>
-              </div>
-              <div className="badgeRow">
-                <span className="infoBadge">🥾 {realHikes.filter((hike) => hike.organizerId === user?.id).length} οργανωμένες</span>
-                <span className="infoBadge">📨 {incomingRequests.length} νέα αιτήματα</span>
-                <span className="infoBadge">⛰ MVP member</span>
-              </div>
+              {!user ? (
+                <>
+                  <div className="profileHero">
+                    <div className="profileAvatar">PX</div>
+                    <div>
+                      <h2>Το προφίλ σου</h2>
+                      <p>Συνδέσου για να φτιάξεις προφίλ και να συμμετέχεις σε ομάδες.</p>
+                    </div>
+                  </div>
+                  <a className="submit authLink" href="/auth">Σύνδεση / Εγγραφή</a>
+                </>
+              ) : (
+                <>
+                  <div className="profileHero profileHeroEditable">
+                    <label className="avatarUpload">
+                      {profile?.avatarUrl ? (
+                        <img src={avatarPublicUrl(profile.avatarUrl) ?? ""} alt="Φωτογραφία προφίλ" />
+                      ) : (
+                        <span>{initials(profile?.displayName || user.email?.split("@")[0]).toUpperCase()}</span>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/heic"
+                        disabled={uploadingAvatar}
+                        onChange={(event) => uploadAvatar(event.target.files?.[0])}
+                      />
+                      <small>{uploadingAvatar ? "Ανέβασμα..." : "Αλλαγή"}</small>
+                    </label>
+                    <div>
+                      <h2>{profile?.displayName || "Το προφίλ σου"}</h2>
+                      <p>{profile?.city || "Βάλε περιοχή"} · {experienceLabel(profile?.experienceLevel ?? null)}</p>
+                    </div>
+                  </div>
 
-              {user && (
-                <div className="requestPanel">
-                  <h3>Αιτήματα συμμετοχής</h3>
-                  {incomingRequests.length === 0 ? (
-                    <p className="emptyNote">Δεν έχεις εκκρεμή αιτήματα αυτή τη στιγμή.</p>
-                  ) : (
-                    incomingRequests.map((request) => (
-                      <div className="requestRow" key={request.id}>
-                        <div>
-                          <strong>{request.displayName}</strong>
-                          <span>θέλει να μπει στο «{request.hikeTitle}»</span>
-                        </div>
-                        <div className="requestActions">
-                          <button
-                            className="requestAccept"
-                            disabled={handlingRequestId === request.id}
-                            onClick={() => handleJoinRequest(request, "accepted")}
-                          >
-                            Αποδοχή
-                          </button>
-                          <button
-                            className="requestReject"
-                            disabled={handlingRequestId === request.id}
-                            onClick={() => handleJoinRequest(request, "rejected")}
-                          >
-                            Απόρριψη
-                          </button>
-                        </div>
+                  <div className="badgeRow">
+                    <span className="infoBadge">🥾 {realHikes.filter((hike) => hike.organizerId === user.id).length} οργανωμένες</span>
+                    <span className="infoBadge">📨 {incomingRequests.length} νέα αιτήματα</span>
+                    <span className="infoBadge">💬 {chatGroups.length} groups</span>
+                  </div>
+
+                  <form className="profileForm" onSubmit={saveProfile} key={profile?.id ?? user.id}>
+                    <div className="formGrid">
+                      <div className="field">
+                        <label>Όνομα</label>
+                        <input name="displayName" required defaultValue={profile?.displayName ?? ""} placeholder="π.χ. Πάνος" />
                       </div>
-                    ))
-                  )}
-                </div>
-              )}
+                      <div className="field">
+                        <label>Περιοχή</label>
+                        <input name="city" defaultValue={profile?.city ?? ""} placeholder="π.χ. Αθήνα" />
+                      </div>
+                      <div className="field full">
+                        <label>Εμπειρία</label>
+                        <select name="experienceLevel" defaultValue={profile?.experienceLevel ?? ""}>
+                          <option value="">Δεν έχω επιλέξει</option>
+                          <option value="beginner">Αρχάριος</option>
+                          <option value="intermediate">Μέτριος</option>
+                          <option value="advanced">Προχωρημένος</option>
+                        </select>
+                      </div>
+                      <div className="field full">
+                        <label>Λίγα λόγια για σένα</label>
+                        <textarea
+                          name="bio"
+                          rows={4}
+                          maxLength={500}
+                          defaultValue={profile?.bio ?? ""}
+                          placeholder="Τι βουνά σου αρέσουν, τι ρυθμό προτιμάς, τι εμπειρία έχεις..."
+                        />
+                      </div>
+                    </div>
+                    <button className="submit" type="submit" disabled={savingProfile}>
+                      {savingProfile ? "Αποθήκευση..." : "Αποθήκευση προφίλ"}
+                    </button>
+                  </form>
 
-              {!user && <a className="submit authLink" href="/auth">Σύνδεση / Εγγραφή</a>}
+                  <div className="requestPanel">
+                    <h3>Αιτήματα συμμετοχής</h3>
+                    {incomingRequests.length === 0 ? (
+                      <p className="emptyNote">Δεν έχεις εκκρεμή αιτήματα αυτή τη στιγμή.</p>
+                    ) : (
+                      incomingRequests.map((request) => (
+                        <div className="requestRow" key={request.id}>
+                          <div>
+                            <strong>{request.displayName}</strong>
+                            <span>θέλει να μπει στο «{request.hikeTitle}»</span>
+                          </div>
+                          <div className="requestActions">
+                            <button className="requestProfile" onClick={() => openPublicProfile(request.userId)}>
+                              Προφίλ
+                            </button>
+                            <button
+                              className="requestAccept"
+                              disabled={handlingRequestId === request.id}
+                              onClick={() => handleJoinRequest(request, "accepted")}
+                            >
+                              Αποδοχή
+                            </button>
+                            <button
+                              className="requestReject"
+                              disabled={handlingRequestId === request.id}
+                              onClick={() => handleJoinRequest(request, "rejected")}
+                            >
+                              Απόρριψη
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
             </section>
           )}
+
         </main>
 
         <nav className="mobileNav">
@@ -1149,6 +1311,117 @@ export default function Home() {
           ))}
         </nav>
       </div>
+
+      {selectedProfile && (
+        <div className="modalBackdrop" onClick={() => setSelectedProfile(null)}>
+          <section className="profileModal" onClick={(event) => event.stopPropagation()}>
+            <button className="modalClose" onClick={() => setSelectedProfile(null)}>×</button>
+            <div className="publicProfileHero">
+              <div className="publicProfileAvatar">
+                {selectedProfile.avatarUrl ? (
+                  <img src={avatarPublicUrl(selectedProfile.avatarUrl) ?? ""} alt="" />
+                ) : (
+                  initials(selectedProfile.displayName).toUpperCase()
+                )}
+              </div>
+              <div>
+                <h2>{selectedProfile.displayName}</h2>
+                <p>{selectedProfile.city || "Περιοχή δεν έχει δηλωθεί"}</p>
+              </div>
+            </div>
+            <span className="profileLevel">{experienceLabel(selectedProfile.experienceLevel)}</span>
+            <p className="publicProfileBio">
+              {selectedProfile.bio || "Ο χρήστης δεν έχει γράψει ακόμη περιγραφή."}
+            </p>
+          </section>
+        </div>
+      )}
+
+      {selectedHike && (
+        <div className="modalBackdrop" onClick={() => setSelectedHike(null)}>
+          <section className="hikeModal" onClick={(event) => event.stopPropagation()}>
+            <button className="modalClose" onClick={() => setSelectedHike(null)}>×</button>
+            <div className="hikeModalTop">
+              <span className="cardBadge">{selectedHike.demo ? "Demo" : "Live"} · {selectedHike.difficulty}</span>
+              <h2>{selectedHike.title}</h2>
+              <p>📍 {selectedHike.location} · ⏰ {selectedHike.start} · ↗ {selectedHike.distance}</p>
+            </div>
+
+            <div className="hikeDetailGrid">
+              <div>
+                <small>Διοργανωτής</small>
+                <button
+                  className="detailOrganizer"
+                  disabled={selectedHike.demo || !selectedHike.organizerId}
+                  onClick={() => selectedHike.organizerId && openPublicProfile(selectedHike.organizerId)}
+                >
+                  {selectedHike.organizerAvatar ? (
+                    <img src={avatarPublicUrl(selectedHike.organizerAvatar) ?? ""} alt="" />
+                  ) : (
+                    <span>{initials(selectedHike.organizerName || "Ο")}</span>
+                  )}
+                  {selectedHike.organizerName || "Πεζοπόρος"}
+                </button>
+              </div>
+              <div>
+                <small>Θέσεις</small>
+                <strong>{selectedHike.people}{selectedHike.maxParticipants ? ` / ${selectedHike.maxParticipants}` : ""}</strong>
+              </div>
+            </div>
+
+            <div className="hikeDescription">
+              <h3>Περιγραφή</h3>
+              <p>{selectedHike.description || "Δεν έχει προστεθεί περιγραφή."}</p>
+            </div>
+
+            {!selectedHike.demo && (
+              <div className="participantsBlock">
+                <h3>Ποιοι πάνε</h3>
+                {detailLoading ? (
+                  <p className="emptyNote">Φορτώνουμε την ομάδα...</p>
+                ) : detailParticipants.length === 0 ? (
+                  <p className="emptyNote">Δεν έχουν εγκριθεί ακόμη άλλοι συμμετέχοντες.</p>
+                ) : (
+                  <div className="participantList">
+                    {detailParticipants.map((member) => (
+                      <button key={member.id} onClick={() => openPublicProfile(member.id)}>
+                        <span className="participantAvatar">
+                          {member.avatarUrl ? (
+                            <img src={avatarPublicUrl(member.avatarUrl) ?? ""} alt="" />
+                          ) : (
+                            initials(member.displayName)
+                          )}
+                        </span>
+                        <span>
+                          <strong>{member.displayName}</strong>
+                          <small>{member.city || experienceLabel(member.experienceLevel)}</small>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="hikeModalActions">
+              {selectedHike.organizerId === user?.id && selectedHike.id ? (
+                <>
+                  <button className="editHikeButton" onClick={() => { setSelectedHike(null); startEditHike(selectedHike); }}>
+                    Επεξεργασία
+                  </button>
+                  <button className="deleteHikeButton" onClick={() => { setSelectedHike(null); deleteHike(selectedHike); }}>
+                    Διαγραφή
+                  </button>
+                </>
+              ) : (
+                <button className="joinButton" onClick={() => requestJoin(selectedHike)}>
+                  Θέλω να μπω
+                </button>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
 
       {toast && <div className="toast">{toast}</div>}
     </div>
