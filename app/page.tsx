@@ -1014,12 +1014,19 @@ export default function Home() {
             <>
               <section className="hero">
                 <div className="mobileHomeBrand">
-                  <div className="mobileBrandLockup">
-                    <span className="mobileBrandMark">▲</span>
-                    <span>MAZI<br />TRAILS</span>
-                  </div>
+                  <button className="mobileMountainLogo" aria-label="Αρχική" onClick={() => setView("home")}>
+                    <svg viewBox="0 0 32 32" aria-hidden="true">
+                      <path d="M3 25 12.2 9.5l4.4 7.2L20.2 11 29 25H3Z" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"/>
+                      <path d="m9.7 13.7 2.5 3.2 2-2.1" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
                   <div className="mobileBrandActions">
-                    <button aria-label="Αναζήτηση" onClick={() => document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" })}>⌕</button>
+                    <button aria-label="Αναζήτηση" onClick={() => document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" })}>
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="11" cy="11" r="6.2" fill="none" stroke="currentColor" strokeWidth="2"/>
+                        <path d="m16 16 4 4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </button>
                     <button aria-label="Προφίλ" onClick={() => setView("profile")}>
                       {profile?.avatarUrl ? (
                         <img src={avatarPublicUrl(profile.avatarUrl) ?? ""} alt="" />
