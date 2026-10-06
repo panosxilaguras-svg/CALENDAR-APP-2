@@ -591,29 +591,65 @@ export default function Home() {
   useEffect(() => {
     if (!user) return;
 
-    const timer = window.setInterval(() => {
+    const refreshAccount = () => {
       loadMyJoinRequests(user.id);
-    }, 6000);
+      loadIncomingRequests(user.id);
+      loadChatGroups(user.id);
+      loadHikes();
+    };
 
-    return () => window.clearInterval(timer);
+    const channel = supabase
+      .channel(`account-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "join_requests" },
+        refreshAccount
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "participants" },
+        refreshAccount
+      )
+      .subscribe();
+
+    const fallback = window.setInterval(refreshAccount, 15000);
+
+    return () => {
+      window.clearInterval(fallback);
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   useEffect(() => {
     if (view !== "messages" || !user) return;
-
     loadChatGroups(user.id);
-    const timer = window.setInterval(() => {
-      loadChatGroups(user.id);
-      if (selectedChatId) loadChatMessages(selectedChatId);
-    }, 4000);
-
-    return () => window.clearInterval(timer);
-  }, [view, user, selectedChatId]);
+  }, [view, user]);
 
   useEffect(() => {
-    if (view === "messages" && selectedChatId) {
-      loadChatMessages(selectedChatId);
-    }
+    if (view !== "messages" || !selectedChatId) return;
+
+    loadChatMessages(selectedChatId);
+
+    const channel = supabase
+      .channel(`hike-chat-${selectedChatId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "messages",
+          filter: `hike_id=eq.${selectedChatId}`
+        },
+        () => loadChatMessages(selectedChatId)
+      )
+      .subscribe();
+
+    const fallback = window.setInterval(() => loadChatMessages(selectedChatId), 15000);
+
+    return () => {
+      window.clearInterval(fallback);
+      supabase.removeChannel(channel);
+    };
   }, [view, selectedChatId]);
 
   const allHikes = useMemo(
@@ -1239,7 +1275,7 @@ export default function Home() {
                   <div className="chatPane">
                     <div className="chatHeader">
                       <strong>{chatGroups.find((group) => group.id === selectedChatId)?.title ?? "Group chat"}</strong>
-                      <span>Ανανέωση αυτόματα</span>
+                      <span>Live chat</span>
                     </div>
 
                     <div className="chatMessages">
