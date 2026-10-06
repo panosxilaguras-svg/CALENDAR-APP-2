@@ -1021,7 +1021,7 @@ export default function Home() {
         </aside>
 
         <main className="main">
-          {view !== "detail" && (
+          {view !== "detail" && view !== "explore" && (
             <header className={`topbar ${view === "home" ? "homeTopbar" : ""}`}>
               <div>
                 <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
