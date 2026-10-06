@@ -22,6 +22,8 @@ type Hike = {
   description?: string | null;
   distanceKm?: number | null;
   maxParticipants?: number | null;
+  organizerName?: string;
+  organizerAvatar?: string | null;
   demo?: boolean;
 };
 
@@ -58,6 +60,19 @@ type ChatMessage = {
   senderName: string;
   body: string;
   createdAt: string;
+};
+
+type PublicProfile = {
+  id: string;
+  displayName: string;
+  avatarUrl: string | null;
+  city: string | null;
+  experienceLevel: "beginner" | "intermediate" | "advanced" | null;
+  bio: string | null;
+};
+
+type HikeParticipant = PublicProfile & {
+  joinedAt: string;
 };
 
 const demoHikes: Hike[] = [
@@ -165,6 +180,13 @@ export default function Home() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<PublicProfile | null>(null);
+  const [selectedHike, setSelectedHike] = useState<Hike | null>(null);
+  const [detailParticipants, setDetailParticipants] = useState<HikeParticipant[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -173,6 +195,7 @@ export default function Home() {
       if (currentUser) {
         loadIncomingRequests(currentUser.id);
         loadChatGroups(currentUser.id);
+        loadCurrentProfile(currentUser.id);
       }
     });
 
@@ -182,11 +205,13 @@ export default function Home() {
       if (currentUser) {
         loadIncomingRequests(currentUser.id);
         loadChatGroups(currentUser.id);
+        loadCurrentProfile(currentUser.id);
       } else {
         setIncomingRequests([]);
         setChatGroups([]);
         setSelectedChatId(null);
         setChatMessages([]);
+        setProfile(null);
       }
     });
 
@@ -207,10 +232,138 @@ export default function Home() {
       .limit(30);
 
     if (!error && data) {
-      setRealHikes((data as DbHike[]).map(dbHikeToCard));
+      const dbHikes = data as DbHike[];
+      const hikeIds = dbHikes.map((hike) => hike.id);
+      const organizerIds = [...new Set(dbHikes.map((hike) => hike.organizer_id))];
+
+      const [{ data: participants }, { data: organizerProfiles }] = await Promise.all([
+        hikeIds.length
+          ? supabase.from("participants").select("hike_id, user_id").in("hike_id", hikeIds)
+          : Promise.resolve({ data: [] as { hike_id: string; user_id: string }[] }),
+        organizerIds.length
+          ? supabase.from("profiles").select("id, display_name, avatar_url").in("id", organizerIds)
+          : Promise.resolve({ data: [] as { id: string; display_name: string; avatar_url: string | null }[] })
+      ]);
+
+      const participantCount = new Map<string, number>();
+      for (const row of participants ?? []) {
+        participantCount.set(row.hike_id, (participantCount.get(row.hike_id) ?? 0) + 1);
+      }
+
+      const organizers = new Map(
+        (organizerProfiles ?? []).map((item) => [
+          item.id,
+          { name: item.display_name || "Πεζοπόρος", avatar: item.avatar_url }
+        ])
+      );
+
+      setRealHikes(
+        dbHikes.map((item) => {
+          const card = dbHikeToCard(item);
+          const organizer = organizers.get(item.organizer_id);
+          return {
+            ...card,
+            people: 1 + (participantCount.get(item.id) ?? 0),
+            organizerName: organizer?.name ?? "Πεζοπόρος",
+            organizerAvatar: organizer?.avatar ?? null
+          };
+        })
+      );
     }
 
     setLoadingHikes(false);
+  }
+
+  function toPublicProfile(row: {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    city: string | null;
+    experience_level: PublicProfile["experienceLevel"];
+    bio: string | null;
+  }): PublicProfile {
+    return {
+      id: row.id,
+      displayName: row.display_name || "Πεζοπόρος",
+      avatarUrl: row.avatar_url,
+      city: row.city,
+      experienceLevel: row.experience_level,
+      bio: row.bio
+    };
+  }
+
+  function avatarPublicUrl(path?: string | null) {
+    if (!path) return null;
+    return supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+  }
+
+  function initials(name?: string | null) {
+    const value = (name || "Πεζοπόρος").trim();
+    const parts = value.split(/\s+/).filter(Boolean);
+    return (parts[0]?.[0] || "Π") + (parts[1]?.[0] || "");
+  }
+
+  function experienceLabel(level: PublicProfile["experienceLevel"]) {
+    if (level === "beginner") return "Αρχάριο επίπεδο";
+    if (level === "advanced") return "Προχωρημένο επίπεδο";
+    if (level === "intermediate") return "Μέτριο επίπεδο";
+    return "Δεν έχει δηλωθεί επίπεδο";
+  }
+
+  async function fetchPublicProfile(userId: string) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url, city, experience_level, bio")
+      .eq("id", userId)
+      .single();
+
+    return data ? toPublicProfile(data) : null;
+  }
+
+  async function loadCurrentProfile(userId: string) {
+    const nextProfile = await fetchPublicProfile(userId);
+    setProfile(nextProfile);
+  }
+
+  async function openPublicProfile(userId: string) {
+    const nextProfile = await fetchPublicProfile(userId);
+    if (nextProfile) setSelectedProfile(nextProfile);
+  }
+
+  async function openHikeDetails(hike: Hike) {
+    setSelectedHike(hike);
+    setDetailParticipants([]);
+    if (!hike.id || hike.demo) return;
+
+    setDetailLoading(true);
+
+    const { data: memberships } = await supabase
+      .from("participants")
+      .select("user_id, joined_at")
+      .eq("hike_id", hike.id)
+      .order("joined_at", { ascending: true });
+
+    const participantRows = memberships ?? [];
+    const userIds = participantRows.map((row) => row.user_id);
+
+    if (userIds.length) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, city, experience_level, bio")
+        .in("id", userIds);
+
+      const profileMap = new Map((profiles ?? []).map((row) => [row.id, toPublicProfile(row)]));
+      setDetailParticipants(
+        participantRows
+          .map((row) => {
+            const member = profileMap.get(row.user_id);
+            return member ? { ...member, joinedAt: row.joined_at } : null;
+          })
+          .filter((member): member is HikeParticipant => Boolean(member))
+      );
+    }
+
+    setDetailLoading(false);
   }
 
   async function loadIncomingRequests(userId: string) {
