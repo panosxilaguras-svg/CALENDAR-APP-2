@@ -89,7 +89,7 @@ export default function AuthPage() {
       <section className="authCard">
         <a className="authBack" href="/">← Πίσω</a>
         <div className="authMark">△</div>
-        <p className="authEyebrow">Hiking MVP</p>
+        <p className="authEyebrow">HikeMazi</p>
         <h1>{mode === "signup" ? "Βρες την παρέα σου." : "Καλώς ήρθες πίσω."}</h1>
         <p className="authLead">
           {mode === "signup"
@@ -160,7 +160,7 @@ export default function AuthPage() {
         {message && <p className="authMessage">{message}</p>}
 
         <p className="authFine">
-          Πρώτη MVP έκδοση · αργότερα προσθέτουμε Google/Apple login.
+          HikeMazi · Βρες παρέα για την επόμενη πεζοπορία σου.
         </p>
       </section>
     </main>
