@@ -1765,3 +1765,25 @@ h1 {
     width: 100%;
   }
 }
+
+
+.profileSaveRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.profileSaveRow .submit {
+  margin-top: 0;
+}
+
+.signOutButton {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  padding: 13px 18px;
+  border-radius: 14px;
+  font-weight: 900;
+}
