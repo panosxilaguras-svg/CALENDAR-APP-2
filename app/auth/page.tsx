@@ -12,12 +12,15 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (event === "PASSWORD_RECOVERY") setRecoveryMode(true);
     });
 
     return () => subscription.subscription.unsubscribe();
@@ -60,10 +63,55 @@ export default function AuthPage() {
         window.location.href = "/";
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Κάτι πήγε στραβά.");
+      const text = error instanceof Error ? error.message : "";
+      if (text.toLowerCase().includes("invalid login credentials")) {
+        setMessage("Το email ή ο κωδικός δεν ταιριάζει. Αν δεν θυμάσαι τον κωδικό, πάτησε «Ξέχασα κωδικό;».");
+      } else if (text.toLowerCase().includes("email not confirmed")) {
+        setMessage("Χρειάζεται πρώτα να επιβεβαιώσεις το email σου.");
+      } else {
+        setMessage(text || "Κάτι πήγε στραβά.");
+      }
     } finally {
       setLoading(false);
     }
+  }
+
+  async function sendPasswordReset() {
+    if (!email.trim()) {
+      setMessage("Γράψε πρώτα το email σου.");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: "https://hikemazi.com/auth?reset=1"
+    });
+    setLoading(false);
+
+    setMessage(
+      error
+        ? "Δεν μπορέσαμε να στείλουμε email επαναφοράς. Δοκίμασε ξανά."
+        : "Σου στείλαμε email επαναφοράς κωδικού ✓"
+    );
+  }
+
+  async function updatePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setLoading(false);
+
+    if (error) {
+      setMessage("Δεν άλλαξε ο κωδικός. Άνοιξε ξανά το link επαναφοράς από το email.");
+      return;
+    }
+
+    setRecoveryMode(false);
+    setMessage("Ο κωδικός άλλαξε ✓");
+    window.location.href = "/";
   }
 
   async function logout() {
@@ -71,6 +119,38 @@ export default function AuthPage() {
     await supabase.auth.signOut();
     setUser(null);
     setLoading(false);
+  }
+
+  if (recoveryMode) {
+    return (
+      <main className="authShell">
+        <section className="authCard">
+          <a className="authBack" href="/">← Πίσω</a>
+          <div className="authMark">△</div>
+          <p className="authEyebrow">HikeMazi</p>
+          <h1>Βάλε νέο κωδικό.</h1>
+          <p className="authLead">Διάλεξε έναν νέο κωδικό με τουλάχιστον 6 χαρακτήρες.</p>
+          <form onSubmit={updatePassword} className="authForm">
+            <label>
+              Νέος κωδικός
+              <input
+                required
+                minLength={6}
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Τουλάχιστον 6 χαρακτήρες"
+                autoComplete="new-password"
+              />
+            </label>
+            <button className="authSubmit" disabled={loading} type="submit">
+              {loading ? "Αποθήκευση..." : "Αλλαγή κωδικού"}
+            </button>
+          </form>
+          {message && <p className="authMessage">{message}</p>}
+        </section>
+      </main>
+    );
   }
 
   if (user) {
@@ -160,6 +240,12 @@ export default function AuthPage() {
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
             />
           </label>
+
+          {mode === "login" && (
+            <button className="authForgot" type="button" disabled={loading} onClick={sendPasswordReset}>
+              Ξέχασα κωδικό;
+            </button>
+          )}
 
           {mode === "signup" && (
             <label className="authTerms">
