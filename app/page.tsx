@@ -18,6 +18,10 @@ type Hike = {
   distance: string;
   people: number;
   start: string;
+  startsAt?: string;
+  description?: string | null;
+  distanceKm?: number | null;
+  maxParticipants?: number | null;
   demo?: boolean;
 };
 
@@ -29,6 +33,8 @@ type DbHike = {
   starts_at: string;
   difficulty: "easy" | "moderate" | "hard";
   distance_km: number | null;
+  description: string | null;
+  max_participants: number | null;
 };
 
 type IncomingRequest = {
@@ -120,7 +126,11 @@ function dbHikeToCard(hike: DbHike): Hike {
     difficulty: mapDifficulty(hike.difficulty),
     distance: hike.distance_km ? `${String(hike.distance_km).replace(".", ",")} km` : "—",
     people: 1,
-    start: date.toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })
+    start: date.toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" }),
+    startsAt: hike.starts_at,
+    description: hike.description,
+    distanceKm: hike.distance_km,
+    maxParticipants: hike.max_participants
   };
 }
 
@@ -135,6 +145,7 @@ export default function Home() {
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
   const [handlingRequestId, setHandlingRequestId] = useState<string | null>(null);
   const [deletingHikeId, setDeletingHikeId] = useState<string | null>(null);
+  const [editingHike, setEditingHike] = useState<Hike | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -160,7 +171,7 @@ export default function Home() {
 
     const { data, error } = await supabase
       .from("hikes")
-      .select("id, organizer_id, title, location_name, starts_at, difficulty, distance_km")
+      .select("id, organizer_id, title, location_name, starts_at, difficulty, distance_km, description, max_participants")
       .eq("status", "open")
       .gte("starts_at", new Date().toISOString())
       .order("starts_at", { ascending: true })
@@ -271,6 +282,31 @@ export default function Home() {
     }, 650);
   }
 
+  function openNewHike() {
+    setEditingHike(null);
+    setView("new");
+  }
+
+  function startEditHike(hike: Hike) {
+    if (!user || !hike.id || hike.organizerId !== user.id) return;
+    setEditingHike(hike);
+    setView("new");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function localDateValue(iso?: string) {
+    if (!iso) return "";
+    const date = new Date(iso);
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10);
+  }
+
+  function localTimeValue(iso?: string) {
+    if (!iso) return "";
+    const date = new Date(iso);
+    return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+  }
+
   async function submitHike(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -302,28 +338,41 @@ export default function Home() {
 
     setSubmitting(true);
 
-    const { error } = await supabase.from("hikes").insert({
-      organizer_id: user.id,
+    const payload = {
       title,
       description: description || null,
       location_name: location,
       starts_at: startsAt.toISOString(),
       difficulty: mapDifficultyToDb(difficulty),
       distance_km: distanceRaw ? Number(distanceRaw) : null,
-      max_participants: maxRaw ? Number(maxRaw) : null
-    });
+      max_participants: maxRaw ? Number(maxRaw) : null,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = editingHike?.id
+      ? await supabase
+          .from("hikes")
+          .update(payload)
+          .eq("id", editingHike.id)
+          .eq("organizer_id", user.id)
+      : await supabase.from("hikes").insert({
+          organizer_id: user.id,
+          ...payload
+        });
 
     setSubmitting(false);
 
     if (error) {
-      showToast(`Δεν δημιουργήθηκε: ${error.message}`);
+      showToast(`Δεν αποθηκεύτηκε: ${error.message}`);
       return;
     }
 
     event.currentTarget.reset();
+    const wasEditing = Boolean(editingHike?.id);
+    setEditingHike(null);
     await loadHikes();
     setView("home");
-    showToast("Η πεζοπορία δημοσιεύτηκε κανονικά ✓");
+    showToast(wasEditing ? "Οι αλλαγές αποθηκεύτηκαν ✓" : "Η πεζοπορία δημοσιεύτηκε κανονικά ✓");
   }
 
   async function deleteHike(hike: Hike) {
@@ -401,7 +450,7 @@ export default function Home() {
               <button
                 className={`navButton ${view === item.id ? "active" : ""}`}
                 key={item.id}
-                onClick={() => setView(item.id)}
+                onClick={() => item.id === "new" ? openNewHike() : setView(item.id)}
               >
                 <span>{item.icon}</span>
                 {item.label}
@@ -443,7 +492,7 @@ export default function Home() {
                     <button className="primary" onClick={() => document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" })}>
                       Βρες πεζοπορία
                     </button>
-                    <button className="secondary" onClick={() => setView("new")}>
+                    <button className="secondary" onClick={openNewHike}>
                       + Οργάνωσε μία
                     </button>
                     <a className="secondary authLink" href="/auth">
@@ -501,13 +550,21 @@ export default function Home() {
                             </div>
                           </div>
                           {hike.organizerId === user?.id && hike.id ? (
-                            <button
-                              className="deleteHikeButton"
-                              disabled={deletingHikeId === hike.id}
-                              onClick={() => deleteHike(hike)}
-                            >
-                              {deletingHikeId === hike.id ? "Διαγραφή..." : "Διαγραφή"}
-                            </button>
+                            <div className="ownerActions">
+                              <button
+                                className="editHikeButton"
+                                onClick={() => startEditHike(hike)}
+                              >
+                                Επεξεργασία
+                              </button>
+                              <button
+                                className="deleteHikeButton"
+                                disabled={deletingHikeId === hike.id}
+                                onClick={() => deleteHike(hike)}
+                              >
+                                {deletingHikeId === hike.id ? "Διαγραφή..." : "Διαγραφή"}
+                              </button>
+                            </div>
                           ) : (
                             <button
                               className="joinButton"
@@ -547,8 +604,8 @@ export default function Home() {
             <section className="formCard">
               <div className="sectionHeader" style={{ marginTop: 0 }}>
                 <div>
-                  <h2>Οργάνωσε πεζοπορία</h2>
-                  <p>{user ? "Η δημοσίευση θα αποθηκευτεί πραγματικά στη βάση." : "Συνδέσου πρώτα για να δημοσιεύσεις."}</p>
+                  <h2>{editingHike ? "Επεξεργασία πεζοπορίας" : "Οργάνωσε πεζοπορία"}</h2>
+                  <p>{user ? (editingHike ? "Άλλαξε ό,τι χρειάζεται και αποθήκευσε." : "Η δημοσίευση θα αποθηκευτεί πραγματικά στη βάση.") : "Συνδέσου πρώτα για να δημοσιεύσεις."}</p>
                 </div>
               </div>
 
@@ -558,27 +615,27 @@ export default function Home() {
                   <a className="submit authLink" href="/auth">Σύνδεση / Εγγραφή</a>
                 </>
               ) : (
-                <form onSubmit={submitHike}>
+                <form key={editingHike?.id ?? "new-hike"} onSubmit={submitHike}>
                   <div className="formGrid">
                     <div className="field full">
                       <label>Τίτλος</label>
-                      <input name="title" required placeholder="π.χ. Πάρνηθα — Μπάφι & Φλαμπούρι" />
+                      <input name="title" required defaultValue={editingHike?.title ?? ""} placeholder="π.χ. Πάρνηθα — Μπάφι & Φλαμπούρι" />
                     </div>
                     <div className="field">
                       <label>Ημερομηνία</label>
-                      <input name="date" required type="date" />
+                      <input name="date" required type="date" defaultValue={localDateValue(editingHike?.startsAt)} />
                     </div>
                     <div className="field">
                       <label>Ώρα έναρξης</label>
-                      <input name="time" required type="time" />
+                      <input name="time" required type="time" defaultValue={localTimeValue(editingHike?.startsAt)} />
                     </div>
                     <div className="field">
                       <label>Περιοχή</label>
-                      <input name="location" required placeholder="π.χ. Πάρνηθα" />
+                      <input name="location" required defaultValue={editingHike?.location ?? ""} placeholder="π.χ. Πάρνηθα" />
                     </div>
                     <div className="field">
                       <label>Δυσκολία</label>
-                      <select name="difficulty" defaultValue="Μέτρια">
+                      <select name="difficulty" defaultValue={editingHike?.difficulty ?? "Μέτρια"}>
                         <option>Εύκολη</option>
                         <option>Μέτρια</option>
                         <option>Δύσκολη</option>
@@ -586,20 +643,31 @@ export default function Home() {
                     </div>
                     <div className="field">
                       <label>Απόσταση (km)</label>
-                      <input name="distance" type="number" min="0.1" step="0.1" placeholder="9.4" />
+                      <input name="distance" type="number" min="0.1" step="0.1" defaultValue={editingHike?.distanceKm ?? ""} placeholder="9.4" />
                     </div>
                     <div className="field">
                       <label>Μέγιστα άτομα</label>
-                      <input name="maxParticipants" type="number" min="2" max="30" placeholder="8" />
+                      <input name="maxParticipants" type="number" min="2" max="30" defaultValue={editingHike?.maxParticipants ?? ""} placeholder="8" />
                     </div>
                     <div className="field full">
                       <label>Περιγραφή</label>
-                      <textarea name="description" rows={5} placeholder="Τι πρέπει να ξέρει η ομάδα; Σημείο συνάντησης, εξοπλισμός, ρυθμός..." />
+                      <textarea name="description" rows={5} defaultValue={editingHike?.description ?? ""} placeholder="Τι πρέπει να ξέρει η ομάδα; Σημείο συνάντησης, εξοπλισμός, ρυθμός..." />
                     </div>
                   </div>
-                  <button className="submit" type="submit" disabled={submitting}>
-                    {submitting ? "Δημοσίευση..." : "Δημιουργία πεζοπορίας"}
-                  </button>
+                  <div className="formActions">
+                    <button className="submit" type="submit" disabled={submitting}>
+                      {submitting ? "Αποθήκευση..." : editingHike ? "Αποθήκευση αλλαγών" : "Δημιουργία πεζοπορίας"}
+                    </button>
+                    {editingHike && (
+                      <button
+                        className="cancelEditButton"
+                        type="button"
+                        onClick={() => { setEditingHike(null); setView("home"); }}
+                      >
+                        Ακύρωση
+                      </button>
+                    )}
+                  </div>
                 </form>
               )}
             </section>
