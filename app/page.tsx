@@ -141,11 +141,11 @@ const monthNames = ["ΙΑΝ", "ΦΕΒ", "ΜΑΡ", "ΑΠΡ", "ΜΑΪ", "ΙΟΥΝ"
 
 const featuredHikePhotos: Record<string, string[]> = {
   "Δίρφυς — Κορυφή Δέλφη": [
-    "/dirfys/02-trail.avif",
-    "/dirfys/01-cover.avif",
-    "/dirfys/03-rest.avif",
-    "/dirfys/04-climb.avif",
-    "/dirfys/05-fog.avif"
+    "/dirfys/02-trail.webp",
+    "/dirfys/04-climb.webp",
+    "/dirfys/01-cover.webp",
+    "/dirfys/03-rest.webp",
+    "/dirfys/05-fog.webp"
   ]
 };
 
