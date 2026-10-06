@@ -997,7 +997,7 @@ export default function Home() {
           <div className="brand">
             <div className="brandMark">△</div>
             <div className="brandText">
-              HIKING
+              HikeMazi
               <small>find your trail people</small>
             </div>
           </div>
@@ -1029,7 +1029,7 @@ export default function Home() {
                 <p className="subtitle">
                   {view === "home"
                     ? "Βρες την επόμενη πεζοπορία και την ομάδα που σου ταιριάζει."
-                    : "Πρώτη λειτουργική έκδοση του hiking community."}
+                    : "Το HikeMazi community για πεζοπορίες και παρέα."}
                 </p>
               </div>
               <button className="avatarButton" onClick={() => setView("profile")}>
@@ -1046,12 +1046,15 @@ export default function Home() {
             <>
               <section className="hero">
                 <div className="mobileHomeBrand">
-                  <button className="mobileMountainLogo" aria-label="Αρχική" onClick={() => setView("home")}>
-                    <svg viewBox="0 0 32 32" aria-hidden="true">
-                      <path d="M3 25 12.2 9.5l4.4 7.2L20.2 11 29 25H3Z" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"/>
-                      <path d="m9.7 13.7 2.5 3.2 2-2.1" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
+                  <div className="mobileBrandIdentity">
+                    <button className="mobileMountainLogo" aria-label="Αρχική" onClick={() => setView("home")}>
+                      <svg viewBox="0 0 32 32" aria-hidden="true">
+                        <path d="M3 25 12.2 9.5l4.4 7.2L20.2 11 29 25H3Z" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"/>
+                        <path d="m9.7 13.7 2.5 3.2 2-2.1" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                    <span className="mobileWordmark">HikeMazi</span>
+                  </div>
                   <div className="mobileBrandActions">
                     <button aria-label="Αναζήτηση" onClick={() => document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" })}>
                       <svg viewBox="0 0 24 24" aria-hidden="true">
