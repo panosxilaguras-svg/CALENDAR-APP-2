@@ -596,6 +596,16 @@ export default function Home() {
   }
 
   useEffect(() => {
+    if (!user) return;
+
+    const timer = window.setInterval(() => {
+      loadMyJoinRequests(user.id);
+    }, 6000);
+
+    return () => window.clearInterval(timer);
+  }, [user]);
+
+  useEffect(() => {
     if (view !== "messages" || !user) return;
 
     loadChatGroups(user.id);
@@ -850,17 +860,24 @@ export default function Home() {
       return;
     }
 
-    const { error } = await supabase.from("join_requests").insert({
-      hike_id: hike.id,
-      user_id: user.id
-    });
+    const existing = myJoinRequests[hike.id];
+
+    const { error } = existing
+      ? await supabase
+          .from("join_requests")
+          .update({
+            status: "pending",
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", existing.id)
+          .eq("user_id", user.id)
+      : await supabase.from("join_requests").insert({
+          hike_id: hike.id,
+          user_id: user.id
+        });
 
     if (error) {
-      if (error.code === "23505") {
-        showToast("Έχεις ήδη στείλει αίτημα γι' αυτή την πεζοπορία.");
-      } else {
-        showToast(`Δεν στάλθηκε: ${error.message}`);
-      }
+      showToast(`Δεν στάλθηκε: ${error.message}`);
       return;
     }
 
