@@ -5026,3 +5026,23 @@ h1 {
     max-width: 86%;
   }
 }
+
+
+/* Whole hike cards are tappable/clickable */
+.hikeCard,
+.exploreCard {
+  cursor: pointer;
+}
+
+.hikeCard:focus-visible,
+.exploreCard:focus-visible {
+  outline: 3px solid rgba(242,102,53,.35);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hikeCard:hover,
+  .exploreCard:hover {
+    transform: translateY(-2px);
+  }
+}
