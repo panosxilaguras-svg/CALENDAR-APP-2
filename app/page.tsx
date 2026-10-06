@@ -753,6 +753,12 @@ export default function Home() {
     const maxRaw = String(form.get("maxParticipants") ?? "").trim();
     const description = String(form.get("description") ?? "").trim();
     const meetingPoint = String(form.get("meetingPoint") ?? "").trim();
+    const communityAgreement = form.get("communityAgreement") === "on";
+
+    if (!communityAgreement) {
+      showToast("Για να δημοσιεύσεις, επιβεβαίωσε ότι πρόκειται για κοινωνική συνάντηση και όχι επαγγελματική υπηρεσία.");
+      return;
+    }
 
     if (!title || !date || !time || !location) {
       showToast("Συμπλήρωσε τα βασικά πεδία.");
@@ -781,6 +787,8 @@ export default function Home() {
       distance_km: distanceRaw ? Number(distanceRaw) : null,
       max_participants: maxRaw ? Number(maxRaw) : null,
       meeting_point: meetingPoint || null,
+      meeting_type: "social",
+      community_terms_accepted_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
@@ -806,7 +814,7 @@ export default function Home() {
     const wasEditing = Boolean(editingHike?.id);
     setEditingHike(null);
     setView("home");
-    showToast(wasEditing ? "Οι αλλαγές αποθηκεύτηκαν ✓" : "Η πεζοπορία σας δημιουργήθηκε ✓");
+    showToast(wasEditing ? "Οι αλλαγές αποθηκεύτηκαν ✓" : "Η πεζοπορική συνάντηση δημοσιεύτηκε ✓");
     void loadHikes();
   }
 
@@ -1082,7 +1090,7 @@ export default function Home() {
                       ⌕&nbsp;&nbsp; Βρες πεζοπορία
                     </button>
                     <button className="secondary" onClick={openNewHike}>
-                      ＋&nbsp;&nbsp; Οργάνωσε μία
+                      ＋&nbsp;&nbsp; Φτιάξε παρέα
                     </button>
                   </div>
                 </div>
@@ -1205,7 +1213,7 @@ export default function Home() {
                               disabled={Boolean(hike.maxParticipants && hike.people >= hike.maxParticipants)}
                               onClick={(event) => { event.stopPropagation(); requestJoin(hike); }}
                             >
-                              {hike.maxParticipants && hike.people >= hike.maxParticipants ? "Γεμάτη" : "Θέλω να μπω"}
+                              {hike.maxParticipants && hike.people >= hike.maxParticipants ? "Γεμάτη" : "Μπες στην παρέα"}
                             </button>
                           )}
                         </div>
@@ -1302,7 +1310,7 @@ export default function Home() {
                               initials(hike.organizerName || "Π")
                             )}
                           </span>
-                          <span>{hike.organizerName || (hike.demo ? "Οργανωτής" : "Πεζοπόρος")}</span>
+                          <span>{hike.organizerName || (hike.demo ? "Πεζοπόρος" : "Πεζοπόρος")}</span>
                         </button>
                         <span className="exploreLocation">⌖ {hike.location}</span>
                       </div>
@@ -1383,7 +1391,7 @@ export default function Home() {
                     )}
                   </span>
                   <span className="detailOrganizerText">
-                    <small>Διοργανωτής</small>
+                    <small>Ξεκίνησε την παρέα</small>
                     <strong>{selectedHike.organizerName || "Πεζοπόρος"}</strong>
                   </span>
                   <span className="detailOrganizerArrow">›</span>
@@ -1399,9 +1407,17 @@ export default function Home() {
                   </section>
                 )}
 
+                <section className="communityNotice compact">
+                  <strong>Κοινωνική πεζοπορική συνάντηση</strong>
+                  <p>
+                    Το HikeMazi φέρνει ανθρώπους σε επαφή για να πεζοπορούν μαζί. Η ανάρτηση δεν αποτελεί επαγγελματική ξενάγηση ή υπηρεσία συνοδείας και το μέλος που ξεκίνησε την παρέα δεν αναλαμβάνει, μόνο από αυτή την ιδιότητα, ρόλο επαγγελματία οδηγού.
+                  </p>
+                  <a href="/safety">Ασφάλεια & κανόνες</a>
+                </section>
+
                 <section className="detailSection">
                   <h3>Περιγραφή</h3>
-                  <p>{selectedHike.description || "Ο διοργανωτής δεν έχει προσθέσει ακόμη περιγραφή για αυτή την πεζοπορία."}</p>
+                  <p>{selectedHike.description || "Δεν έχει προστεθεί ακόμη περιγραφή για αυτή την πεζοπορική συνάντηση."}</p>
                 </section>
 
                 <section className="detailSection">
@@ -1515,14 +1531,14 @@ export default function Home() {
               <div className="createTopbar">
                 <button className="createBackButton" type="button" onClick={() => setView("home")} aria-label="Πίσω">×</button>
                 <div>
-                  <p>{editingHike ? "Επεξεργασία" : "Νέα πεζοπορία"}</p>
-                  <h2>{editingHike ? "Επεξεργάσου την πεζοπορία" : "Δημιούργησε πεζοπορία"}</h2>
+                  <p>{editingHike ? "Επεξεργασία" : "Νέα συνάντηση"}</p>
+                  <h2>{editingHike ? "Επεξεργάσου τη συνάντηση" : "Φτιάξε πεζοπορική παρέα"}</h2>
                 </div>
               </div>
 
               {!user ? (
                 <div className="createLoginState">
-                  <p>Χρειάζεται να συνδεθείς για να οργανώσεις πεζοπορία.</p>
+                  <p>Χρειάζεται να συνδεθείς για να φτιάξεις πεζοπορική συνάντηση.</p>
                   <a className="createPrimaryButton authLink" href="/auth">Σύνδεση / Εγγραφή</a>
                 </div>
               ) : (
@@ -1598,6 +1614,23 @@ export default function Home() {
                     </div>
                   </section>
 
+                  <section className="communityNotice">
+                    <strong>Το HikeMazi είναι για παρέες, όχι για επαγγελματικές εκδρομές</strong>
+                    <p>
+                      Δημιουργείς μια κοινωνική συνάντηση μεταξύ χρηστών. Δεν επιτρέπεται μέσω αυτής της ανάρτησης χρέωση για συμμετοχή, ξενάγηση, καθοδήγηση ή οργανωμένη εκδρομή.
+                    </p>
+                    <label className="communityAgreement">
+                      <input name="communityAgreement" type="checkbox" required />
+                      <span>
+                        Επιβεβαιώνω ότι η συνάντηση είναι κοινωνική και μη εμπορική, ότι δεν παρουσιάζομαι μέσω της ανάρτησης ως επαγγελματίας οδηγός/συνοδός και ότι κάθε μέλος αξιολογεί μόνο του διαδρομή, καιρό, εξοπλισμό και φυσική κατάσταση.
+                      </span>
+                    </label>
+                    <div className="communityLegalLinks">
+                      <a href="/terms">Όροι χρήσης</a>
+                      <a href="/safety">Ασφάλεια & κανόνες</a>
+                    </div>
+                  </section>
+
                   <section className="createPhotoPlaceholder">
                     <div className="createPhotoIcon">＋</div>
                     <div>
@@ -1608,7 +1641,7 @@ export default function Home() {
 
                   <div className="createActions">
                     <button className="createPrimaryButton" type="submit" disabled={submitting}>
-                      {submitting ? "Αποθήκευση..." : editingHike ? "Αποθήκευση αλλαγών" : "Δημιουργία πεζοπορίας"}
+                      {submitting ? "Αποθήκευση..." : editingHike ? "Αποθήκευση αλλαγών" : "Δημοσίευση συνάντησης"}
                     </button>
                     {editingHike && (
                       <button className="createCancelButton" type="button" onClick={() => { setEditingHike(null); setView("home"); }}>
@@ -1640,7 +1673,7 @@ export default function Home() {
               ) : chatGroups.length === 0 ? (
                 <div className="messagesEmptyCard">
                   <strong>Δεν έχεις ομαδική συνομιλία ακόμη</strong>
-                  <p>Μόλις εγκριθείς σε μια πεζοπορία — ή οργανώσεις τη δική σου — η ομάδα θα εμφανιστεί εδώ.</p>
+                  <p>Μόλις εγκριθείς σε μια πεζοπορία — ή ξεκινήσεις τη δική σου παρέα — η ομάδα θα εμφανιστεί εδώ.</p>
                   <button className="createPrimaryButton" onClick={() => setView("explore")}>Βρες πεζοπορία</button>
                 </div>
               ) : (
@@ -1660,7 +1693,7 @@ export default function Home() {
                             {group.memberCount} μέλη · {new Date(group.startsAt).toLocaleDateString("el-GR", { day: "numeric", month: "short" })}
                           </small>
                         </span>
-                        <span className="groupChatRole">{group.role === "organizer" ? "Οργανώνεις" : "Μέλος"}</span>
+                        <span className="groupChatRole">{group.role === "organizer" ? "Ξεκίνησες την παρέα" : "Μέλος"}</span>
                       </button>
                     ))}
                   </aside>
@@ -1763,7 +1796,7 @@ export default function Home() {
                   </div>
 
                   <div className="badgeRow">
-                    <span className="infoBadge">🥾 {realHikes.filter((hike) => hike.organizerId === user.id).length} οργανωμένες</span>
+                    <span className="infoBadge">🥾 {realHikes.filter((hike) => hike.organizerId === user.id).length} παρέες ξεκίνησες</span>
                     <span className="infoBadge">📨 {incomingRequests.length} νέα αιτήματα</span>
                     <span className="infoBadge">💬 {chatGroups.length} groups</span>
                   </div>
@@ -1807,6 +1840,11 @@ export default function Home() {
                       </button>
                     </div>
                   </form>
+
+                  <div className="profileLegalLinks">
+                    <a href="/terms">Όροι χρήσης</a>
+                    <a href="/safety">Ασφάλεια & κανόνες</a>
+                  </div>
 
                   <div className="requestPanel">
                     <h3>Αιτήματα συμμετοχής</h3>
