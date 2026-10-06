@@ -1057,3 +1057,59 @@ h1 {
   opacity: .55;
   cursor: wait;
 }
+
+
+.ownerActions {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+
+.editHikeButton {
+  border: 1px solid var(--line);
+  background: #edf2e9;
+  color: var(--forest);
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.editHikeButton:hover {
+  background: #e3ebde;
+}
+
+.formActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.formActions .submit {
+  margin-top: 0;
+}
+
+.cancelEditButton {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  padding: 13px 18px;
+  border-radius: 14px;
+  font-weight: 900;
+}
+
+@media (max-width: 520px) {
+  .ownerActions {
+    width: 100%;
+  }
+
+  .ownerActions button {
+    flex: 1;
+  }
+
+  .peopleRow {
+    align-items: flex-end;
+  }
+}
