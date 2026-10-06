@@ -1037,3 +1037,23 @@ h1 {
     flex: 1;
   }
 }
+
+
+.deleteHikeButton {
+  border: 1px solid rgba(151, 64, 64, 0.18);
+  background: #fff5f3;
+  color: #8a3f3f;
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.deleteHikeButton:hover {
+  background: #fbe9e5;
+}
+
+.deleteHikeButton:disabled {
+  opacity: .55;
+  cursor: wait;
+}
