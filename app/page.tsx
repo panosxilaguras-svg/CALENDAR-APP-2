@@ -169,6 +169,7 @@ function dbHikeToCard(hike: DbHike): Hike {
 export default function Home() {
   const [view, setView] = useState<View>("home");
   const [filter, setFilter] = useState("Όλες");
+  const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [realHikes, setRealHikes] = useState<Hike[]>([]);
@@ -615,12 +616,22 @@ export default function Home() {
     }
   }, [view, selectedChatId]);
 
-  const allHikes = useMemo(() => [...realHikes, ...demoHikes], [realHikes]);
+  const allHikes = useMemo(
+    () => realHikes.length > 0 ? realHikes : demoHikes,
+    [realHikes]
+  );
 
   const visibleHikes = useMemo(() => {
-    if (filter === "Όλες") return allHikes;
-    return allHikes.filter((hike) => hike.difficulty === filter);
-  }, [allHikes, filter]);
+    const query = search.trim().toLocaleLowerCase("el-GR");
+    return allHikes.filter((hike) => {
+      const matchesDifficulty = filter === "Όλες" || hike.difficulty === filter;
+      const matchesSearch =
+        !query ||
+        hike.title.toLocaleLowerCase("el-GR").includes(query) ||
+        hike.location.toLocaleLowerCase("el-GR").includes(query);
+      return matchesDifficulty && matchesSearch;
+    });
+  }, [allHikes, filter, search]);
 
   function showToast(message: string) {
     setToast(message);
@@ -977,7 +988,7 @@ export default function Home() {
 
               <section className="stats">
                 <div className="stat"><strong>{realHikes.length}</strong><span>πραγματικές ανοιχτές πεζοπορίες</span></div>
-                <div className="stat"><strong>{realHikes.length + demoHikes.length}</strong><span>διαθέσιμες στο MVP</span></div>
+                <div className="stat"><strong>{realHikes.reduce((sum, hike) => sum + hike.people, 0)}</strong><span>άτομα σε live ομάδες</span></div>
                 <div className="stat"><strong>{user ? "✓" : "—"}</strong><span>{user ? "είσαι συνδεδεμένος" : "σύνδεση για συμμετοχή"}</span></div>
               </section>
 
@@ -987,16 +998,24 @@ export default function Home() {
                     <h2>Επόμενες πεζοπορίες</h2>
                     <p>{loadingHikes ? "Φορτώνουμε τις πραγματικές πεζοπορίες..." : "Οι νέες δημοσιεύσεις έρχονται live από το Supabase."}</p>
                   </div>
-                  <div className="filters">
-                    {["Όλες", "Εύκολη", "Μέτρια", "Δύσκολη"].map((item) => (
-                      <button
-                        key={item}
-                        className={`chip ${filter === item ? "active" : ""}`}
-                        onClick={() => setFilter(item)}
-                      >
-                        {item}
-                      </button>
-                    ))}
+                  <div className="browseControls">
+                    <input
+                      className="hikeSearch"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Αναζήτηση βουνού ή περιοχής..."
+                    />
+                    <div className="filters">
+                      {["Όλες", "Εύκολη", "Μέτρια", "Δύσκολη"].map((item) => (
+                        <button
+                          key={item}
+                          className={`chip ${filter === item ? "active" : ""}`}
+                          onClick={() => setFilter(item)}
+                        >
+                          {item}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -1070,6 +1089,11 @@ export default function Home() {
                       </div>
                     </article>
                   ))}
+                {visibleHikes.length === 0 && (
+                  <div className="emptySearch">
+                    Δεν βρήκαμε πεζοπορία με αυτά τα φίλτρα.
+                  </div>
+                )}
                 </div>
               </section>
             </>
