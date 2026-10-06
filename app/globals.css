@@ -4366,3 +4366,663 @@ h1 {
     display: none;
   }
 }
+
+
+/* =========================================================
+   Create hike — clean mobile flow
+   ========================================================= */
+.createPage {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.createTopbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.createBackButton {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 22px;
+}
+
+.createTopbar p {
+  margin: 1px 0 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.createTopbar h2 {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.04;
+  letter-spacing: -.045em;
+}
+
+.createForm {
+  display: grid;
+  gap: 12px;
+}
+
+.createSection {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(17,23,19,.07);
+  border-radius: 18px;
+  background: var(--paper);
+}
+
+.createField {
+  display: grid;
+  gap: 7px;
+}
+
+.createField > span {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: #2b352e;
+}
+
+.createField input,
+.createField textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(17,23,19,.10);
+  border-radius: 12px;
+  background: #f6f4ef;
+  color: var(--ink);
+  padding: 13px 14px;
+  outline: 0;
+  font: inherit;
+  font-size: 13px;
+}
+
+.createField input:focus,
+.createField textarea:focus {
+  border-color: rgba(23,51,33,.40);
+  box-shadow: 0 0 0 3px rgba(169,201,151,.17);
+}
+
+.createField textarea {
+  resize: vertical;
+}
+
+.createField small {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.createTwoCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.createDifficulty {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 8px;
+}
+
+.createDifficulty label {
+  cursor: pointer;
+}
+
+.createDifficulty input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.createDifficulty span {
+  min-height: 42px;
+  border: 1px solid rgba(17,23,19,.09);
+  border-radius: 999px;
+  background: #f3f1eb;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.createDifficulty input:checked + span {
+  border-color: #f26635;
+  background: #fff0e9;
+  color: #bf512c;
+}
+
+.createPhotoPlaceholder {
+  min-height: 105px;
+  padding: 18px;
+  border: 1px dashed rgba(23,51,33,.22);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  background: #f0f2eb;
+}
+
+.createPhotoIcon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: white;
+  color: var(--forest);
+  font-size: 22px;
+}
+
+.createPhotoPlaceholder strong {
+  display: block;
+  font-size: 13px;
+}
+
+.createPhotoPlaceholder p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.createActions {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.createPrimaryButton,
+.createCancelButton {
+  min-height: 50px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.createPrimaryButton {
+  background: var(--forest);
+  color: white;
+}
+
+.createCancelButton {
+  background: #eceae4;
+  color: var(--muted);
+}
+
+.createLoginState {
+  padding: 22px;
+  border-radius: 18px;
+  background: var(--paper);
+}
+
+.createLoginState p {
+  margin: 0 0 14px;
+  color: var(--muted);
+}
+
+/* =========================================================
+   Group chat — accepted participants only
+   ========================================================= */
+.messagesPage {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.messagesPageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 17px;
+}
+
+.messagesPageHeader p {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.messagesPageHeader h2 {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: -.05em;
+}
+
+.messagesLiveBadge {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #e3efdf;
+  color: var(--forest);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.messagesEmptyCard {
+  padding: 24px;
+  border: 1px solid rgba(17,23,19,.07);
+  border-radius: 18px;
+  background: var(--paper);
+}
+
+.messagesEmptyCard strong {
+  display: block;
+  font-size: 16px;
+}
+
+.messagesEmptyCard p {
+  margin: 6px 0 16px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.groupChatShell {
+  display: grid;
+  grid-template-columns: 270px minmax(0,1fr);
+  min-height: 560px;
+  overflow: hidden;
+  border: 1px solid rgba(17,23,19,.07);
+  border-radius: 20px;
+  background: var(--paper);
+}
+
+.groupChatList {
+  padding: 12px;
+  border-right: 1px solid var(--line);
+  background: #f0eee8;
+}
+
+.groupChatListTitle {
+  padding: 8px 8px 10px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.groupChatItem {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 38px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+
+.groupChatItem + .groupChatItem {
+  margin-top: 5px;
+}
+
+.groupChatItem.active {
+  background: white;
+}
+
+.groupChatIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: var(--forest);
+  color: white;
+  font-size: 12px;
+}
+
+.groupChatItemText {
+  min-width: 0;
+}
+
+.groupChatItemText strong,
+.groupChatItemText small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.groupChatItemText strong {
+  font-size: 11px;
+}
+
+.groupChatItemText small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 8.5px;
+}
+
+.groupChatRole {
+  padding: 5px 7px;
+  border-radius: 999px;
+  background: #e8ece5;
+  color: var(--forest);
+  font-size: 7.5px;
+  font-weight: 850;
+}
+
+.groupChatPane {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(320px,1fr) auto;
+}
+
+.groupChatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.groupChatHeader > div {
+  min-width: 0;
+}
+
+.groupChatHeader small,
+.groupChatHeader strong,
+.groupChatHeader span {
+  display: block;
+}
+
+.groupChatHeader small {
+  color: var(--muted);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.groupChatHeader strong {
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.groupChatHeader span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.groupChatHeader > button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  color: var(--forest);
+  padding: 0 11px;
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.groupChatHeader > button:disabled {
+  opacity: .45;
+}
+
+.groupChatMessages {
+  min-height: 0;
+  max-height: 520px;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #faf9f5;
+}
+
+.groupChatEmpty {
+  margin: auto;
+  max-width: 260px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.groupChatEmpty > span {
+  font-size: 28px;
+}
+
+.groupChatEmpty strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.groupChatEmpty p {
+  margin: 6px 0 0;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.groupMessage {
+  max-width: min(76%, 520px);
+  align-self: flex-start;
+  padding: 10px 12px;
+  border-radius: 15px 15px 15px 5px;
+  background: white;
+  border: 1px solid rgba(17,23,19,.07);
+}
+
+.groupMessage.mine {
+  align-self: flex-end;
+  background: var(--forest);
+  color: white;
+  border-color: var(--forest);
+  border-radius: 15px 15px 5px 15px;
+}
+
+.groupMessageMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.groupMessageMeta strong {
+  font-size: 9px;
+}
+
+.groupMessageMeta span {
+  font-size: 8px;
+  opacity: .62;
+}
+
+.groupMessage p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.48;
+  overflow-wrap: anywhere;
+}
+
+.groupChatComposer {
+  display: grid;
+  grid-template-columns: 1fr 44px;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--line);
+  background: white;
+}
+
+.groupChatComposer input {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f4f2ed;
+  padding: 0 15px;
+  font-size: 13px;
+  outline: 0;
+}
+
+.groupChatComposer input:focus {
+  border-color: rgba(23,51,33,.38);
+}
+
+.groupChatComposer button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: #f26635;
+  color: white;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.detailMeetingPoint {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 15px;
+  background: #eef1e9;
+  color: var(--forest);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.detailMeetingPoint > span {
+  font-size: 20px;
+}
+
+.detailMeetingPoint small,
+.detailMeetingPoint strong {
+  display: block;
+}
+
+.detailMeetingPoint small {
+  color: var(--muted);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.detailMeetingPoint strong {
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+@media (max-width: 820px) {
+  .createPage,
+  .messagesPage {
+    padding-top: 14px;
+  }
+
+  .createSection {
+    padding: 15px;
+    border-radius: 16px;
+  }
+
+  .groupChatShell {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    border-radius: 16px;
+  }
+
+  .groupChatList {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    scrollbar-width: none;
+  }
+
+  .groupChatListTitle {
+    display: none;
+  }
+
+  .groupChatItem {
+    flex: 0 0 235px;
+    grid-template-columns: 36px minmax(0,1fr);
+    background: #f7f5ef;
+  }
+
+  .groupChatItem.active {
+    box-shadow: inset 0 0 0 1px rgba(23,51,33,.12);
+  }
+
+  .groupChatRole {
+    display: none;
+  }
+
+  .groupChatPane {
+    grid-template-rows: auto 410px auto;
+  }
+
+  .groupChatMessages {
+    max-height: 410px;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 430px) {
+  .createTopbar h2 {
+    font-size: 27px;
+  }
+
+  .createTwoCols {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .createDifficulty {
+    gap: 6px;
+  }
+
+  .createDifficulty span {
+    min-height: 40px;
+    font-size: 10px;
+  }
+
+  .messagesPageHeader h2 {
+    font-size: 29px;
+  }
+
+  .groupChatItem {
+    flex-basis: 215px;
+  }
+
+  .groupChatHeader {
+    padding: 12px;
+  }
+
+  .groupChatMessages {
+    min-height: 360px;
+  }
+
+  .groupMessage {
+    max-width: 86%;
+  }
+}
