@@ -2717,3 +2717,336 @@ h1 {
     bottom: max(8px, env(safe-area-inset-bottom));
   }
 }
+
+
+/* =========================================================
+   Home v3 — mockup-matched mobile experience
+   ========================================================= */
+
+.mobileHomeBrand {
+  display: none;
+}
+
+.hero {
+  background:
+    linear-gradient(90deg, rgba(250,248,241,.98) 0%, rgba(250,248,241,.93) 30%, rgba(250,248,241,.58) 52%, rgba(250,248,241,.05) 76%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(15,35,23,.12)),
+    url("https://commons.wikimedia.org/wiki/Special:Redirect/file/Sunrise_hiking_views_%28Unsplash%29.jpg");
+  background-size: cover;
+  background-position: center 54%;
+  color: var(--forest);
+  border: 0;
+}
+
+.hero::before,
+.hero::after {
+  display: none;
+}
+
+.heroCopy {
+  max-width: 540px;
+}
+
+.heroEyebrow {
+  color: var(--forest-2) !important;
+}
+
+.hero h2 {
+  color: #153321;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 800;
+  letter-spacing: -0.075em;
+}
+
+.hero p {
+  color: #35443b;
+  font-weight: 600;
+}
+
+.hero .primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 10px 22px rgba(239,106,58,.22);
+}
+
+.hero .secondary {
+  background: rgba(255,254,250,.92);
+  color: var(--forest);
+  border: 1px solid rgba(21,51,33,.10);
+  box-shadow: 0 8px 22px rgba(18,32,23,.08);
+}
+
+.statIcon {
+  display: inline-flex;
+  min-height: 18px;
+  align-items: center;
+  color: var(--forest);
+  font-size: 13px;
+  letter-spacing: -4px;
+}
+
+.popularSection {
+  margin-top: 34px;
+}
+
+.popularHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 13px;
+}
+
+.popularHeader h2 {
+  margin: 0;
+  font-size: 23px;
+  letter-spacing: -0.04em;
+}
+
+.popularHeader button {
+  border: 0;
+  background: transparent;
+  color: var(--forest-2);
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.popularRoutes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 10px;
+}
+
+.popularRoute {
+  position: relative;
+  min-height: 145px;
+  border: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, transparent 35%, rgba(13,29,19,.70) 100%),
+    url("https://commons.wikimedia.org/wiki/Special:Redirect/file/Sunrise_hiking_views_%28Unsplash%29.jpg");
+  background-size: cover;
+  color: white;
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(18,32,23,.10);
+}
+
+.popularRouteOne { background-position: 22% 55%; }
+.popularRouteTwo { background-position: 55% 58%; }
+.popularRouteThree { background-position: 82% 50%; }
+
+.popularRoute span {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 11px;
+  font-size: 14px;
+  font-weight: 900;
+  text-shadow: 0 2px 9px rgba(0,0,0,.26);
+}
+
+@media (max-width: 820px) {
+  .homeTopbar {
+    display: none;
+  }
+
+  .mobileHomeBrand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 4px 2px 16px;
+  }
+
+  .mobileBrandLockup {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--forest);
+    font-size: 12px;
+    font-weight: 950;
+    line-height: .92;
+    letter-spacing: -.03em;
+  }
+
+  .mobileBrandMark {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 13px;
+    background: var(--forest);
+    color: #e6f1d2;
+    font-size: 17px;
+  }
+
+  .mobileBrandActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobileBrandActions button {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: rgba(255,254,250,.88);
+    color: var(--forest);
+    font-weight: 900;
+    box-shadow: 0 6px 18px rgba(18,32,23,.06);
+  }
+
+  .mobileBrandActions img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero {
+    min-height: 500px;
+    padding: 34px 22px 24px;
+    display: flex;
+    align-items: flex-start;
+    background:
+      linear-gradient(180deg, rgba(250,248,241,.96) 0%, rgba(250,248,241,.82) 31%, rgba(250,248,241,.18) 58%, rgba(17,36,24,.24) 100%),
+      url("https://commons.wikimedia.org/wiki/Special:Redirect/file/Sunrise_hiking_views_%28Unsplash%29.jpg");
+    background-size: cover;
+    background-position: center 55%;
+  }
+
+  .heroCopy {
+    width: 100%;
+  }
+
+  .heroEyebrow {
+    font-size: 9px;
+    letter-spacing: .13em;
+  }
+
+  .hero h2 {
+    max-width: 290px;
+    font-size: 64px;
+    line-height: .84;
+    margin: 16px 0 16px;
+  }
+
+  .hero p {
+    width: min(85%, 340px);
+    font-size: 14px;
+    line-height: 1.42;
+  }
+
+  .heroActions {
+    position: absolute;
+    left: 22px;
+    right: 22px;
+    bottom: 24px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .heroActions .primary,
+  .heroActions .secondary {
+    min-height: 48px;
+    border-radius: 999px;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    overflow: visible;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 0;
+  }
+
+  .stat {
+    min-width: 0;
+    min-height: 116px;
+    padding: 13px 10px 12px;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .stat strong {
+    margin-top: 5px;
+    font-size: 27px;
+  }
+
+  .stat span:not(.statIcon) {
+    margin-top: auto;
+    font-size: 8.5px;
+    line-height: 1.35;
+    letter-spacing: .045em;
+  }
+
+  .popularSection {
+    margin-top: 30px;
+  }
+
+  .popularHeader h2 {
+    font-size: 22px;
+  }
+
+  .popularRoutes {
+    gap: 8px;
+  }
+
+  .popularRoute {
+    min-height: 122px;
+    border-radius: 14px;
+  }
+
+  .popularRoute span {
+    font-size: 12px;
+    left: 10px;
+    bottom: 9px;
+  }
+
+  .sectionHeader {
+    margin-top: 32px;
+  }
+}
+
+@media (max-width: 430px) {
+  .hero {
+    min-height: 520px;
+    padding: 30px 18px 20px;
+  }
+
+  .hero h2 {
+    font-size: 58px;
+    max-width: 265px;
+  }
+
+  .heroActions {
+    left: 18px;
+    right: 18px;
+    bottom: 18px;
+  }
+
+  .stats {
+    gap: 7px;
+  }
+
+  .stat {
+    min-height: 110px;
+    padding: 11px 8px;
+  }
+
+  .stat strong {
+    font-size: 25px;
+  }
+
+  .popularRoute {
+    min-height: 112px;
+  }
+}
