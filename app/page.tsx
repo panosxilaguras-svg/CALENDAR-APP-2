@@ -1012,24 +1012,23 @@ export default function Home() {
 
           {view === "home" && (
             <>
-              <div className="mobileHomeBrand">
-                <div className="mobileBrandLockup">
-                  <span className="mobileBrandMark">▲</span>
-                  <span>MAZI<br />TRAILS</span>
-                </div>
-                <div className="mobileBrandActions">
-                  <button aria-label="Αναζήτηση" onClick={() => document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" })}>⌕</button>
-                  <button aria-label="Προφίλ" onClick={() => setView("profile")}>
-                    {profile?.avatarUrl ? (
-                      <img src={avatarPublicUrl(profile.avatarUrl) ?? ""} alt="" />
-                    ) : (
-                      initials(profile?.displayName || user?.email?.split("@")[0] || "PX").toUpperCase()
-                    )}
-                  </button>
-                </div>
-              </div>
-
               <section className="hero">
+                <div className="mobileHomeBrand">
+                  <div className="mobileBrandLockup">
+                    <span className="mobileBrandMark">▲</span>
+                    <span>MAZI<br />TRAILS</span>
+                  </div>
+                  <div className="mobileBrandActions">
+                    <button aria-label="Αναζήτηση" onClick={() => document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" })}>⌕</button>
+                    <button aria-label="Προφίλ" onClick={() => setView("profile")}>
+                      {profile?.avatarUrl ? (
+                        <img src={avatarPublicUrl(profile.avatarUrl) ?? ""} alt="" />
+                      ) : (
+                        initials(profile?.displayName || user?.email?.split("@")[0] || "PX").toUpperCase()
+                      )}
+                    </button>
+                  </div>
+                </div>
                 <div className="heroCopy">
                   <div className="eyebrow heroEyebrow">Βουνό · παρέα · εμπειρίες</div>
                   <h2>Πάμε<br />βουνό;</h2>
@@ -1067,7 +1066,7 @@ export default function Home() {
 
               <section className="popularSection">
                 <div className="popularHeader">
-                  <h2>Δημοφιλείς διαδρομές</h2>
+                  <h2>Δημοφιλείς προορισμοί</h2>
                   <button onClick={() => setView("map")}>Προβολή όλων →</button>
                 </div>
                 <div className="popularRoutes">
@@ -1113,7 +1112,7 @@ export default function Home() {
                 <div className="hikeGrid">
                   {visibleHikes.map((hike, index) => (
                     <article className="hikeCard" key={hike.id ?? `demo-${hike.title}`}>
-                      <div className="cardVisual" style={{ filter: `hue-rotate(${index * 9}deg)` }}>
+                      <div className="cardVisual">
                         <span className="cardBadge">{hike.demo ? `Demo · ${hike.difficulty}` : `Live · ${hike.difficulty}`}</span>
                         <span className="cardDate"><strong>{hike.day}</strong>{hike.month}</span>
                       </div>
