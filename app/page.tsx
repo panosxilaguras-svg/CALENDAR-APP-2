@@ -1048,17 +1048,14 @@ export default function Home() {
 
               <section className="stats">
                 <div className="stat">
-                  <span className="statIcon">♟</span>
                   <strong>{realHikes.length}</strong>
                   <span>Ανοιχτές<br />πεζοπορίες</span>
                 </div>
                 <div className="stat">
-                  <span className="statIcon">♟♟</span>
                   <strong>{realHikes.reduce((sum, hike) => sum + hike.people, 0)}</strong>
                   <span>Άτομα<br />στις ομάδες</span>
                 </div>
                 <div className="stat">
-                  <span className="statIcon">▲</span>
                   <strong>{user ? "✓" : "—"}</strong>
                   <span>{user ? "Συνδεδεμένος" : "Γίνε μέλος"}</span>
                 </div>
