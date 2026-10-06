@@ -22,6 +22,7 @@ type Hike = {
   description?: string | null;
   distanceKm?: number | null;
   maxParticipants?: number | null;
+  meetingPoint?: string | null;
   organizerName?: string;
   organizerAvatar?: string | null;
   demo?: boolean;
@@ -37,6 +38,7 @@ type DbHike = {
   distance_km: number | null;
   description: string | null;
   max_participants: number | null;
+  meeting_point: string | null;
 };
 
 type IncomingRequest = {
@@ -52,6 +54,7 @@ type ChatGroup = {
   title: string;
   startsAt: string;
   role: "organizer" | "participant";
+  memberCount: number;
 };
 
 type ChatMessage = {
@@ -162,7 +165,8 @@ function dbHikeToCard(hike: DbHike): Hike {
     startsAt: hike.starts_at,
     description: hike.description,
     distanceKm: hike.distance_km,
-    maxParticipants: hike.max_participants
+    maxParticipants: hike.max_participants,
+    meetingPoint: hike.meeting_point
   };
 }
 
@@ -233,7 +237,7 @@ export default function Home() {
 
     const { data, error } = await supabase
       .from("hikes")
-      .select("id, organizer_id, title, location_name, starts_at, difficulty, distance_km, description, max_participants")
+      .select("id, organizer_id, title, location_name, starts_at, difficulty, distance_km, description, max_participants, meeting_point")
       .eq("status", "open")
       .gte("starts_at", new Date().toISOString())
       .order("starts_at", { ascending: true })
@@ -462,6 +466,23 @@ export default function Home() {
       joinedHikes = data ?? [];
     }
 
+    const allGroupIds = [...new Set([
+      ...(ownedHikes ?? []).map((hike) => hike.id),
+      ...joinedHikes.map((hike) => hike.id)
+    ])];
+
+    let countByHike = new Map<string, number>();
+    if (allGroupIds.length) {
+      const { data: allParticipants } = await supabase
+        .from("participants")
+        .select("hike_id")
+        .in("hike_id", allGroupIds);
+
+      for (const row of allParticipants ?? []) {
+        countByHike.set(row.hike_id, (countByHike.get(row.hike_id) ?? 0) + 1);
+      }
+    }
+
     const groupMap = new Map<string, ChatGroup>();
 
     for (const hike of ownedHikes ?? []) {
@@ -469,7 +490,8 @@ export default function Home() {
         id: hike.id,
         title: hike.title,
         startsAt: hike.starts_at,
-        role: "organizer"
+        role: "organizer",
+        memberCount: 1 + (countByHike.get(hike.id) ?? 0)
       });
     }
 
@@ -479,7 +501,8 @@ export default function Home() {
           id: hike.id,
           title: hike.title,
           startsAt: hike.starts_at,
-          role: "participant"
+          role: "participant",
+          memberCount: 1 + (countByHike.get(hike.id) ?? 0)
         });
       }
     }
@@ -729,6 +752,7 @@ export default function Home() {
     const distanceRaw = String(form.get("distance") ?? "").trim();
     const maxRaw = String(form.get("maxParticipants") ?? "").trim();
     const description = String(form.get("description") ?? "").trim();
+    const meetingPoint = String(form.get("meetingPoint") ?? "").trim();
 
     if (!title || !date || !time || !location) {
       showToast("Συμπλήρωσε τα βασικά πεδία.");
@@ -756,6 +780,7 @@ export default function Home() {
       difficulty: mapDifficultyToDb(difficulty),
       distance_km: distanceRaw ? Number(distanceRaw) : null,
       max_participants: maxRaw ? Number(maxRaw) : null,
+      meeting_point: meetingPoint || null,
       updated_at: new Date().toISOString()
     };
 
@@ -1367,6 +1392,16 @@ export default function Home() {
                   <span className="detailOrganizerArrow">›</span>
                 </button>
 
+                {selectedHike.meetingPoint && (
+                  <section className="detailMeetingPoint">
+                    <span>⌖</span>
+                    <div>
+                      <small>Σημείο συνάντησης</small>
+                      <strong>{selectedHike.meetingPoint}</strong>
+                    </div>
+                  </section>
+                )}
+
                 <section className="detailSection">
                   <h3>Περιγραφή</h3>
                   <p>{selectedHike.description || "Ο διοργανωτής δεν έχει προσθέσει ακόμη περιγραφή για αυτή την πεζοπορία."}</p>
@@ -1479,69 +1514,107 @@ export default function Home() {
           )}
 
           {view === "new" && (
-            <section className="formCard">
-              <div className="sectionHeader" style={{ marginTop: 0 }}>
+            <section className="createPage">
+              <div className="createTopbar">
+                <button className="createBackButton" type="button" onClick={() => setView("home")} aria-label="Πίσω">×</button>
                 <div>
-                  <h2>{editingHike ? "Επεξεργασία πεζοπορίας" : "Οργάνωσε πεζοπορία"}</h2>
-                  <p>{user ? (editingHike ? "Άλλαξε ό,τι χρειάζεται και αποθήκευσε." : "Η δημοσίευση θα αποθηκευτεί πραγματικά στη βάση.") : "Συνδέσου πρώτα για να δημοσιεύσεις."}</p>
+                  <p>{editingHike ? "Επεξεργασία" : "Νέα πεζοπορία"}</p>
+                  <h2>{editingHike ? "Επεξεργάσου την πεζοπορία" : "Δημιούργησε πεζοπορία"}</h2>
                 </div>
               </div>
 
               {!user ? (
-                <>
-                  <p className="emptyNote">Η δημιουργία πεζοπορίας είναι διαθέσιμη μόνο σε συνδεδεμένους χρήστες.</p>
-                  <a className="submit authLink" href="/auth">Σύνδεση / Εγγραφή</a>
-                </>
+                <div className="createLoginState">
+                  <p>Χρειάζεται να συνδεθείς για να οργανώσεις πεζοπορία.</p>
+                  <a className="createPrimaryButton authLink" href="/auth">Σύνδεση / Εγγραφή</a>
+                </div>
               ) : (
-                <form key={editingHike?.id ?? "new-hike"} onSubmit={submitHike}>
-                  <div className="formGrid">
-                    <div className="field full">
-                      <label>Τίτλος</label>
-                      <input name="title" required defaultValue={editingHike?.title ?? ""} placeholder="π.χ. Πάρνηθα — Μπάφι & Φλαμπούρι" />
+                <form className="createForm" key={editingHike?.id ?? "new-hike"} onSubmit={submitHike}>
+                  <section className="createSection">
+                    <label className="createField full">
+                      <span>Τίτλος πεζοπορίας</span>
+                      <input name="title" required defaultValue={editingHike?.title ?? ""} placeholder="π.χ. Πάρνηθα — Μονή Κλειστών" />
+                    </label>
+
+                    <label className="createField full">
+                      <span>Περιγραφή</span>
+                      <textarea
+                        name="description"
+                        rows={5}
+                        defaultValue={editingHike?.description ?? ""}
+                        placeholder="Πες στην ομάδα τι να περιμένει, ρυθμό, εξοπλισμό, στάσεις..."
+                      />
+                    </label>
+                  </section>
+
+                  <section className="createSection">
+                    <label className="createField full">
+                      <span>Περιοχή</span>
+                      <input name="location" required defaultValue={editingHike?.location ?? ""} placeholder="π.χ. Πάρνηθα, Αττική" />
+                    </label>
+
+                    <label className="createField full">
+                      <span>Σημείο συνάντησης</span>
+                      <input name="meetingPoint" defaultValue={editingHike?.meetingPoint ?? ""} placeholder="π.χ. Parking τελεφερίκ / Καταφύγιο Μπάφι" />
+                      <small>Αυτό θα μας βοηθήσει αργότερα όταν συνδέσουμε τον χάρτη.</small>
+                    </label>
+
+                    <div className="createTwoCols">
+                      <label className="createField">
+                        <span>Ημερομηνία</span>
+                        <input name="date" required type="date" defaultValue={localDateValue(editingHike?.startsAt)} />
+                      </label>
+                      <label className="createField">
+                        <span>Ώρα</span>
+                        <input name="time" required type="time" defaultValue={localTimeValue(editingHike?.startsAt)} />
+                      </label>
                     </div>
-                    <div className="field">
-                      <label>Ημερομηνία</label>
-                      <input name="date" required type="date" defaultValue={localDateValue(editingHike?.startsAt)} />
+                  </section>
+
+                  <section className="createSection">
+                    <div className="createField full">
+                      <span>Δυσκολία</span>
+                      <div className="createDifficulty">
+                        {["Εύκολη", "Μέτρια", "Δύσκολη"].map((level) => (
+                          <label key={level}>
+                            <input
+                              type="radio"
+                              name="difficulty"
+                              value={level}
+                              defaultChecked={(editingHike?.difficulty ?? "Μέτρια") === level}
+                            />
+                            <span>{level}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                    <div className="field">
-                      <label>Ώρα έναρξης</label>
-                      <input name="time" required type="time" defaultValue={localTimeValue(editingHike?.startsAt)} />
+
+                    <div className="createTwoCols">
+                      <label className="createField">
+                        <span>Χιλιόμετρα</span>
+                        <input name="distance" type="number" min="0.1" step="0.1" defaultValue={editingHike?.distanceKm ?? ""} placeholder="8" />
+                      </label>
+                      <label className="createField">
+                        <span>Μέγιστα άτομα</span>
+                        <input name="maxParticipants" type="number" min="2" max="30" defaultValue={editingHike?.maxParticipants ?? ""} placeholder="10" />
+                      </label>
                     </div>
-                    <div className="field">
-                      <label>Περιοχή</label>
-                      <input name="location" required defaultValue={editingHike?.location ?? ""} placeholder="π.χ. Πάρνηθα" />
+                  </section>
+
+                  <section className="createPhotoPlaceholder">
+                    <div className="createPhotoIcon">＋</div>
+                    <div>
+                      <strong>Φωτογραφίες</strong>
+                      <p>Θα προσθέσουμε upload φωτογραφιών στο επόμενο pass.</p>
                     </div>
-                    <div className="field">
-                      <label>Δυσκολία</label>
-                      <select name="difficulty" defaultValue={editingHike?.difficulty ?? "Μέτρια"}>
-                        <option>Εύκολη</option>
-                        <option>Μέτρια</option>
-                        <option>Δύσκολη</option>
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label>Απόσταση (km)</label>
-                      <input name="distance" type="number" min="0.1" step="0.1" defaultValue={editingHike?.distanceKm ?? ""} placeholder="9.4" />
-                    </div>
-                    <div className="field">
-                      <label>Μέγιστα άτομα</label>
-                      <input name="maxParticipants" type="number" min="2" max="30" defaultValue={editingHike?.maxParticipants ?? ""} placeholder="8" />
-                    </div>
-                    <div className="field full">
-                      <label>Περιγραφή</label>
-                      <textarea name="description" rows={5} defaultValue={editingHike?.description ?? ""} placeholder="Τι πρέπει να ξέρει η ομάδα; Σημείο συνάντησης, εξοπλισμός, ρυθμός..." />
-                    </div>
-                  </div>
-                  <div className="formActions">
-                    <button className="submit" type="submit" disabled={submitting}>
+                  </section>
+
+                  <div className="createActions">
+                    <button className="createPrimaryButton" type="submit" disabled={submitting}>
                       {submitting ? "Αποθήκευση..." : editingHike ? "Αποθήκευση αλλαγών" : "Δημιουργία πεζοπορίας"}
                     </button>
                     {editingHike && (
-                      <button
-                        className="cancelEditButton"
-                        type="button"
-                        onClick={() => { setEditingHike(null); setView("home"); }}
-                      >
+                      <button className="createCancelButton" type="button" onClick={() => { setEditingHike(null); setView("home"); }}>
                         Ακύρωση
                       </button>
                     )}
@@ -1552,77 +1625,105 @@ export default function Home() {
           )}
 
           {view === "messages" && (
-            <section className="messagesCard">
-              <div className="sectionHeader" style={{ marginTop: 0 }}>
+            <section className="messagesPage">
+              <div className="messagesPageHeader">
                 <div>
-                  <h2>Ομαδικές συζητήσεις</h2>
-                  <p>Το group chat εμφανίζεται μόλις εγκριθεί η συμμετοχή.</p>
+                  <p>Η ομάδα σου στο βουνό</p>
+                  <h2>Συνομιλίες</h2>
                 </div>
+                <span className="messagesLiveBadge">Live</span>
               </div>
 
               {!user ? (
-                <div className="chatLoginBox">
-                  <p className="emptyNote">Συνδέσου για να δεις τα group chats των πεζοποριών σου.</p>
-                  <a className="submit authLink" href="/auth">Σύνδεση / Εγγραφή</a>
+                <div className="messagesEmptyCard">
+                  <strong>Συνδέσου για να δεις τις ομάδες σου</strong>
+                  <p>Τα group chats ανοίγουν μόνο για εγκεκριμένους συμμετέχοντες.</p>
+                  <a className="createPrimaryButton authLink" href="/auth">Σύνδεση / Εγγραφή</a>
                 </div>
               ) : chatGroups.length === 0 ? (
-                <p className="emptyNote">Δεν έχεις ενεργό group chat ακόμη. Μόλις οργανώσεις πεζοπορία ή εγκριθεί η συμμετοχή σου, θα εμφανιστεί εδώ.</p>
+                <div className="messagesEmptyCard">
+                  <strong>Δεν έχεις ομαδική συνομιλία ακόμη</strong>
+                  <p>Μόλις εγκριθείς σε μια πεζοπορία — ή οργανώσεις τη δική σου — η ομάδα θα εμφανιστεί εδώ.</p>
+                  <button className="createPrimaryButton" onClick={() => setView("explore")}>Βρες πεζοπορία</button>
+                </div>
               ) : (
-                <div className="chatLayout">
-                  <div className="chatGroups">
+                <div className="groupChatShell">
+                  <aside className="groupChatList">
+                    <div className="groupChatListTitle">Οι ομάδες μου</div>
                     {chatGroups.map((group) => (
                       <button
                         key={group.id}
-                        className={`chatGroupButton ${selectedChatId === group.id ? "active" : ""}`}
+                        className={`groupChatItem ${selectedChatId === group.id ? "active" : ""}`}
                         onClick={() => setSelectedChatId(group.id)}
                       >
-                        <strong>{group.title}</strong>
-                        <span>
-                          {new Date(group.startsAt).toLocaleDateString("el-GR", { day: "numeric", month: "short" })}
-                          {" · "}
-                          {group.role === "organizer" ? "Διοργανωτής" : "Συμμετέχων"}
+                        <span className="groupChatIcon">▲</span>
+                        <span className="groupChatItemText">
+                          <strong>{group.title}</strong>
+                          <small>
+                            {group.memberCount} μέλη · {new Date(group.startsAt).toLocaleDateString("el-GR", { day: "numeric", month: "short" })}
+                          </small>
                         </span>
+                        <span className="groupChatRole">{group.role === "organizer" ? "Οργανώνεις" : "Μέλος"}</span>
                       </button>
                     ))}
-                  </div>
+                  </aside>
 
-                  <div className="chatPane">
-                    <div className="chatHeader">
-                      <strong>{chatGroups.find((group) => group.id === selectedChatId)?.title ?? "Group chat"}</strong>
-                      <span>Live chat</span>
-                    </div>
+                  <section className="groupChatPane">
+                    <header className="groupChatHeader">
+                      <div>
+                        <small>Ομαδική συνομιλία</small>
+                        <strong>{chatGroups.find((group) => group.id === selectedChatId)?.title ?? "Πεζοπορία"}</strong>
+                        <span>
+                          {chatGroups.find((group) => group.id === selectedChatId)?.memberCount ?? 0} μέλη
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const hike = realHikes.find((item) => item.id === selectedChatId);
+                          if (hike) openHikeDetails(hike);
+                        }}
+                        disabled={!realHikes.some((item) => item.id === selectedChatId)}
+                      >
+                        Πληροφορίες
+                      </button>
+                    </header>
 
-                    <div className="chatMessages">
+                    <div className="groupChatMessages">
                       {chatMessages.length === 0 ? (
-                        <p className="emptyNote">Δεν υπάρχουν μηνύματα ακόμη. Στείλε το πρώτο 👋</p>
+                        <div className="groupChatEmpty">
+                          <span>👋</span>
+                          <strong>Η ομάδα είναι έτοιμη</strong>
+                          <p>Στείλε το πρώτο μήνυμα για σημείο συνάντησης, εξοπλισμό ή μετακίνηση.</p>
+                        </div>
                       ) : (
                         chatMessages.map((message) => (
                           <div
                             key={message.id}
-                            className={`chatBubble ${message.senderId === user.id ? "mine" : ""}`}
+                            className={`groupMessage ${message.senderId === user.id ? "mine" : ""}`}
                           >
-                            <strong>{message.senderId === user.id ? "Εσύ" : message.senderName}</strong>
+                            <div className="groupMessageMeta">
+                              <strong>{message.senderId === user.id ? "Εσύ" : message.senderName}</strong>
+                              <span>{new Date(message.createdAt).toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })}</span>
+                            </div>
                             <p>{message.body}</p>
-                            <span>
-                              {new Date(message.createdAt).toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })}
-                            </span>
                           </div>
                         ))
                       )}
                     </div>
 
-                    <form className="chatComposer" onSubmit={sendChatMessage}>
+                    <form className="groupChatComposer" onSubmit={sendChatMessage}>
                       <input
                         name="message"
                         maxLength={2000}
                         placeholder="Γράψε μήνυμα στην ομάδα..."
                         autoComplete="off"
                       />
-                      <button type="submit" disabled={sendingMessage || !selectedChatId}>
-                        {sendingMessage ? "..." : "Αποστολή"}
+                      <button type="submit" disabled={sendingMessage || !selectedChatId} aria-label="Αποστολή">
+                        {sendingMessage ? "…" : "↑"}
                       </button>
                     </form>
-                  </div>
+                  </section>
                 </div>
               )}
             </section>
