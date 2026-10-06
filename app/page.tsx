@@ -143,8 +143,8 @@ const featuredHikePhotos: Record<string, string[]> = {
   "Δίρφυς — Κορυφή Δέλφη": [
     "/dirfys/02-trail.webp",
     "/dirfys/01-cover.webp",
-    "/dirfys/04-climb.webp",
     "/dirfys/03-rest.webp",
+    "/dirfys/04-climb.webp",
     "/dirfys/05-fog.webp"
   ]
 };
@@ -842,8 +842,8 @@ export default function Home() {
       return;
     }
 
-    if (photoFiles.some((file) => file.size > 2 * 1024 * 1024)) {
-      showToast("Κάθε φωτογραφία πρέπει να είναι έως 2 MB.");
+    if (photoFiles.some((file) => file.size > 8 * 1024 * 1024)) {
+      showToast("Κάθε φωτογραφία πρέπει να είναι έως 8 MB.");
       return;
     }
 
@@ -1026,7 +1026,7 @@ export default function Home() {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 8 * 1024 * 1024) {
       showToast("Η φωτογραφία πρέπει να είναι έως 2 MB.");
       return;
     }
@@ -1835,7 +1835,7 @@ export default function Home() {
                         multiple
                       />
                     </label>
-                    <small>Μέχρι 2 MB η καθεμία · JPG, PNG, WebP ή HEIC.</small>
+                    <small>Μέχρι 8 MB η καθεμία · JPG, PNG, WebP ή HEIC.</small>
                   </section>
 
                   <div className="createActions">
