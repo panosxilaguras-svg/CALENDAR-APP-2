@@ -75,6 +75,8 @@ type HikeParticipant = PublicProfile & {
   joinedAt: string;
 };
 
+type MyJoinStatus = "pending" | "accepted" | "rejected" | "cancelled";
+
 const demoHikes: Hike[] = [
   {
     title: "Πάρνηθα — Μπάφι & Φλαμπούρι",
@@ -187,6 +189,7 @@ export default function Home() {
   const [selectedHike, setSelectedHike] = useState<Hike | null>(null);
   const [detailParticipants, setDetailParticipants] = useState<HikeParticipant[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [myJoinRequests, setMyJoinRequests] = useState<Record<string, { id: string; status: MyJoinStatus }>>({});
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -196,6 +199,7 @@ export default function Home() {
         loadIncomingRequests(currentUser.id);
         loadChatGroups(currentUser.id);
         loadCurrentProfile(currentUser.id);
+        loadMyJoinRequests(currentUser.id);
       }
     });
 
@@ -206,12 +210,14 @@ export default function Home() {
         loadIncomingRequests(currentUser.id);
         loadChatGroups(currentUser.id);
         loadCurrentProfile(currentUser.id);
+        loadMyJoinRequests(currentUser.id);
       } else {
         setIncomingRequests([]);
         setChatGroups([]);
         setSelectedChatId(null);
         setChatMessages([]);
         setProfile(null);
+        setMyJoinRequests({});
       }
     });
 
@@ -364,6 +370,19 @@ export default function Home() {
     }
 
     setDetailLoading(false);
+  }
+
+  async function loadMyJoinRequests(userId: string) {
+    const { data } = await supabase
+      .from("join_requests")
+      .select("id, hike_id, status")
+      .eq("user_id", userId);
+
+    const next: Record<string, { id: string; status: MyJoinStatus }> = {};
+    for (const row of data ?? []) {
+      next[row.hike_id] = { id: row.id, status: row.status as MyJoinStatus };
+    }
+    setMyJoinRequests(next);
   }
 
   async function loadIncomingRequests(userId: string) {
@@ -845,7 +864,28 @@ export default function Home() {
       return;
     }
 
-    showToast(`Στάλθηκε πραγματικό αίτημα για «${hike.title}» ✓`);
+    await loadMyJoinRequests(user.id);
+    showToast(`Στάλθηκε αίτημα για «${hike.title}» ✓`);
+  }
+
+  async function cancelJoinRequest(hike: Hike) {
+    if (!user || !hike.id) return;
+    const request = myJoinRequests[hike.id];
+    if (!request || request.status !== "pending") return;
+
+    const { error } = await supabase
+      .from("join_requests")
+      .update({ status: "cancelled", updated_at: new Date().toISOString() })
+      .eq("id", request.id)
+      .eq("user_id", user.id);
+
+    if (error) {
+      showToast(`Δεν ακυρώθηκε το αίτημα: ${error.message}`);
+      return;
+    }
+
+    await loadMyJoinRequests(user.id);
+    showToast("Το αίτημα συμμετοχής ακυρώθηκε.");
   }
 
   return (
@@ -995,6 +1035,14 @@ export default function Home() {
                                 {deletingHikeId === hike.id ? "Διαγραφή..." : "Διαγραφή"}
                               </button>
                             </div>
+                          ) : hike.id && myJoinRequests[hike.id]?.status === "pending" ? (
+                            <button className="pendingButton" onClick={() => cancelJoinRequest(hike)}>
+                              Αναμονή · Ακύρωση
+                            </button>
+                          ) : hike.id && myJoinRequests[hike.id]?.status === "accepted" ? (
+                            <button className="memberButton" onClick={() => setView("messages")}>
+                              Μέλος · Chat
+                            </button>
                           ) : (
                             <button
                               className="joinButton"
@@ -1413,6 +1461,14 @@ export default function Home() {
                     Διαγραφή
                   </button>
                 </>
+              ) : selectedHike.id && myJoinRequests[selectedHike.id]?.status === "pending" ? (
+                <button className="pendingButton" onClick={() => cancelJoinRequest(selectedHike)}>
+                  Ακύρωση αιτήματος
+                </button>
+              ) : selectedHike.id && myJoinRequests[selectedHike.id]?.status === "accepted" ? (
+                <button className="memberButton" onClick={() => { setSelectedHike(null); setView("messages"); }}>
+                  Άνοιγμα group chat
+                </button>
               ) : (
                 <button className="joinButton" onClick={() => requestJoin(selectedHike)}>
                   Θέλω να μπω
