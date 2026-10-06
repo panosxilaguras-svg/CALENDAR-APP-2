@@ -18,6 +18,10 @@ export default function AuthPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
 
+    if (new URLSearchParams(window.location.search).get("reset") === "1") {
+      setRecoveryMode(true);
+    }
+
     const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (event === "PASSWORD_RECOVERY") setRecoveryMode(true);
@@ -85,7 +89,7 @@ export default function AuthPage() {
     setLoading(true);
     setMessage("");
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: "https://hikemazi.com/auth?reset=1"
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://hikemazi.com"}/auth?reset=1`
     });
     setLoading(false);
 
