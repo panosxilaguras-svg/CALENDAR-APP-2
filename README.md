@@ -1,14 +1,15 @@
-# Hiking MVP
+# HikeMazi
 
-Mobile-first hiking community MVP built with Next.js.
+Mobile-first hiking community built with Next.js, Supabase and Vercel.
+
+Public site: https://hikemazi.com
 
 Core flow:
-- discover nearby hikes
+- discover hikes
 - filter by difficulty
 - request to join
 - create a hike
-- map preview
-- group messages
-- profile
+- approved participants join the group chat
+- profile and community features
 
-Next step: connect Supabase for authentication, profiles, hikes, join requests and chat.
+HikeMazi connects people who want to hike with others organizing real hikes.
