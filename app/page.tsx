@@ -139,6 +139,16 @@ const nav: { id: View; icon: string; label: string }[] = [
 
 const monthNames = ["ΙΑΝ", "ΦΕΒ", "ΜΑΡ", "ΑΠΡ", "ΜΑΪ", "ΙΟΥΝ", "ΙΟΥΛ", "ΑΥΓ", "ΣΕΠ", "ΟΚΤ", "ΝΟΕ", "ΔΕΚ"];
 
+const featuredHikePhotos: Record<string, string[]> = {
+  "Δίρφυς — Κορυφή Δέλφη": [
+    "/dirfys/01-cover.webp",
+    "/dirfys/02-trail.webp",
+    "/dirfys/03-rest.webp",
+    "/dirfys/04-climb.webp",
+    "/dirfys/05-fog.webp"
+  ]
+};
+
 function mapDifficulty(value: DbHike["difficulty"]): Difficulty {
   if (value === "easy") return "Εύκολη";
   if (value === "hard") return "Δύσκολη";
@@ -287,13 +297,17 @@ export default function Home() {
         dbHikes.map((item) => {
           const card = dbHikeToCard(item);
           const organizer = organizers.get(item.organizer_id);
+          const storedPhotos = photoMap.get(item.id) ?? [];
+          const seededPhotos = featuredHikePhotos[item.title] ?? [];
+          const photos = storedPhotos.length ? storedPhotos : seededPhotos;
+
           return {
             ...card,
             people: 1 + (participantCount.get(item.id) ?? 0),
             organizerName: organizer?.name ?? "Πεζοπόρος",
             organizerAvatar: organizer?.avatar ?? null,
-            photoUrls: photoMap.get(item.id) ?? [],
-            coverPhoto: photoMap.get(item.id)?.[0] ?? null
+            photoUrls: photos,
+            coverPhoto: photos[0] ?? null
           };
         })
       );
