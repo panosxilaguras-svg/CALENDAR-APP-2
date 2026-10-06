@@ -1430,15 +1430,19 @@ export default function Home() {
               <div className="detailStickyAction">
                 {selectedHike.organizerId === user?.id && selectedHike.id ? (
                   <div className="detailOwnerActions">
-                    <button className="detailSecondaryAction" onClick={() => startEditHike(selectedHike)}>Επεξεργασία</button>
-                    <button className="detailDangerAction" onClick={() => deleteHike(selectedHike)}>Διαγραφή</button>
+                    <button className="detailSecondaryAction" onClick={() => { setSelectedHike(null); startEditHike(selectedHike); }}>Επεξεργασία</button>
+                    <button className="detailDangerAction" onClick={async () => {
+                      await deleteHike(selectedHike);
+                      setSelectedHike(null);
+                      setView(detailReturnView);
+                    }}>Διαγραφή</button>
                   </div>
                 ) : selectedHike.id && myJoinRequests[selectedHike.id]?.status === "pending" ? (
                   <button className="detailSecondaryAction full" onClick={() => cancelJoinRequest(selectedHike)}>
                     Ακύρωση αιτήματος
                   </button>
                 ) : selectedHike.id && myJoinRequests[selectedHike.id]?.status === "accepted" ? (
-                  <button className="detailPrimaryAction" onClick={() => setView("messages")}>
+                  <button className="detailPrimaryAction" onClick={() => { setSelectedHike(null); setView("messages"); }}>
                     Άνοιγμα group chat
                   </button>
                 ) : (
