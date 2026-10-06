@@ -700,6 +700,11 @@ export default function Home() {
       return;
     }
 
+    if (startsAt.getTime() <= Date.now()) {
+      showToast("Η πεζοπορία πρέπει να είναι σε μελλοντική ημερομηνία/ώρα.");
+      return;
+    }
+
     setSubmitting(true);
 
     const payload = {
@@ -762,6 +767,12 @@ export default function Home() {
     await Promise.all([loadHikes(), loadIncomingRequests(user.id)]);
     setDeletingHikeId(null);
     showToast("Η πεζοπορία διαγράφηκε ✓");
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    setView("home");
+    showToast("Αποσυνδέθηκες.");
   }
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
@@ -1339,9 +1350,14 @@ export default function Home() {
                         />
                       </div>
                     </div>
-                    <button className="submit" type="submit" disabled={savingProfile}>
-                      {savingProfile ? "Αποθήκευση..." : "Αποθήκευση προφίλ"}
-                    </button>
+                    <div className="profileSaveRow">
+                      <button className="submit" type="submit" disabled={savingProfile}>
+                        {savingProfile ? "Αποθήκευση..." : "Αποθήκευση προφίλ"}
+                      </button>
+                      <button className="signOutButton" type="button" onClick={signOut}>
+                        Αποσύνδεση
+                      </button>
+                    </div>
                   </form>
 
                   <div className="requestPanel">
