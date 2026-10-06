@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 
-type View = "home" | "explore" | "map" | "new" | "messages" | "profile";
+type View = "home" | "explore" | "detail" | "map" | "new" | "messages" | "profile";
 type Difficulty = "Εύκολη" | "Μέτρια" | "Δύσκολη";
 
 type Hike = {
@@ -188,6 +188,7 @@ export default function Home() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<PublicProfile | null>(null);
   const [selectedHike, setSelectedHike] = useState<Hike | null>(null);
+  const [detailReturnView, setDetailReturnView] = useState<View>("explore");
   const [detailParticipants, setDetailParticipants] = useState<HikeParticipant[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [myJoinRequests, setMyJoinRequests] = useState<Record<string, { id: string; status: MyJoinStatus }>>({});
@@ -338,8 +339,12 @@ export default function Home() {
   }
 
   async function openHikeDetails(hike: Hike) {
+    setDetailReturnView(view === "home" ? "home" : "explore");
     setSelectedHike(hike);
     setDetailParticipants([]);
+    setView("detail");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
     if (!hike.id || hike.demo) return;
 
     setDetailLoading(true);
@@ -991,24 +996,26 @@ export default function Home() {
         </aside>
 
         <main className="main">
-          <header className={`topbar ${view === "home" ? "homeTopbar" : ""}`}>
-            <div>
-              <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
-              <h1>{view === "home" ? "Πάμε βουνό;" : view === "map" ? "Χάρτης" : nav.find((x) => x.id === view)?.label}</h1>
-              <p className="subtitle">
-                {view === "home"
-                  ? "Βρες την επόμενη πεζοπορία και την ομάδα που σου ταιριάζει."
-                  : "Πρώτη λειτουργική έκδοση του hiking community."}
-              </p>
-            </div>
-            <button className="avatarButton" onClick={() => setView("profile")}>
-              {profile?.avatarUrl ? (
-                <img src={avatarPublicUrl(profile.avatarUrl) ?? ""} alt="" />
-              ) : (
-                initials(profile?.displayName || user?.email?.split("@")[0] || "PX").toUpperCase()
-              )}
-            </button>
-          </header>
+          {view !== "detail" && (
+            <header className={`topbar ${view === "home" ? "homeTopbar" : ""}`}>
+              <div>
+                <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
+                <h1>{view === "home" ? "Πάμε βουνό;" : view === "map" ? "Χάρτης" : nav.find((x) => x.id === view)?.label}</h1>
+                <p className="subtitle">
+                  {view === "home"
+                    ? "Βρες την επόμενη πεζοπορία και την ομάδα που σου ταιριάζει."
+                    : "Πρώτη λειτουργική έκδοση του hiking community."}
+                </p>
+              </div>
+              <button className="avatarButton" onClick={() => setView("profile")}>
+                {profile?.avatarUrl ? (
+                  <img src={avatarPublicUrl(profile.avatarUrl) ?? ""} alt="" />
+                ) : (
+                  initials(profile?.displayName || user?.email?.split("@")[0] || "PX").toUpperCase()
+                )}
+              </button>
+            </header>
+          )}
 
           {view === "home" && (
             <>
@@ -1232,17 +1239,24 @@ export default function Home() {
 
               <div className="exploreList">
                 {visibleHikes.map((hike) => (
-                  <article className="exploreCard" key={hike.id ?? `explore-${hike.title}`}>
-                    <button className="exploreThumb" onClick={() => openHikeDetails(hike)} aria-label={`Άνοιγμα ${hike.title}`}>
+                  <article
+                    className="exploreCard"
+                    key={hike.id ?? `explore-${hike.title}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openHikeDetails(hike)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") openHikeDetails(hike);
+                    }}
+                  >
+                    <div className="exploreThumb" aria-hidden="true">
                       <span className={`exploreDifficulty difficulty-${hike.difficulty}`}>{hike.difficulty}</span>
                       <span className="exploreHeart">♡</span>
-                    </button>
+                    </div>
 
                     <div className="exploreInfo">
                       <div className="exploreDate">{hike.day} {hike.month} · {hike.start}</div>
-                      <button className="exploreTitle" onClick={() => openHikeDetails(hike)}>
-                        {hike.title}
-                      </button>
+                      <h3 className="exploreTitle">{hike.title}</h3>
 
                       <div className="exploreMeta">
                         <span>↗ {hike.distance}</span>
@@ -1254,7 +1268,10 @@ export default function Home() {
                         <button
                           className="exploreOrganizer"
                           disabled={hike.demo || !hike.organizerId}
-                          onClick={() => hike.organizerId && openPublicProfile(hike.organizerId)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (hike.organizerId) openPublicProfile(hike.organizerId);
+                          }}
                         >
                           <span className="exploreOrganizerAvatar">
                             {hike.organizerAvatar ? (
@@ -1275,6 +1292,165 @@ export default function Home() {
                   <div className="exploreEmpty">
                     Δεν βρήκαμε πεζοπορία με αυτά τα φίλτρα.
                   </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {view === "detail" && selectedHike && (
+            <section className="detailPage">
+              <div className={`detailHero detailHero-${selectedHike.difficulty}`}>
+                <div className="detailHeroTop">
+                  <button
+                    className="detailRoundButton"
+                    onClick={() => {
+                      setView(detailReturnView);
+                      setSelectedHike(null);
+                    }}
+                    aria-label="Πίσω"
+                  >
+                    ←
+                  </button>
+                  <div className="detailHeroTools">
+                    <button className="detailRoundButton" aria-label="Αγαπημένο">♡</button>
+                    <button className="detailRoundButton" aria-label="Κοινοποίηση">↗</button>
+                  </div>
+                </div>
+                <span className={`detailDifficulty difficulty-${selectedHike.difficulty}`}>{selectedHike.difficulty}</span>
+              </div>
+
+              <div className="detailContent">
+                <div className="detailTitleBlock">
+                  <p className="detailLocation">⌖ {selectedHike.location}</p>
+                  <h2>{selectedHike.title}</h2>
+                </div>
+
+                <div className="detailQuickMeta">
+                  <div>
+                    <span>↗</span>
+                    <strong>{selectedHike.distance}</strong>
+                    <small>Απόσταση</small>
+                  </div>
+                  <div>
+                    <span>◷</span>
+                    <strong>{selectedHike.start}</strong>
+                    <small>Ώρα</small>
+                  </div>
+                  <div>
+                    <span>♙</span>
+                    <strong>{selectedHike.people}{selectedHike.maxParticipants ? `/${selectedHike.maxParticipants}` : ""}</strong>
+                    <small>Άτομα</small>
+                  </div>
+                  <div>
+                    <span>▣</span>
+                    <strong>{selectedHike.day} {selectedHike.month}</strong>
+                    <small>Ημερομηνία</small>
+                  </div>
+                </div>
+
+                <button
+                  className="detailOrganizerCard"
+                  disabled={selectedHike.demo || !selectedHike.organizerId}
+                  onClick={() => selectedHike.organizerId && openPublicProfile(selectedHike.organizerId)}
+                >
+                  <span className="detailOrganizerAvatar">
+                    {selectedHike.organizerAvatar ? (
+                      <img src={avatarPublicUrl(selectedHike.organizerAvatar) ?? ""} alt="" />
+                    ) : (
+                      initials(selectedHike.organizerName || "Ο")
+                    )}
+                  </span>
+                  <span className="detailOrganizerText">
+                    <small>Διοργανωτής</small>
+                    <strong>{selectedHike.organizerName || "Πεζοπόρος"}</strong>
+                  </span>
+                  <span className="detailOrganizerArrow">›</span>
+                </button>
+
+                <section className="detailSection">
+                  <h3>Περιγραφή</h3>
+                  <p>{selectedHike.description || "Ο διοργανωτής δεν έχει προσθέσει ακόμη περιγραφή για αυτή την πεζοπορία."}</p>
+                </section>
+
+                <section className="detailSection">
+                  <div className="detailSectionHeading">
+                    <h3>Ποιοι πάνε</h3>
+                    <span>{selectedHike.people}{selectedHike.maxParticipants ? ` / ${selectedHike.maxParticipants}` : ""}</span>
+                  </div>
+
+                  {selectedHike.demo ? (
+                    <div className="detailDemoPeople">
+                      <span>Μ</span><span>Α</span><span>Κ</span>
+                      <small>Demo συμμετέχοντες</small>
+                    </div>
+                  ) : detailLoading ? (
+                    <p className="detailMuted">Φορτώνουμε την ομάδα...</p>
+                  ) : detailParticipants.length === 0 ? (
+                    <p className="detailMuted">Δεν έχουν εγκριθεί ακόμη άλλοι συμμετέχοντες.</p>
+                  ) : (
+                    <div className="detailParticipants">
+                      {detailParticipants.map((member) => (
+                        <button key={member.id} onClick={() => openPublicProfile(member.id)}>
+                          <span className="participantAvatar">
+                            {member.avatarUrl ? (
+                              <img src={avatarPublicUrl(member.avatarUrl) ?? ""} alt="" />
+                            ) : (
+                              initials(member.displayName)
+                            )}
+                          </span>
+                          <span>
+                            <strong>{member.displayName}</strong>
+                            <small>{member.city || experienceLabel(member.experienceLevel)}</small>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </section>
+
+                <section className="detailSection">
+                  <h3>Φωτογραφίες</h3>
+                  <div className="detailPhotoStrip">
+                    <div className="detailPhoto detailPhotoOne" />
+                    <div className="detailPhoto detailPhotoTwo" />
+                    <div className="detailPhoto detailPhotoThree" />
+                  </div>
+                </section>
+
+                <section className="detailRouteSoon">
+                  <div>
+                    <small>Διαδρομή</small>
+                    <strong>Χάρτης μονοπατιού</strong>
+                    <p>Θα προστεθεί στο επόμενο βήμα.</p>
+                  </div>
+                  <span>⌖</span>
+                </section>
+              </div>
+
+              <div className="detailStickyAction">
+                {selectedHike.organizerId === user?.id && selectedHike.id ? (
+                  <div className="detailOwnerActions">
+                    <button className="detailSecondaryAction" onClick={() => startEditHike(selectedHike)}>Επεξεργασία</button>
+                    <button className="detailDangerAction" onClick={() => deleteHike(selectedHike)}>Διαγραφή</button>
+                  </div>
+                ) : selectedHike.id && myJoinRequests[selectedHike.id]?.status === "pending" ? (
+                  <button className="detailSecondaryAction full" onClick={() => cancelJoinRequest(selectedHike)}>
+                    Ακύρωση αιτήματος
+                  </button>
+                ) : selectedHike.id && myJoinRequests[selectedHike.id]?.status === "accepted" ? (
+                  <button className="detailPrimaryAction" onClick={() => setView("messages")}>
+                    Άνοιγμα group chat
+                  </button>
+                ) : (
+                  <button
+                    className="detailPrimaryAction"
+                    disabled={Boolean(selectedHike.maxParticipants && selectedHike.people >= selectedHike.maxParticipants)}
+                    onClick={() => requestJoin(selectedHike)}
+                  >
+                    {selectedHike.maxParticipants && selectedHike.people >= selectedHike.maxParticipants
+                      ? "Η ομάδα γέμισε"
+                      : "Συμμετέχω στην πεζοπορία"}
+                  </button>
                 )}
               </div>
             </section>
@@ -1571,18 +1747,20 @@ export default function Home() {
 
         </main>
 
-        <nav className="mobileNav">
-          {nav.map((item) => (
-            <button
-              key={item.id}
-              className={`${view === item.id ? "active" : ""} ${item.id === "new" ? "plus" : ""}`}
-              onClick={() => item.id === "new" ? openNewHike() : setView(item.id)}
-            >
-              <span>{item.icon}</span>
-              {item.id !== "new" && <span>{item.label}</span>}
-            </button>
-          ))}
-        </nav>
+        {view !== "detail" && (
+          <nav className="mobileNav">
+            {nav.map((item) => (
+              <button
+                key={item.id}
+                className={`${view === item.id ? "active" : ""} ${item.id === "new" ? "plus" : ""}`}
+                onClick={() => item.id === "new" ? openNewHike() : setView(item.id)}
+              >
+                <span>{item.icon}</span>
+                {item.id !== "new" && <span>{item.label}</span>}
+              </button>
+            ))}
+          </nav>
+        )}
       </div>
 
       {selectedProfile && (
@@ -1606,104 +1784,6 @@ export default function Home() {
             <p className="publicProfileBio">
               {selectedProfile.bio || "Ο χρήστης δεν έχει γράψει ακόμη περιγραφή."}
             </p>
-          </section>
-        </div>
-      )}
-
-      {selectedHike && (
-        <div className="modalBackdrop" onClick={() => setSelectedHike(null)}>
-          <section className="hikeModal" onClick={(event) => event.stopPropagation()}>
-            <button className="modalClose" onClick={() => setSelectedHike(null)}>×</button>
-            <div className="hikeModalTop">
-              <span className="cardBadge">{selectedHike.demo ? "Demo" : "Live"} · {selectedHike.difficulty}</span>
-              <h2>{selectedHike.title}</h2>
-              <p>📍 {selectedHike.location} · ⏰ {selectedHike.start} · ↗ {selectedHike.distance}</p>
-            </div>
-
-            <div className="hikeDetailGrid">
-              <div>
-                <small>Διοργανωτής</small>
-                <button
-                  className="detailOrganizer"
-                  disabled={selectedHike.demo || !selectedHike.organizerId}
-                  onClick={() => selectedHike.organizerId && openPublicProfile(selectedHike.organizerId)}
-                >
-                  {selectedHike.organizerAvatar ? (
-                    <img src={avatarPublicUrl(selectedHike.organizerAvatar) ?? ""} alt="" />
-                  ) : (
-                    <span>{initials(selectedHike.organizerName || "Ο")}</span>
-                  )}
-                  {selectedHike.organizerName || "Πεζοπόρος"}
-                </button>
-              </div>
-              <div>
-                <small>Θέσεις</small>
-                <strong>{selectedHike.people}{selectedHike.maxParticipants ? ` / ${selectedHike.maxParticipants}` : ""}</strong>
-              </div>
-            </div>
-
-            <div className="hikeDescription">
-              <h3>Περιγραφή</h3>
-              <p>{selectedHike.description || "Δεν έχει προστεθεί περιγραφή."}</p>
-            </div>
-
-            {!selectedHike.demo && (
-              <div className="participantsBlock">
-                <h3>Ποιοι πάνε</h3>
-                {detailLoading ? (
-                  <p className="emptyNote">Φορτώνουμε την ομάδα...</p>
-                ) : detailParticipants.length === 0 ? (
-                  <p className="emptyNote">Δεν έχουν εγκριθεί ακόμη άλλοι συμμετέχοντες.</p>
-                ) : (
-                  <div className="participantList">
-                    {detailParticipants.map((member) => (
-                      <button key={member.id} onClick={() => openPublicProfile(member.id)}>
-                        <span className="participantAvatar">
-                          {member.avatarUrl ? (
-                            <img src={avatarPublicUrl(member.avatarUrl) ?? ""} alt="" />
-                          ) : (
-                            initials(member.displayName)
-                          )}
-                        </span>
-                        <span>
-                          <strong>{member.displayName}</strong>
-                          <small>{member.city || experienceLabel(member.experienceLevel)}</small>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="hikeModalActions">
-              {selectedHike.organizerId === user?.id && selectedHike.id ? (
-                <>
-                  <button className="editHikeButton" onClick={() => { setSelectedHike(null); startEditHike(selectedHike); }}>
-                    Επεξεργασία
-                  </button>
-                  <button className="deleteHikeButton" onClick={() => { setSelectedHike(null); deleteHike(selectedHike); }}>
-                    Διαγραφή
-                  </button>
-                </>
-              ) : selectedHike.id && myJoinRequests[selectedHike.id]?.status === "pending" ? (
-                <button className="pendingButton" onClick={() => cancelJoinRequest(selectedHike)}>
-                  Ακύρωση αιτήματος
-                </button>
-              ) : selectedHike.id && myJoinRequests[selectedHike.id]?.status === "accepted" ? (
-                <button className="memberButton" onClick={() => { setSelectedHike(null); setView("messages"); }}>
-                  Άνοιγμα group chat
-                </button>
-              ) : (
-                <button
-                  className="joinButton"
-                  disabled={Boolean(selectedHike.maxParticipants && selectedHike.people >= selectedHike.maxParticipants)}
-                  onClick={() => requestJoin(selectedHike)}
-                >
-                  {selectedHike.maxParticipants && selectedHike.people >= selectedHike.maxParticipants ? "Η ομάδα γέμισε" : "Θέλω να μπω"}
-                </button>
-              )}
-            </div>
           </section>
         </div>
       )}
