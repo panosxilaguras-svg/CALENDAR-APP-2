@@ -30,11 +30,20 @@ export default function AuthPage() {
 
     try {
       if (mode === "signup") {
+        const form = new FormData(event.currentTarget);
+        if (form.get("termsAccepted") !== "on") {
+          setMessage("Για την εγγραφή χρειάζεται να αποδεχτείς τους Όρους Χρήσης και τους κανόνες της κοινότητας.");
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { display_name: displayName.trim() || email.split("@")[0] }
+            data: {
+              display_name: displayName.trim() || email.split("@")[0],
+              terms_accepted_at: new Date().toISOString(),
+              community_rules_version: "2026-10-06"
+            }
           }
         });
         if (error) throw error;
@@ -151,6 +160,15 @@ export default function AuthPage() {
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
             />
           </label>
+
+          {mode === "signup" && (
+            <label className="authTerms">
+              <input name="termsAccepted" type="checkbox" required />
+              <span>
+                Συμφωνώ με τους <a href="/terms">Όρους Χρήσης</a> και τους <a href="/safety">κανόνες ασφάλειας</a>. Καταλαβαίνω ότι το HikeMazi είναι πλατφόρμα κοινωνικών συναντήσεων και όχι υπηρεσία επαγγελματικής ξενάγησης ή συνοδείας.
+              </span>
+            </label>
+          )}
 
           <button className="authSubmit" disabled={loading} type="submit">
             {loading ? "Περίμενε..." : mode === "signup" ? "Δημιουργία λογαριασμού" : "Σύνδεση"}
