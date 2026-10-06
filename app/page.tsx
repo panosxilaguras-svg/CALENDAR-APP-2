@@ -566,31 +566,23 @@ export default function Home() {
 
     setHandlingRequestId(request.id);
 
-    const { error: updateError } = await supabase
-      .from("join_requests")
-      .update({ status: action, updated_at: new Date().toISOString() })
-      .eq("id", request.id);
+    const { error: updateError } = action === "accepted"
+      ? await supabase.rpc("accept_join_request", { p_request_id: request.id })
+      : await supabase
+          .from("join_requests")
+          .update({ status: "rejected", updated_at: new Date().toISOString() })
+          .eq("id", request.id);
 
     if (updateError) {
-      showToast(`Δεν ενημερώθηκε το αίτημα: ${updateError.message}`);
+      const message = updateError.message.includes("Hike is full")
+        ? "Η πεζοπορία έχει ήδη γεμίσει."
+        : updateError.message;
+      showToast(`Δεν ενημερώθηκε το αίτημα: ${message}`);
       setHandlingRequestId(null);
       return;
     }
 
-    if (action === "accepted") {
-      const { error: participantError } = await supabase
-        .from("participants")
-        .insert({ hike_id: request.hikeId, user_id: request.userId });
-
-      if (participantError && participantError.code !== "23505") {
-        showToast(`Το αίτημα εγκρίθηκε, αλλά υπήρξε θέμα με τον συμμετέχοντα: ${participantError.message}`);
-        setHandlingRequestId(null);
-        await loadIncomingRequests(user.id);
-        return;
-      }
-    }
-
-    await Promise.all([loadIncomingRequests(user.id), loadChatGroups(user.id)]);
+    await Promise.all([loadIncomingRequests(user.id), loadChatGroups(user.id), loadHikes()]);
     setHandlingRequestId(null);
     showToast(action === "accepted" ? "Ο πεζοπόρος μπήκε στην ομάδα και άνοιξε το group chat ✓" : "Το αίτημα απορρίφθηκε.");
   }
@@ -860,6 +852,11 @@ export default function Home() {
       return;
     }
 
+    if (hike.maxParticipants && hike.people >= hike.maxParticipants) {
+      showToast("Η πεζοπορία είναι γεμάτη.");
+      return;
+    }
+
     const existing = myJoinRequests[hike.id];
 
     const { error } = existing
@@ -1063,9 +1060,10 @@ export default function Home() {
                           ) : (
                             <button
                               className="joinButton"
+                              disabled={Boolean(hike.maxParticipants && hike.people >= hike.maxParticipants)}
                               onClick={() => requestJoin(hike)}
                             >
-                              Θέλω να μπω
+                              {hike.maxParticipants && hike.people >= hike.maxParticipants ? "Γεμάτη" : "Θέλω να μπω"}
                             </button>
                           )}
                         </div>
@@ -1487,8 +1485,12 @@ export default function Home() {
                   Άνοιγμα group chat
                 </button>
               ) : (
-                <button className="joinButton" onClick={() => requestJoin(selectedHike)}>
-                  Θέλω να μπω
+                <button
+                  className="joinButton"
+                  disabled={Boolean(selectedHike.maxParticipants && selectedHike.people >= selectedHike.maxParticipants)}
+                  onClick={() => requestJoin(selectedHike)}
+                >
+                  {selectedHike.maxParticipants && selectedHike.people >= selectedHike.maxParticipants ? "Η ομάδα γέμισε" : "Θέλω να μπω"}
                 </button>
               )}
             </div>
