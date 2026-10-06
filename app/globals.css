@@ -2580,3 +2580,140 @@ h1 {
     border-radius: 18px;
   }
 }
+
+
+/* Mobile layout hotfix — keep hero content in normal flow */
+@media (max-width: 820px) {
+  .main {
+    padding-top: 14px;
+  }
+
+  .topbar {
+    gap: 12px;
+  }
+
+  .topbar h1 {
+    font-size: 38px;
+    line-height: .96;
+  }
+
+  .hero {
+    min-height: 0;
+    padding: 25px 20px 22px;
+    overflow: hidden;
+  }
+
+  .heroCopy {
+    max-width: 100%;
+  }
+
+  .hero h2 {
+    font-size: clamp(34px, 9.2vw, 44px);
+    line-height: .94;
+    max-width: 100%;
+    margin: 14px 0 14px;
+  }
+
+  .hero p {
+    max-width: 100%;
+    font-size: 12.5px;
+    line-height: 1.45;
+    margin-bottom: 0;
+  }
+
+  .heroActions {
+    position: static;
+    inset: auto;
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+  }
+
+  .heroActions .primary,
+  .heroActions .secondary {
+    width: 100%;
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 12px;
+    text-align: center;
+  }
+
+  .heroActions .authLink {
+    grid-column: 1 / -1;
+  }
+
+  .hero::before {
+    width: 290px;
+    height: 290px;
+    right: -135px;
+    top: -120px;
+  }
+
+  .stats {
+    margin-top: 12px;
+  }
+
+  .sectionHeader {
+    margin-top: 30px;
+  }
+}
+
+@media (max-width: 430px) {
+  .main {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .topbar h1 {
+    font-size: 36px;
+  }
+
+  .subtitle {
+    max-width: 245px;
+    line-height: 1.35;
+  }
+
+  .avatarButton {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+  }
+
+  .hero {
+    padding: 23px 18px 20px;
+    border-radius: 17px;
+  }
+
+  .hero h2 {
+    font-size: 38px;
+    letter-spacing: -0.055em;
+  }
+
+  .heroActions {
+    grid-template-columns: 1fr;
+  }
+
+  .heroActions .authLink {
+    grid-column: auto;
+  }
+
+  .stats {
+    margin-left: -12px;
+    margin-right: -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .stat {
+    min-width: 142px;
+  }
+
+  .mobileNav {
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+}
