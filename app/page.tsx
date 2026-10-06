@@ -208,6 +208,7 @@ export default function Home() {
   const [detailParticipants, setDetailParticipants] = useState<HikeParticipant[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [myJoinRequests, setMyJoinRequests] = useState<Record<string, { id: string; status: MyJoinStatus }>>({});
+  const [photoViewerIndex, setPhotoViewerIndex] = useState<number | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -243,6 +244,19 @@ export default function Home() {
 
     return () => authListener.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (photoViewerIndex === null) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closePhotoViewer();
+      if (event.key === "ArrowLeft") showPreviousPhoto();
+      if (event.key === "ArrowRight") showNextPhoto();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [photoViewerIndex, selectedHike]);
 
   async function loadHikes() {
     setLoadingHikes(true);
@@ -375,6 +389,30 @@ export default function Home() {
   async function openPublicProfile(userId: string) {
     const nextProfile = await fetchPublicProfile(userId);
     if (nextProfile) setSelectedProfile(nextProfile);
+  }
+
+  function openPhotoViewer(index: number) {
+    setPhotoViewerIndex(index);
+  }
+
+  function closePhotoViewer() {
+    setPhotoViewerIndex(null);
+  }
+
+  function showPreviousPhoto() {
+    if (!selectedHike?.photoUrls?.length) return;
+    setPhotoViewerIndex((current) => {
+      if (current === null) return 0;
+      return (current - 1 + selectedHike.photoUrls!.length) % selectedHike.photoUrls!.length;
+    });
+  }
+
+  function showNextPhoto() {
+    if (!selectedHike?.photoUrls?.length) return;
+    setPhotoViewerIndex((current) => {
+      if (current === null) return 0;
+      return (current + 1) % selectedHike.photoUrls!.length;
+    });
   }
 
   async function openHikeDetails(hike: Hike) {
@@ -1509,14 +1547,6 @@ export default function Home() {
                   </section>
                 )}
 
-                <section className="communityNotice compact">
-                  <strong>Κοινωνική πεζοπορική συνάντηση</strong>
-                  <p>
-                    Το HikeMazi φέρνει ανθρώπους σε επαφή για να πεζοπορούν μαζί. Η ανάρτηση δεν αποτελεί επαγγελματική ξενάγηση ή υπηρεσία συνοδείας και το μέλος που ξεκίνησε την παρέα δεν αναλαμβάνει, μόνο από αυτή την ιδιότητα, ρόλο επαγγελματία οδηγού.
-                  </p>
-                  <a href="/safety">Ασφάλεια & κανόνες</a>
-                </section>
-
                 <section className="detailSection">
                   <h3>Περιγραφή</h3>
                   <p>{selectedHike.description || "Δεν έχει προστεθεί ακόμη περιγραφή για αυτή την πεζοπορική συνάντηση."}</p>
@@ -1563,7 +1593,15 @@ export default function Home() {
                   {selectedHike.photoUrls?.length ? (
                     <div className="detailPhotoStrip realPhotos">
                       {selectedHike.photoUrls.map((photo, index) => (
-                        <img key={photo} className="detailPhoto" src={photo} alt={`${selectedHike.title} — φωτογραφία ${index + 1}`} />
+                        <button
+                          type="button"
+                          className="detailPhotoButton"
+                          key={photo}
+                          onClick={() => openPhotoViewer(index)}
+                          aria-label={`Άνοιγμα φωτογραφίας ${index + 1} από ${selectedHike.photoUrls?.length ?? 0}`}
+                        >
+                          <img className="detailPhoto" src={photo} alt={`${selectedHike.title} — φωτογραφία ${index + 1}`} />
+                        </button>
                       ))}
                     </div>
                   ) : (
@@ -1578,6 +1616,14 @@ export default function Home() {
                     <p>Θα προστεθεί στο επόμενο βήμα.</p>
                   </div>
                   <span>⌖</span>
+                </section>
+
+                <section className="communityNotice compact detailLegalNotice">
+                  <strong>Κοινωνική πεζοπορική συνάντηση</strong>
+                  <p>
+                    Το HikeMazi φέρνει ανθρώπους σε επαφή για να πεζοπορούν μαζί. Η ανάρτηση δεν αποτελεί επαγγελματική ξενάγηση ή υπηρεσία συνοδείας και το μέλος που ξεκίνησε την παρέα δεν αναλαμβάνει, μόνο από αυτή την ιδιότητα, ρόλο επαγγελματία οδηγού.
+                  </p>
+                  <a href="/safety">Ασφάλεια & κανόνες</a>
                 </section>
               </div>
 
@@ -1611,6 +1657,37 @@ export default function Home() {
                   </button>
                 )}
               </div>
+
+              {photoViewerIndex !== null && selectedHike.photoUrls?.[photoViewerIndex] && (
+                <div className="photoViewer" role="dialog" aria-modal="true" aria-label="Προβολή φωτογραφιών" onClick={closePhotoViewer}>
+                  <button className="photoViewerClose" type="button" onClick={closePhotoViewer} aria-label="Κλείσιμο">×</button>
+                  <div className="photoViewerCounter">
+                    {photoViewerIndex + 1} / {selectedHike.photoUrls.length}
+                  </div>
+                  <button
+                    className="photoViewerArrow photoViewerPrev"
+                    type="button"
+                    onClick={(event) => { event.stopPropagation(); showPreviousPhoto(); }}
+                    aria-label="Προηγούμενη φωτογραφία"
+                  >
+                    ‹
+                  </button>
+                  <div className="photoViewerImageWrap" onClick={(event) => event.stopPropagation()}>
+                    <img
+                      src={selectedHike.photoUrls[photoViewerIndex]}
+                      alt={`${selectedHike.title} — φωτογραφία ${photoViewerIndex + 1}`}
+                    />
+                  </div>
+                  <button
+                    className="photoViewerArrow photoViewerNext"
+                    type="button"
+                    onClick={(event) => { event.stopPropagation(); showNextPhoto(); }}
+                    aria-label="Επόμενη φωτογραφία"
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
             </section>
           )}
 
