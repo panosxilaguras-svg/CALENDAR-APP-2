@@ -1501,7 +1501,7 @@ export default function Home() {
                   >
                     {selectedHike.maxParticipants && selectedHike.people >= selectedHike.maxParticipants
                       ? "Η ομάδα γέμισε"
-                      : "Συμμετέχω στην πεζοπορία"}
+                      : "Μπες στην παρέα"}
                   </button>
                 )}
               </div>
