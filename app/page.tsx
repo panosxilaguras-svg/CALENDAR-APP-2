@@ -45,6 +45,21 @@ type IncomingRequest = {
   displayName: string;
 };
 
+type ChatGroup = {
+  id: string;
+  title: string;
+  startsAt: string;
+  role: "organizer" | "participant";
+};
+
+type ChatMessage = {
+  id: number;
+  senderId: string;
+  senderName: string;
+  body: string;
+  createdAt: string;
+};
+
 const demoHikes: Hike[] = [
   {
     title: "Πάρνηθα — Μπάφι & Φλαμπούρι",
@@ -146,19 +161,33 @@ export default function Home() {
   const [handlingRequestId, setHandlingRequestId] = useState<string | null>(null);
   const [deletingHikeId, setDeletingHikeId] = useState<string | null>(null);
   const [editingHike, setEditingHike] = useState<Hike | null>(null);
+  const [chatGroups, setChatGroups] = useState<ChatGroup[]>([]);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       const currentUser = data.user ?? null;
       setUser(currentUser);
-      if (currentUser) loadIncomingRequests(currentUser.id);
+      if (currentUser) {
+        loadIncomingRequests(currentUser.id);
+        loadChatGroups(currentUser.id);
+      }
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      if (currentUser) loadIncomingRequests(currentUser.id);
-      else setIncomingRequests([]);
+      if (currentUser) {
+        loadIncomingRequests(currentUser.id);
+        loadChatGroups(currentUser.id);
+      } else {
+        setIncomingRequests([]);
+        setChatGroups([]);
+        setSelectedChatId(null);
+        setChatMessages([]);
+      }
     });
 
     loadHikes();
@@ -229,6 +258,137 @@ export default function Home() {
     );
   }
 
+  async function loadChatGroups(userId: string) {
+    const [{ data: ownedHikes }, { data: memberships }] = await Promise.all([
+      supabase
+        .from("hikes")
+        .select("id, title, starts_at")
+        .eq("organizer_id", userId)
+        .order("starts_at", { ascending: true }),
+      supabase
+        .from("participants")
+        .select("hike_id")
+        .eq("user_id", userId)
+    ]);
+
+    const participantIds = [...new Set((memberships ?? []).map((row) => row.hike_id))];
+    let joinedHikes: { id: string; title: string; starts_at: string }[] = [];
+
+    if (participantIds.length) {
+      const { data } = await supabase
+        .from("hikes")
+        .select("id, title, starts_at")
+        .in("id", participantIds)
+        .order("starts_at", { ascending: true });
+
+      joinedHikes = data ?? [];
+    }
+
+    const groupMap = new Map<string, ChatGroup>();
+
+    for (const hike of ownedHikes ?? []) {
+      groupMap.set(hike.id, {
+        id: hike.id,
+        title: hike.title,
+        startsAt: hike.starts_at,
+        role: "organizer"
+      });
+    }
+
+    for (const hike of joinedHikes) {
+      if (!groupMap.has(hike.id)) {
+        groupMap.set(hike.id, {
+          id: hike.id,
+          title: hike.title,
+          startsAt: hike.starts_at,
+          role: "participant"
+        });
+      }
+    }
+
+    const groups = [...groupMap.values()].sort(
+      (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()
+    );
+
+    setChatGroups(groups);
+
+    if (!groups.length) {
+      setSelectedChatId(null);
+      setChatMessages([]);
+      return;
+    }
+
+    setSelectedChatId((current) =>
+      current && groups.some((group) => group.id === current) ? current : groups[0].id
+    );
+  }
+
+  async function loadChatMessages(hikeId: string) {
+    const { data: messages, error } = await supabase
+      .from("messages")
+      .select("id, sender_id, body, created_at")
+      .eq("hike_id", hikeId)
+      .order("created_at", { ascending: true })
+      .limit(200);
+
+    if (error || !messages) {
+      setChatMessages([]);
+      return;
+    }
+
+    const senderIds = [...new Set(messages.map((message) => message.sender_id))];
+    let nameByUser = new Map<string, string>();
+
+    if (senderIds.length) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", senderIds);
+
+      nameByUser = new Map(
+        (profiles ?? []).map((profile) => [profile.id, profile.display_name || "Πεζοπόρος"])
+      );
+    }
+
+    setChatMessages(
+      messages.map((message) => ({
+        id: message.id,
+        senderId: message.sender_id,
+        senderName: nameByUser.get(message.sender_id) || "Πεζοπόρος",
+        body: message.body,
+        createdAt: message.created_at
+      }))
+    );
+  }
+
+  async function sendChatMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!user || !selectedChatId) return;
+
+    const formElement = event.currentTarget;
+    const data = new FormData(formElement);
+    const body = String(data.get("message") ?? "").trim();
+    if (!body) return;
+
+    setSendingMessage(true);
+
+    const { error } = await supabase.from("messages").insert({
+      hike_id: selectedChatId,
+      sender_id: user.id,
+      body
+    });
+
+    setSendingMessage(false);
+
+    if (error) {
+      showToast(`Δεν στάλθηκε το μήνυμα: ${error.message}`);
+      return;
+    }
+
+    formElement.reset();
+    await loadChatMessages(selectedChatId);
+  }
+
   async function handleJoinRequest(request: IncomingRequest, action: "accepted" | "rejected") {
     if (!user) return;
 
@@ -258,10 +418,28 @@ export default function Home() {
       }
     }
 
-    await loadIncomingRequests(user.id);
+    await Promise.all([loadIncomingRequests(user.id), loadChatGroups(user.id)]);
     setHandlingRequestId(null);
-    showToast(action === "accepted" ? "Ο πεζοπόρος μπήκε στην ομάδα ✓" : "Το αίτημα απορρίφθηκε.");
+    showToast(action === "accepted" ? "Ο πεζοπόρος μπήκε στην ομάδα και άνοιξε το group chat ✓" : "Το αίτημα απορρίφθηκε.");
   }
+
+  useEffect(() => {
+    if (view !== "messages" || !user) return;
+
+    loadChatGroups(user.id);
+    const timer = window.setInterval(() => {
+      loadChatGroups(user.id);
+      if (selectedChatId) loadChatMessages(selectedChatId);
+    }, 4000);
+
+    return () => window.clearInterval(timer);
+  }, [view, user, selectedChatId]);
+
+  useEffect(() => {
+    if (view === "messages" && selectedChatId) {
+      loadChatMessages(selectedChatId);
+    }
+  }, [view, selectedChatId]);
 
   const allHikes = useMemo(() => [...realHikes, ...demoHikes], [realHikes]);
 
@@ -315,7 +493,8 @@ export default function Home() {
       return;
     }
 
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const title = String(form.get("title") ?? "").trim();
     const date = String(form.get("date") ?? "");
     const time = String(form.get("time") ?? "");
@@ -367,12 +546,12 @@ export default function Home() {
       return;
     }
 
-    event.currentTarget.reset();
+    formElement.reset();
     const wasEditing = Boolean(editingHike?.id);
     setEditingHike(null);
-    await loadHikes();
     setView("home");
-    showToast(wasEditing ? "Οι αλλαγές αποθηκεύτηκαν ✓" : "Η πεζοπορία δημοσιεύτηκε κανονικά ✓");
+    showToast(wasEditing ? "Οι αλλαγές αποθηκεύτηκαν ✓" : "Η πεζοπορία σας δημιουργήθηκε ✓");
+    void loadHikes();
   }
 
   async function deleteHike(hike: Hike) {
@@ -678,10 +857,75 @@ export default function Home() {
               <div className="sectionHeader" style={{ marginTop: 0 }}>
                 <div>
                   <h2>Ομαδικές συζητήσεις</h2>
-                  <p>Το chat θα ανοίγει μετά την αποδοχή συμμετοχής.</p>
+                  <p>Το group chat εμφανίζεται μόλις εγκριθεί η συμμετοχή.</p>
                 </div>
               </div>
-              <p className="emptyNote">Η βάση για τα messages είναι ήδη έτοιμη. Επόμενο βήμα: accept/reject αιτημάτων και πραγματικό group chat.</p>
+
+              {!user ? (
+                <div className="chatLoginBox">
+                  <p className="emptyNote">Συνδέσου για να δεις τα group chats των πεζοποριών σου.</p>
+                  <a className="submit authLink" href="/auth">Σύνδεση / Εγγραφή</a>
+                </div>
+              ) : chatGroups.length === 0 ? (
+                <p className="emptyNote">Δεν έχεις ενεργό group chat ακόμη. Μόλις οργανώσεις πεζοπορία ή εγκριθεί η συμμετοχή σου, θα εμφανιστεί εδώ.</p>
+              ) : (
+                <div className="chatLayout">
+                  <div className="chatGroups">
+                    {chatGroups.map((group) => (
+                      <button
+                        key={group.id}
+                        className={`chatGroupButton ${selectedChatId === group.id ? "active" : ""}`}
+                        onClick={() => setSelectedChatId(group.id)}
+                      >
+                        <strong>{group.title}</strong>
+                        <span>
+                          {new Date(group.startsAt).toLocaleDateString("el-GR", { day: "numeric", month: "short" })}
+                          {" · "}
+                          {group.role === "organizer" ? "Διοργανωτής" : "Συμμετέχων"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="chatPane">
+                    <div className="chatHeader">
+                      <strong>{chatGroups.find((group) => group.id === selectedChatId)?.title ?? "Group chat"}</strong>
+                      <span>Ανανέωση αυτόματα</span>
+                    </div>
+
+                    <div className="chatMessages">
+                      {chatMessages.length === 0 ? (
+                        <p className="emptyNote">Δεν υπάρχουν μηνύματα ακόμη. Στείλε το πρώτο 👋</p>
+                      ) : (
+                        chatMessages.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`chatBubble ${message.senderId === user.id ? "mine" : ""}`}
+                          >
+                            <strong>{message.senderId === user.id ? "Εσύ" : message.senderName}</strong>
+                            <p>{message.body}</p>
+                            <span>
+                              {new Date(message.createdAt).toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <form className="chatComposer" onSubmit={sendChatMessage}>
+                      <input
+                        name="message"
+                        maxLength={2000}
+                        placeholder="Γράψε μήνυμα στην ομάδα..."
+                        autoComplete="off"
+                      />
+                      <button type="submit" disabled={sendingMessage || !selectedChatId}>
+                        {sendingMessage ? "..." : "Αποστολή"}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
             </section>
           )}
 
@@ -744,7 +988,7 @@ export default function Home() {
             <button
               key={item.id}
               className={`${view === item.id ? "active" : ""} ${item.id === "new" ? "plus" : ""}`}
-              onClick={() => setView(item.id)}
+              onClick={() => item.id === "new" ? openNewHike() : setView(item.id)}
             >
               <span>{item.icon}</span>
               {item.id !== "new" && <span>{item.label}</span>}
