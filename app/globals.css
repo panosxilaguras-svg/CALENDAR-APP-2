@@ -5251,3 +5251,90 @@ h1 {
   font-weight: 850;
   text-decoration: none;
 }
+
+
+/* Real hike photography */
+.cardVisual,
+.exploreThumb,
+.detailHero {
+  background-size: cover;
+  background-position: center;
+}
+
+.detailPhotoStrip.realPhotos {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.detailPhotoStrip.realPhotos::-webkit-scrollbar {
+  display: none;
+}
+
+.detailPhotoStrip.realPhotos .detailPhoto {
+  width: 132px;
+  min-width: 132px;
+  height: 164px;
+  object-fit: cover;
+  border-radius: 18px;
+  border: 1px solid rgba(22,37,28,.08);
+  box-shadow: 0 8px 24px rgba(22,37,28,.08);
+}
+
+.createPhotoUpload {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(22,37,28,.12);
+  background: #fffefa;
+  border-radius: 20px;
+}
+
+.createPhotoUpload strong {
+  display: block;
+  color: #16251c;
+  margin-bottom: 4px;
+}
+
+.createPhotoUpload p,
+.createPhotoUpload small {
+  margin: 0;
+  color: #6e746f;
+  line-height: 1.5;
+  font-size: 12px;
+}
+
+.createExistingPhotos {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0;
+}
+
+.createExistingPhotos img {
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.createPhotoPicker {
+  min-height: 52px;
+  border: 1px dashed rgba(46,75,56,.38);
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: #f3f6ee;
+  color: #2e4b38;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.createPhotoPicker input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
