@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 
-type View = "home" | "map" | "new" | "messages" | "profile";
+type View = "home" | "explore" | "map" | "new" | "messages" | "profile";
 type Difficulty = "Εύκολη" | "Μέτρια" | "Δύσκολη";
 
 type Hike = {
@@ -125,8 +125,8 @@ const demoHikes: Hike[] = [
 ];
 
 const nav: { id: View; icon: string; label: string }[] = [
-  { id: "home", icon: "⌂", label: "Πεζοπορίες" },
-  { id: "map", icon: "⌖", label: "Χάρτης" },
+  { id: "home", icon: "⌂", label: "Αρχική" },
+  { id: "explore", icon: "▱", label: "Πεζοπορίες" },
   { id: "new", icon: "＋", label: "Νέα" },
   { id: "messages", icon: "✉", label: "Μηνύματα" },
   { id: "profile", icon: "◉", label: "Προφίλ" }
@@ -967,7 +967,7 @@ export default function Home() {
           <div className="brand">
             <div className="brandMark">△</div>
             <div className="brandText">
-              MAZI TRAILS
+              HIKING
               <small>find your trail people</small>
             </div>
           </div>
@@ -994,7 +994,7 @@ export default function Home() {
           <header className={`topbar ${view === "home" ? "homeTopbar" : ""}`}>
             <div>
               <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
-              <h1>{view === "home" ? "Πάμε βουνό;" : nav.find((x) => x.id === view)?.label}</h1>
+              <h1>{view === "home" ? "Πάμε βουνό;" : view === "map" ? "Χάρτης" : nav.find((x) => x.id === view)?.label}</h1>
               <p className="subtitle">
                 {view === "home"
                   ? "Βρες την επόμενη πεζοπορία και την ομάδα που σου ταιριάζει."
@@ -1071,7 +1071,7 @@ export default function Home() {
               <section className="popularSection">
                 <div className="popularHeader">
                   <h2>Δημοφιλείς προορισμοί</h2>
-                  <button onClick={() => setView("map")}>Προβολή όλων →</button>
+                  <button onClick={() => setView("explore")}>Προβολή όλων →</button>
                 </div>
                 <div className="popularRoutes">
                   <button className="popularRoute popularRouteOne" onClick={() => { setSearch("Παρνασσός"); document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" }); }}>
@@ -1191,6 +1191,93 @@ export default function Home() {
                 </div>
               </section>
             </>
+          )}
+
+          {view === "explore" && (
+            <section className="explorePage">
+              <div className="exploreHeader">
+                <div>
+                  <p className="exploreKicker">Βρες την επόμενη ομάδα σου</p>
+                  <h2>Πεζοπορίες</h2>
+                </div>
+                <button className="exploreMapButton" onClick={() => setView("map")} aria-label="Άνοιγμα χάρτη">
+                  <span>⌖</span>
+                  Χάρτης
+                </button>
+              </div>
+
+              <div className="exploreSearchRow">
+                <div className="exploreSearchBox">
+                  <span>⌕</span>
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Αναζήτηση βουνού ή περιοχής..."
+                  />
+                </div>
+                <button className="exploreFilterButton" aria-label="Φίλτρα">☷</button>
+              </div>
+
+              <div className="exploreChips">
+                {["Όλες", "Εύκολη", "Μέτρια", "Δύσκολη"].map((item) => (
+                  <button
+                    key={item}
+                    className={`exploreChip ${filter === item ? "active" : ""}`}
+                    onClick={() => setFilter(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+
+              <div className="exploreList">
+                {visibleHikes.map((hike) => (
+                  <article className="exploreCard" key={hike.id ?? `explore-${hike.title}`}>
+                    <button className="exploreThumb" onClick={() => openHikeDetails(hike)} aria-label={`Άνοιγμα ${hike.title}`}>
+                      <span className={`exploreDifficulty difficulty-${hike.difficulty}`}>{hike.difficulty}</span>
+                      <span className="exploreHeart">♡</span>
+                    </button>
+
+                    <div className="exploreInfo">
+                      <div className="exploreDate">{hike.day} {hike.month} · {hike.start}</div>
+                      <button className="exploreTitle" onClick={() => openHikeDetails(hike)}>
+                        {hike.title}
+                      </button>
+
+                      <div className="exploreMeta">
+                        <span>↗ {hike.distance}</span>
+                        <span>◷ {hike.start}</span>
+                        <span>♙ {hike.people}{hike.maxParticipants ? `/${hike.maxParticipants}` : ""}</span>
+                      </div>
+
+                      <div className="exploreFooter">
+                        <button
+                          className="exploreOrganizer"
+                          disabled={hike.demo || !hike.organizerId}
+                          onClick={() => hike.organizerId && openPublicProfile(hike.organizerId)}
+                        >
+                          <span className="exploreOrganizerAvatar">
+                            {hike.organizerAvatar ? (
+                              <img src={avatarPublicUrl(hike.organizerAvatar) ?? ""} alt="" />
+                            ) : (
+                              initials(hike.organizerName || "Π")
+                            )}
+                          </span>
+                          <span>{hike.organizerName || (hike.demo ? "Οργανωτής" : "Πεζοπόρος")}</span>
+                        </button>
+                        <span className="exploreLocation">⌖ {hike.location}</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+
+                {visibleHikes.length === 0 && (
+                  <div className="exploreEmpty">
+                    Δεν βρήκαμε πεζοπορία με αυτά τα φίλτρα.
+                  </div>
+                )}
+              </div>
+            </section>
           )}
 
           {view === "map" && (
