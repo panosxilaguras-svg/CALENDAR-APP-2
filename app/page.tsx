@@ -1100,24 +1100,6 @@ export default function Home() {
                 </div>
               </section>
 
-              <section className="popularSection">
-                <div className="popularHeader">
-                  <h2>Δημοφιλείς προορισμοί</h2>
-                  <button onClick={() => setView("explore")}>Προβολή όλων →</button>
-                </div>
-                <div className="popularRoutes">
-                  <button className="popularRoute popularRouteOne" onClick={() => { setSearch("Παρνασσός"); document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" }); }}>
-                    <span>Παρνασσός</span>
-                  </button>
-                  <button className="popularRoute popularRouteTwo" onClick={() => { setSearch("Ταΰγετος"); document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" }); }}>
-                    <span>Ταΰγετος</span>
-                  </button>
-                  <button className="popularRoute popularRouteThree" onClick={() => { setSearch("Πήλιο"); document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" }); }}>
-                    <span>Πήλιο</span>
-                  </button>
-                </div>
-              </section>
-
               <section id="hikes">
                 <div className="sectionHeader">
                   <div>
@@ -1147,13 +1129,22 @@ export default function Home() {
 
                 <div className="hikeGrid">
                   {visibleHikes.map((hike, index) => (
-                    <article className="hikeCard" key={hike.id ?? `demo-${hike.title}`}>
+                    <article
+                      className="hikeCard"
+                      key={hike.id ?? `demo-${hike.title}`}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openHikeDetails(hike)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") openHikeDetails(hike);
+                      }}
+                    >
                       <div className="cardVisual">
                         <span className="cardBadge">{hike.demo ? `Demo · ${hike.difficulty}` : `Live · ${hike.difficulty}`}</span>
                         <span className="cardDate"><strong>{hike.day}</strong>{hike.month}</span>
                       </div>
                       <div className="cardBody">
-                        <button className="cardTitleButton" onClick={() => openHikeDetails(hike)}>
+                        <button className="cardTitleButton" onClick={(event) => { event.stopPropagation(); openHikeDetails(hike); }}>
                           <h3>{hike.title}</h3>
                         </button>
                         <div className="organizerLine">
@@ -1165,7 +1156,10 @@ export default function Home() {
                           <button
                             type="button"
                             disabled={hike.demo || !hike.organizerId}
-                            onClick={() => hike.organizerId && openPublicProfile(hike.organizerId)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (hike.organizerId) openPublicProfile(hike.organizerId);
+                            }}
                           >
                             {hike.organizerName || (hike.demo ? "Demo organizer" : "Πεζοπόρος")}
                           </button>
@@ -1175,38 +1169,38 @@ export default function Home() {
                           ↗ {hike.distance} · ⏰ {hike.start} · 👥 {hike.people}{hike.maxParticipants ? `/${hike.maxParticipants}` : ""}
                         </div>
                         <div className="peopleRow">
-                          <button className="detailsButton" onClick={() => openHikeDetails(hike)}>
+                          <button className="detailsButton" onClick={(event) => { event.stopPropagation(); openHikeDetails(hike); }}>
                             Λεπτομέρειες
                           </button>
                           {hike.organizerId === user?.id && hike.id ? (
                             <div className="ownerActions">
                               <button
                                 className="editHikeButton"
-                                onClick={() => startEditHike(hike)}
+                                onClick={(event) => { event.stopPropagation(); startEditHike(hike); }}
                               >
                                 Επεξεργασία
                               </button>
                               <button
                                 className="deleteHikeButton"
                                 disabled={deletingHikeId === hike.id}
-                                onClick={() => deleteHike(hike)}
+                                onClick={(event) => { event.stopPropagation(); deleteHike(hike); }}
                               >
                                 {deletingHikeId === hike.id ? "Διαγραφή..." : "Διαγραφή"}
                               </button>
                             </div>
                           ) : hike.id && myJoinRequests[hike.id]?.status === "pending" ? (
-                            <button className="pendingButton" onClick={() => cancelJoinRequest(hike)}>
+                            <button className="pendingButton" onClick={(event) => { event.stopPropagation(); cancelJoinRequest(hike); }}>
                               Αναμονή · Ακύρωση
                             </button>
                           ) : hike.id && myJoinRequests[hike.id]?.status === "accepted" ? (
-                            <button className="memberButton" onClick={() => setView("messages")}>
+                            <button className="memberButton" onClick={(event) => { event.stopPropagation(); setView("messages"); }}>
                               Μέλος · Chat
                             </button>
                           ) : (
                             <button
                               className="joinButton"
                               disabled={Boolean(hike.maxParticipants && hike.people >= hike.maxParticipants)}
-                              onClick={() => requestJoin(hike)}
+                              onClick={(event) => { event.stopPropagation(); requestJoin(hike); }}
                             >
                               {hike.maxParticipants && hike.people >= hike.maxParticipants ? "Γεμάτη" : "Θέλω να μπω"}
                             </button>
