@@ -134,6 +134,7 @@ export default function Home() {
   const [submitting, setSubmitting] = useState(false);
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
   const [handlingRequestId, setHandlingRequestId] = useState<string | null>(null);
+  const [deletingHikeId, setDeletingHikeId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -325,6 +326,31 @@ export default function Home() {
     showToast("Η πεζοπορία δημοσιεύτηκε κανονικά ✓");
   }
 
+  async function deleteHike(hike: Hike) {
+    if (!user || !hike.id || hike.organizerId !== user.id) return;
+
+    const confirmed = window.confirm(`Να διαγραφεί οριστικά η πεζοπορία «${hike.title}»;`);
+    if (!confirmed) return;
+
+    setDeletingHikeId(hike.id);
+
+    const { error } = await supabase
+      .from("hikes")
+      .delete()
+      .eq("id", hike.id)
+      .eq("organizer_id", user.id);
+
+    if (error) {
+      showToast(`Δεν διαγράφηκε: ${error.message}`);
+      setDeletingHikeId(null);
+      return;
+    }
+
+    await Promise.all([loadHikes(), loadIncomingRequests(user.id)]);
+    setDeletingHikeId(null);
+    showToast("Η πεζοπορία διαγράφηκε ✓");
+  }
+
   async function requestJoin(hike: Hike) {
     if (hike.demo || !hike.id) {
       showToast("Αυτό είναι demo πεζοπορία. Οι νέες θα είναι πραγματικές.");
@@ -474,12 +500,22 @@ export default function Home() {
                               <span className="miniAvatar">+{Math.max(hike.people - (hike.demo ? 3 : 1), 0)}</span>
                             </div>
                           </div>
-                          <button
-                            className="joinButton"
-                            onClick={() => requestJoin(hike)}
-                          >
-                            {hike.organizerId === user?.id ? "Δική σου" : "Θέλω να μπω"}
-                          </button>
+                          {hike.organizerId === user?.id && hike.id ? (
+                            <button
+                              className="deleteHikeButton"
+                              disabled={deletingHikeId === hike.id}
+                              onClick={() => deleteHike(hike)}
+                            >
+                              {deletingHikeId === hike.id ? "Διαγραφή..." : "Διαγραφή"}
+                            </button>
+                          ) : (
+                            <button
+                              className="joinButton"
+                              onClick={() => requestJoin(hike)}
+                            >
+                              Θέλω να μπω
+                            </button>
+                          )}
                         </div>
                       </div>
                     </article>
