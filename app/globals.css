@@ -5046,3 +5046,27 @@ h1 {
     transform: translateY(-2px);
   }
 }
+
+
+/* HikeMazi brand lockup */
+.mobileBrandIdentity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mobileWordmark {
+  color: #153321;
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.brandText {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
