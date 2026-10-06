@@ -967,7 +967,7 @@ export default function Home() {
           <div className="brand">
             <div className="brandMark">△</div>
             <div className="brandText">
-              Hiking MVP
+              MAZI TRAILS
               <small>find your trail people</small>
             </div>
           </div>
@@ -991,7 +991,7 @@ export default function Home() {
         </aside>
 
         <main className="main">
-          <header className="topbar">
+          <header className={`topbar ${view === "home" ? "homeTopbar" : ""}`}>
             <div>
               <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
               <h1>{view === "home" ? "Πάμε βουνό;" : nav.find((x) => x.id === view)?.label}</h1>
@@ -1012,31 +1012,75 @@ export default function Home() {
 
           {view === "home" && (
             <>
+              <div className="mobileHomeBrand">
+                <div className="mobileBrandLockup">
+                  <span className="mobileBrandMark">▲</span>
+                  <span>MAZI<br />TRAILS</span>
+                </div>
+                <div className="mobileBrandActions">
+                  <button aria-label="Αναζήτηση" onClick={() => document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" })}>⌕</button>
+                  <button aria-label="Προφίλ" onClick={() => setView("profile")}>
+                    {profile?.avatarUrl ? (
+                      <img src={avatarPublicUrl(profile.avatarUrl) ?? ""} alt="" />
+                    ) : (
+                      initials(profile?.displayName || user?.email?.split("@")[0] || "PX").toUpperCase()
+                    )}
+                  </button>
+                </div>
+              </div>
+
               <section className="hero">
                 <div className="heroCopy">
-                  <div className="eyebrow" style={{ color: "#dbe8cf" }}>Ελλάδα · νέες παρέες στο βουνό</div>
-                  <h2>Δεν έχεις παρέα;<br />Βρες τη στο μονοπάτι.</h2>
+                  <div className="eyebrow heroEyebrow">Βουνό · παρέα · εμπειρίες</div>
+                  <h2>Πάμε<br />βουνό;</h2>
                   <p>
-                    Δες ποιος οργανώνει πεζοπορία, ζήτα να μπεις στην ομάδα και κανονίστε τα πάντα μαζί.
+                    Βρες την επόμενη πεζοπορία και την ομάδα που σου ταιριάζει.
                   </p>
                   <div className="heroActions">
                     <button className="primary" onClick={() => document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" })}>
-                      Βρες πεζοπορία
+                      ⌕&nbsp;&nbsp; Βρες πεζοπορία
                     </button>
                     <button className="secondary" onClick={openNewHike}>
-                      + Οργάνωσε μία
+                      ＋&nbsp;&nbsp; Οργάνωσε μία
                     </button>
-                    <a className="secondary authLink" href="/auth">
-                      {user ? "Λογαριασμός" : "Σύνδεση"}
-                    </a>
                   </div>
                 </div>
               </section>
 
               <section className="stats">
-                <div className="stat"><strong>{realHikes.length}</strong><span>πραγματικές ανοιχτές πεζοπορίες</span></div>
-                <div className="stat"><strong>{realHikes.reduce((sum, hike) => sum + hike.people, 0)}</strong><span>άτομα σε live ομάδες</span></div>
-                <div className="stat"><strong>{user ? "✓" : "—"}</strong><span>{user ? "είσαι συνδεδεμένος" : "σύνδεση για συμμετοχή"}</span></div>
+                <div className="stat">
+                  <span className="statIcon">♟</span>
+                  <strong>{realHikes.length}</strong>
+                  <span>Ανοιχτές<br />πεζοπορίες</span>
+                </div>
+                <div className="stat">
+                  <span className="statIcon">♟♟</span>
+                  <strong>{realHikes.reduce((sum, hike) => sum + hike.people, 0)}</strong>
+                  <span>Άτομα<br />στις ομάδες</span>
+                </div>
+                <div className="stat">
+                  <span className="statIcon">▲</span>
+                  <strong>{user ? "✓" : "—"}</strong>
+                  <span>{user ? "Συνδεδεμένος" : "Γίνε μέλος"}</span>
+                </div>
+              </section>
+
+              <section className="popularSection">
+                <div className="popularHeader">
+                  <h2>Δημοφιλείς διαδρομές</h2>
+                  <button onClick={() => setView("map")}>Προβολή όλων →</button>
+                </div>
+                <div className="popularRoutes">
+                  <button className="popularRoute popularRouteOne" onClick={() => { setSearch("Παρνασσός"); document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" }); }}>
+                    <span>Παρνασσός</span>
+                  </button>
+                  <button className="popularRoute popularRouteTwo" onClick={() => { setSearch("Ταΰγετος"); document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" }); }}>
+                    <span>Ταΰγετος</span>
+                  </button>
+                  <button className="popularRoute popularRouteThree" onClick={() => { setSearch("Πήλιο"); document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" }); }}>
+                    <span>Πήλιο</span>
+                  </button>
+                </div>
               </section>
 
               <section id="hikes">
