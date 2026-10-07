@@ -90,6 +90,14 @@ type HikeParticipant = PublicProfile & {
 
 type MyJoinStatus = "pending" | "accepted" | "rejected" | "cancelled";
 type ThemeMode = "light" | "dark";
+type MountainSearchResult = {
+  id: string;
+  name: string;
+  displayName: string;
+  type: string;
+  lat: number;
+  lng: number;
+};
 
 const demoHikes: Hike[] = [
   {
@@ -231,6 +239,10 @@ export default function Home() {
   const [createRoutePoints, setCreateRoutePoints] = useState<[number, number][]>([]);
   const [createRouteName, setCreateRouteName] = useState("");
   const [createRouteDistanceKm, setCreateRouteDistanceKm] = useState<number | null>(null);
+  const [mountainQuery, setMountainQuery] = useState("");
+  const [mountainResults, setMountainResults] = useState<MountainSearchResult[]>([]);
+  const [mountainSearching, setMountainSearching] = useState(false);
+  const [selectedMountain, setSelectedMountain] = useState<MountainSearchResult | null>(null);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("orivatis-theme");
@@ -280,6 +292,52 @@ export default function Home() {
 
     return () => authListener.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (view !== "new") return;
+    const query = mountainQuery.trim();
+    if (query.length < 2 || selectedMountain?.name === query) {
+      setMountainResults([]);
+      setMountainSearching(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setMountainSearching(true);
+      try {
+        const response = await fetch(`/api/mountain-search?q=${encodeURIComponent(query)}`, {
+          signal: controller.signal,
+          cache: "no-store"
+        });
+        const json = await response.json();
+        setMountainResults(response.ok && Array.isArray(json.results) ? json.results : []);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") setMountainResults([]);
+      } finally {
+        if (!controller.signal.aborted) setMountainSearching(false);
+      }
+    }, 280);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [mountainQuery, selectedMountain, view]);
+
+  function chooseMountain(result: MountainSearchResult) {
+    setSelectedMountain(result);
+    setMountainQuery(result.name);
+    setMountainResults([]);
+    setCreateMapPoint({ lat: result.lat, lng: result.lng });
+
+    const locationInput = document.querySelector<HTMLInputElement>('input[name="location"]');
+    if (locationInput && !locationInput.value.trim()) {
+      locationInput.value = result.displayName;
+      locationInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    showToast(`${result.name} επιλέχθηκε ✓`);
+  }
 
   useEffect(() => {
     if (photoViewerIndex === null) return;
@@ -911,11 +969,7 @@ export default function Home() {
       }
 
       if (data?.type === "orivatis-summit-name" && typeof data.name === "string" && data.name.trim()) {
-        const locationInput = document.querySelector<HTMLInputElement>('input[name="location"]');
-        if (locationInput) {
-          locationInput.value = data.name.trim();
-          locationInput.dispatchEvent(new Event("input", { bubbles: true }));
-        }
+        setMountainQuery(data.name.trim());
         showToast(`Κορυφή ${data.name.trim()} επιλέχθηκε ✓`);
         return;
       }
@@ -987,6 +1041,9 @@ export default function Home() {
     setCreateRoutePoints([]);
     setCreateRouteName("");
     setCreateRouteDistanceKm(null);
+    setMountainQuery("");
+    setMountainResults([]);
+    setSelectedMountain(null);
     setView("new");
   }
 
@@ -1001,6 +1058,9 @@ export default function Home() {
     setCreateRoutePoints(hike.routePoints ?? []);
     setCreateRouteName(hike.routePoints?.length ? "Αποθηκευμένη διαδρομή" : "");
     setCreateRouteDistanceKm(hike.distanceKm ?? null);
+    setMountainQuery(hike.location ?? "");
+    setMountainResults([]);
+    setSelectedMountain(null);
     setView("new");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -2129,33 +2189,62 @@ export default function Home() {
                       <small>Αυτό θα μας βοηθήσει αργότερα όταν συνδέσουμε τον χάρτη.</small>
                     </label>
 
+                    <div className="mountainSearch">
+                      <label className="createField full">
+                        <span>Βρες κορυφή ή βουνό</span>
+                        <div className="mountainSearchInput">
+                          <span aria-hidden="true">⌕</span>
+                          <input
+                            value={mountainQuery}
+                            onChange={(event) => {
+                              setMountainQuery(event.target.value);
+                              setSelectedMountain(null);
+                            }}
+                            autoComplete="off"
+                            placeholder="π.χ. Πάρνηθα, Δέλφι, Όλυμπος..."
+                          />
+                          {mountainSearching && <i>...</i>}
+                        </div>
+                      </label>
+                      {mountainResults.length > 0 && (
+                        <div className="mountainResults">
+                          {mountainResults.map((result) => (
+                            <button key={result.id} type="button" onClick={() => chooseMountain(result)}>
+                              <span className="mountainResultIcon">△</span>
+                              <span>
+                                <strong>{result.name}</strong>
+                                <small>{result.displayName}</small>
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {mountainQuery.trim().length >= 2 && !mountainSearching && mountainResults.length === 0 && !selectedMountain && (
+                        <small className="mountainSearchHint">Γράψε το όνομα και διάλεξε την κορυφή ή το βουνό από τις προτάσεις.</small>
+                      )}
+                    </div>
+
                     <div className="createMapPicker">
                       <div className="createMapPickerHeader">
                         <div>
-                          <strong>Σημείο στον χάρτη</strong>
-                          <small>Πάτησε πάνω στον χάρτη εκεί που γίνεται η πεζοπορία.</small>
+                          <strong>{selectedMountain ? selectedMountain.name : "Προεπισκόπηση στον χάρτη"}</strong>
+                          <small>{createMapPoint ? "Η περιοχή της επιλογής σου φαίνεται στον χάρτη. Μπορείς και να μετακινήσεις το pin." : "Αναζήτησε πρώτα κορυφή ή βουνό από πάνω."}</small>
                         </div>
                         <span className={createMapPoint ? "picked" : ""}>
                           {createMapPoint ? "✓ Επιλέχθηκε" : "Απαραίτητο"}
                         </span>
                       </div>
                       <iframe
-                        key={`${editingHike?.id ?? "new-map-point"}-${createRouteName}-${createRoutePoints.length}`}
+                        key={`${editingHike?.id ?? "new-map-point"}-${createMapPoint?.lat ?? "none"}-${createMapPoint?.lng ?? "none"}-${createRoutePoints.length}`}
                         className="createMapPickerFrame"
-                        title="Επιλογή σημείου πεζοπορίας"
-                        src={`/orivatis-map.html?mode=pick${editingHike?.mapLat != null && editingHike?.mapLng != null ? `&lat=${editingHike.mapLat}&lng=${editingHike.mapLng}` : ""}${createRoutePoints.length > 1 ? `&route=${encodeURIComponent(JSON.stringify(createRoutePoints))}` : ""}`}
+                        title="Προεπισκόπηση βουνού στον χάρτη"
+                        src={`/orivatis-map.html?mode=pick${createMapPoint ? `&lat=${createMapPoint.lat}&lng=${createMapPoint.lng}` : ""}${createRoutePoints.length > 1 ? `&route=${encodeURIComponent(JSON.stringify(createRoutePoints))}` : ""}`}
                       />
                       <input name="mapLat" type="hidden" value={createMapPoint?.lat ?? ""} readOnly />
                       <input name="mapLng" type="hidden" value={createMapPoint?.lng ?? ""} readOnly />
-                      {createMapPoint ? (
-                        <small className="createMapCoordinates">
-                          Το pin αποθηκεύτηκε · μπορείς να πατήσεις αλλού για αλλαγή.
-                        </small>
-                      ) : (
-                        <small className="createMapCoordinates">
-                          Χωρίς pin η πεζοπορία δεν μπορεί να δημοσιευτεί στον χάρτη του ORIVATIS.
-                        </small>
-                      )}
+                      <small className="createMapCoordinates">
+                        {createMapPoint ? "Το σημείο αποθηκεύτηκε · ο κύκλος δείχνει την ευρύτερη περιοχή του βουνού." : "Επίλεξε κορυφή ή βουνό για να το δεις εδώ."}
+                      </small>
                     </div>
 
                     {createRoutePoints.length > 1 && (
