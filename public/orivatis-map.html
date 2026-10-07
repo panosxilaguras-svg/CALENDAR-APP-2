@@ -131,10 +131,42 @@
           : 'Πάτησε την κορυφή που θέλεις να επιλέξεις';
         document.body.appendChild(tip);
 
+        var pickLookupId = 0;
+
+        async function labelPickedSummit(lat, lng) {
+          var lookupId = ++pickLookupId;
+          tip.textContent = '📍 Αναγνωρίζω την κορυφή…';
+          try {
+            var response = await fetch('/api/summit-name?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng), {
+              cache: 'no-store'
+            });
+            var json = await response.json();
+            if (lookupId !== pickLookupId) return;
+            var name = response.ok && typeof json.name === 'string' ? json.name.trim() : '';
+            if (name) {
+              tip.textContent = '📍 Κορυφή ' + name + ' · ✓ Επιλέχθηκε';
+              pickMarker.bindTooltip('Κορυφή ' + name, {
+                permanent: true,
+                direction: 'top',
+                offset: [0, -42],
+                className: 'summit-name-tooltip'
+              }).openTooltip();
+            } else {
+              tip.textContent = '📍 Επιλεγμένη κορυφή · ✓ Επιλέχθηκε';
+              if (pickMarker) pickMarker.unbindTooltip();
+            }
+          } catch (_) {
+            if (lookupId !== pickLookupId) return;
+            tip.textContent = '📍 Επιλεγμένη κορυφή · ✓ Επιλέχθηκε';
+            if (pickMarker) pickMarker.unbindTooltip();
+          }
+        }
+
         map.on('click', function (event) {
           var point = [event.latlng.lat, event.latlng.lng];
+          if (pickMarker) pickMarker.unbindTooltip();
           placePick(point[0], point[1], true);
-          tip.textContent = '✓ Η κορυφή επιλέχθηκε · πάτησε αλλού για αλλαγή';
+          labelPickedSummit(point[0], point[1]);
         });
         return;
       }
