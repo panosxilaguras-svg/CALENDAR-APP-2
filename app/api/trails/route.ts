@@ -12,11 +12,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "invalid_coordinates" }, { status: 400 });
   }
 
+  // Keep this deliberately small. Large relation geometry queries regularly
+  // time out on public Overpass instances. Nearby mapped ways are enough for
+  // the organizer to select the real trail segment on the map.
   const query =
-    '[out:json][timeout:18];(' +
-    'relation(around:12000,' + lat + ',' + lng + ')[type=route][route~"^(hiking|foot|walking)$"];' +
-    'way(around:4500,' + lat + ',' + lng + ')[highway~"^(path|footway|track)$"];' +
-    ');out tags geom;';
+    '[out:json][timeout:12];' +
+    'way(around:3000,' + lat + ',' + lng + ')[highway~"^(path|footway|track)$"];' +
+    'out tags geom 80;';
 
   let lastError = "overpass_failed";
   for (const endpoint of OVERPASS_ENDPOINTS) {
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
         headers: { "content-type": "application/x-www-form-urlencoded;charset=UTF-8" },
         body: "data=" + encodeURIComponent(query),
         cache: "no-store",
-        signal: AbortSignal.timeout(20000)
+        signal: AbortSignal.timeout(15000)
       });
       if (!response.ok) {
         lastError = "overpass_" + response.status;
