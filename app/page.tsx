@@ -928,7 +928,9 @@ export default function Home() {
     setMapPreviewHike(hike);
     setMapResetToken((value) => value + 1);
     setView("map");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
   }
 
   function showToast(message: string) {
