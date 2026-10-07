@@ -169,7 +169,11 @@
             ');out tags geom;';
           try {
             var response = await fetch('/api/trails?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng), { cache: 'no-store' });
-            if (!response.ok) throw new Error('overpass');
+            if (!response.ok) {
+              var errorText = '';
+              try { errorText = await response.text(); } catch (_) {}
+              throw new Error('api_' + response.status + (errorText ? '_' + errorText.slice(0, 80) : ''));
+            }
             var json = await response.json();
             var relationRoutes = (json.elements || []).filter(function (element) {
               return element.type === 'relation';
@@ -230,9 +234,9 @@
             });
 
             if (discoveredRoutes.length === 1) chooseRoute(0);
-          } catch (_) {
-            routePanel.innerHTML = '<span class="route-loading">Δεν μπόρεσα να φορτώσω μονοπάτια τώρα.</span>';
-            window.setTimeout(function () { routePanel.className = 'route-panel'; }, 2600);
+          } catch (error) {
+            var detail = error && error.message ? error.message : 'unknown';
+            routePanel.innerHTML = '<span class="route-loading">Σφάλμα μονοπατιών · ' + detail.replace(/[<>]/g, '') + '</span>';
           }
         }
 
