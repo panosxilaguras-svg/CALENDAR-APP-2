@@ -104,6 +104,7 @@
         }
 
         var pickMarker = null;
+        var mountainArea = null;
         var pickIcon = L.divIcon({
           className: 'hm-shell',
           html: '<div class="hm-pick"></div>',
@@ -114,12 +115,25 @@
         function placePick(lat, lng, notify) {
           if (pickMarker) pickMarker.setLatLng([lat, lng]);
           else pickMarker = L.marker([lat, lng], { icon: pickIcon }).addTo(map);
+
+          if (mountainArea) mountainArea.setLatLng([lat, lng]);
+          else mountainArea = L.circle([lat, lng], {
+            radius: 6500,
+            color: '#ef6a3a',
+            weight: 2,
+            opacity: .72,
+            fillColor: '#ef6a3a',
+            fillOpacity: .08,
+            dashArray: '7 7',
+            interactive: false
+          }).addTo(map);
+
           if (notify) parent.postMessage({ type: 'orivatis-map-pick', lat: lat, lng: lng }, '*');
         }
 
         if (hasInitial) {
           placePick(initialLat, initialLng, false);
-          map.setView([initialLat, initialLng], 10);
+          map.setView([initialLat, initialLng], 11);
         } else {
           map.setView([38.45, 23.55], 7);
         }
@@ -127,8 +141,8 @@
         var tip = document.createElement('div');
         tip.className = 'pick-tip';
         tip.textContent = hasInitial
-          ? '✓ Η κορυφή επιλέχθηκε · πάτησε αλλού για αλλαγή'
-          : 'Πάτησε την κορυφή που θέλεις να επιλέξεις';
+          ? '✓ Επιλέχθηκε · ο κύκλος δείχνει την περιοχή'
+          : 'Αναζήτησε κορυφή ή βουνό από το πεδίο πάνω';
         document.body.appendChild(tip);
 
         var pickLookupId = 0;
