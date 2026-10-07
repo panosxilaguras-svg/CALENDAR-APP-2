@@ -5313,12 +5313,50 @@ h1 {
   padding: 2px 0;
 }
 
-.createExistingPhotos img {
+.createExistingPhoto {
+  position: relative;
   width: 76px;
   height: 76px;
   flex: 0 0 76px;
+}
+
+.createExistingPhotos img {
+  width: 76px;
+  height: 76px;
   object-fit: cover;
   border-radius: 14px;
+}
+
+.createExistingPhotoDelete {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 27px;
+  height: 27px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(20, 24, 21, .78);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,.2);
+}
+
+.createExistingPhotoDelete:disabled {
+  opacity: .6;
+}
+
+.publicProfileAvatarClickable {
+  cursor: zoom-in;
+  transition: transform .16s ease;
+}
+
+.publicProfileAvatarClickable:active {
+  transform: scale(.96);
 }
 
 .createPhotoPicker {
