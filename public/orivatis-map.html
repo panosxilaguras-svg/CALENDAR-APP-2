@@ -103,57 +103,6 @@
           }).addTo(map);
         }
 
-        var selectedRoute = pickRoute.length > 1 ? pickRoute : [];
-        var routeLayer = null;
-        var routeStart = null;
-        var routeEndMarker = null;
-        var routePanel = document.createElement('div');
-        routePanel.className = 'route-panel';
-        document.body.appendChild(routePanel);
-
-        function clearRoute() {
-          if (routeLayer) map.removeLayer(routeLayer);
-          if (routeEndMarker) map.removeLayer(routeEndMarker);
-          routeLayer = null;
-          routeEndMarker = null;
-          selectedRoute = [];
-        }
-
-        async function buildHikingRoute(start, end) {
-          routePanel.className = 'route-panel show';
-          routePanel.innerHTML = '<span class="route-loading">Υπολογίζω πεζοπορική διαδρομή…</span>';
-          try {
-            var response = await fetch('/api/trails', {
-              method: 'POST',
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify(start ? { start: start, end: end } : { auto: true, end: end })
-            });
-            var json = await response.json();
-            if (!response.ok) throw new Error(json.error || 'route_failed');
-            var points = Array.isArray(json.route) ? json.route : [];
-            if (points.length < 2) throw new Error('empty_route');
-            clearRoute();
-            selectedRoute = points;
-            routeLayer = L.polyline(points, {
-              color: '#ef6a3a', weight: 6, opacity: .98, lineCap: 'round', lineJoin: 'round'
-            }).addTo(map);
-            routeEndMarker = L.circleMarker(end, {
-              radius: 8, color: '#fffefa', weight: 4, fillColor: '#173321', fillOpacity: 1
-            }).addTo(map);
-            map.fitBounds(routeLayer.getBounds(), { padding: [28, 28], maxZoom: 16 });
-            var km = typeof json.distanceKm === 'number' ? json.distanceKm : null;
-            routePanel.innerHTML = '<span class="route-loading">✓ Διαδρομή πεζοπορίας' + (km ? ' · ' + km.toFixed(1) + ' km' : '') + '</span>';
-            parent.postMessage({
-              type: 'orivatis-route-select',
-              route: points,
-              name: 'Πεζοπορική διαδρομή'
-            }, '*');
-          } catch (error) {
-            var detail = error && error.message ? error.message : 'route_failed';
-            routePanel.innerHTML = '<span class="route-loading">Δεν βρέθηκε πεζοπορική διαδρομή · ' + detail.replace(/[<>]/g, '') + '</span>';
-          }
-        }
-
         var pickMarker = null;
         var pickIcon = L.divIcon({
           className: 'hm-shell',
@@ -168,39 +117,24 @@
           if (notify) parent.postMessage({ type: 'orivatis-map-pick', lat: lat, lng: lng }, '*');
         }
 
-        if (pickRoute.length > 1) {
-          var routeBounds = L.latLngBounds(pickRoute);
-          if (hasInitial) placePick(initialLat, initialLng, false);
-          else placePick(pickRoute[0][0], pickRoute[0][1], false);
-          map.fitBounds(routeBounds, { padding: [34, 34], maxZoom: 15 });
-        } else if (hasInitial) {
+        if (hasInitial) {
           placePick(initialLat, initialLng, false);
           map.setView([initialLat, initialLng], 10);
         } else {
-          // Start over mainland Greece instead of treating missing query params
-          // as numeric zero (0,0), which is ocean in the Gulf of Guinea.
           map.setView([38.45, 23.55], 7);
         }
 
         var tip = document.createElement('div');
         tip.className = 'pick-tip';
-        tip.textContent = pickRoute.length > 1
-          ? '✓ Η πεζοπορική διαδρομή είναι πάνω στον χάρτη'
-          : 'Πάτησε την κορυφή · η διαδρομή θα βρεθεί αυτόματα';
+        tip.textContent = hasInitial
+          ? '✓ Η κορυφή επιλέχθηκε · πάτησε αλλού για αλλαγή'
+          : 'Πάτησε την κορυφή που θέλεις να επιλέξεις';
         document.body.appendChild(tip);
 
         map.on('click', function (event) {
-          var summit = [event.latlng.lat, event.latlng.lng];
-          clearRoute();
-          placePick(summit[0], summit[1], true);
-          routePanel.className = 'route-panel show';
-          routePanel.innerHTML = '<span class="route-loading">Βρίσκω αφετηρία και πεζοπορικό μονοπάτι…</span>';
-          tip.textContent = 'Βρίσκω αυτόματα τη διαδρομή προς την κορυφή…';
-          buildHikingRoute(null, summit).then(function () {
-            tip.textContent = selectedRoute.length > 1
-              ? '✓ Η πεζοπορική διαδρομή είναι έτοιμη · πάτησε άλλη κορυφή για αλλαγή'
-              : 'Δεν βρέθηκε διαδρομή · πάτησε άλλη κορυφή';
-          });
+          var point = [event.latlng.lat, event.latlng.lng];
+          placePick(point[0], point[1], true);
+          tip.textContent = '✓ Η κορυφή επιλέχθηκε · πάτησε αλλού για αλλαγή';
         });
         return;
       }
