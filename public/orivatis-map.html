@@ -163,25 +163,47 @@
           clearDiscoveredRoutes();
           routePanel.className = 'route-panel show';
           routePanel.innerHTML = '<span class="route-loading">Ψάχνω μονοπάτια γύρω από το σημείο…</span>';
-          var query = '[out:json][timeout:18];relation(around:7000,' + lat + ',' + lng + ')[type=route][route~"^(hiking|foot)$"];out tags geom;';
+          var query = '[out:json][timeout:20];(' +
+            'relation(around:12000,' + lat + ',' + lng + ')[type=route][route~"^(hiking|foot|walking)$"];' +
+            'way(around:4500,' + lat + ',' + lng + ')[highway~"^(path|footway|track)$"];' +
+            ');out tags geom;';
           try {
             var response = await fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query));
             if (!response.ok) throw new Error('overpass');
             var json = await response.json();
-            discoveredRoutes = (json.elements || []).map(function (relation) {
+            var relationRoutes = (json.elements || []).filter(function (element) {
+              return element.type === 'relation';
+            }).map(function (relation) {
               var segments = (relation.members || []).filter(function (member) {
                 return member.type === 'way' && Array.isArray(member.geometry) && member.geometry.length > 1 &&
-                  (!member.role || member.role === 'main' || member.role === '');
+                  (!member.role || ['main','forward','backward','alternative','approach','excursion','connection'].indexOf(member.role) !== -1);
               }).map(function (member) {
-                return member.geometry.map(function (point) { return [point.lat, point.lon]; });
+                var points = member.geometry.map(function (point) { return [point.lat, point.lon]; });
+                if (member.role === 'backward') points.reverse();
+                return points;
               });
-              var points = joinSegments(segments);
               return {
-                id: relation.id,
-                name: (relation.tags && (relation.tags.name || relation.tags.ref)) || 'Μονοπάτι',
-                points: points
+                id: 'r' + relation.id,
+                name: (relation.tags && (relation.tags.name || relation.tags.ref)) || 'Πεζοπορική διαδρομή',
+                points: joinSegments(segments),
+                official: true
               };
-            }).filter(function (route) { return route.points.length > 1; }).slice(0, 6);
+            }).filter(function (route) { return route.points.length > 1; });
+
+            var pathWays = (json.elements || []).filter(function (element) {
+              return element.type === 'way' && Array.isArray(element.geometry) && element.geometry.length > 1;
+            }).map(function (way) {
+              return {
+                id: 'w' + way.id,
+                name: (way.tags && (way.tags.name || way.tags.ref || way.tags.trail_name)) || 'Μονοπάτι',
+                points: way.geometry.map(function (point) { return [point.lat, point.lon]; }),
+                official: false
+              };
+            });
+
+            discoveredRoutes = relationRoutes.length
+              ? relationRoutes.slice(0, 8)
+              : pathWays.slice(0, 8);
 
             routePanel.innerHTML = '';
             if (!discoveredRoutes.length) {
@@ -202,7 +224,7 @@
               var button = document.createElement('button');
               button.type = 'button';
               button.className = 'route-choice';
-              button.textContent = route.name;
+              button.textContent = route.name + (route.official ? '' : ' · τμήμα');
               button.onclick = function () { chooseRoute(index); };
               routePanel.appendChild(button);
             });
