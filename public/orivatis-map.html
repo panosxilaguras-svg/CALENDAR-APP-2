@@ -168,7 +168,7 @@
             'way(around:4500,' + lat + ',' + lng + ')[highway~"^(path|footway|track)$"];' +
             ');out tags geom;';
           try {
-            var response = await fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query));
+            var response = await fetch('/api/trails?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng), { cache: 'no-store' });
             if (!response.ok) throw new Error('overpass');
             var json = await response.json();
             var relationRoutes = (json.elements || []).filter(function (element) {
