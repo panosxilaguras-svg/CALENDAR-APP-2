@@ -2076,11 +2076,11 @@ export default function Home() {
           {view === "new" && (
             <section className="createPage">
               <div className="createTopbar">
-                <button className="createBackButton" type="button" onClick={() => setView("home")} aria-label="Πίσω">×</button>
                 <div>
                   <p>{editingHike ? "Επεξεργασία" : "Νέα συνάντηση"}</p>
                   <h2>{editingHike ? "Επεξεργάσου τη συνάντηση" : "Φτιάξε πεζοπορική παρέα"}</h2>
                 </div>
+                <button className="createBackButton" type="button" onClick={() => setView("home")} aria-label="Κλείσιμο">×</button>
               </div>
 
               {!user ? (

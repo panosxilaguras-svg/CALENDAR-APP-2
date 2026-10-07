@@ -6902,3 +6902,16 @@ html[data-theme="dark"] .detailInlineMapMissing {
     box-sizing: border-box !important;
   }
 }
+
+
+/* Create header: title left, close action right */
+.createTopbar {
+  justify-content: space-between;
+}
+.createTopbar > div {
+  min-width: 0;
+}
+.createTopbar .createBackButton {
+  order: 2;
+  margin-left: auto;
+}
