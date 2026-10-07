@@ -893,7 +893,7 @@ export default function Home() {
     if (view !== "map" && view !== "new") return;
 
     const handleMapMessage = (event: MessageEvent) => {
-      const data = event.data as { type?: string; id?: string; lat?: number; lng?: number };
+      const data = event.data as { type?: string; id?: string; lat?: number; lng?: number; route?: [number, number][]; name?: string };
 
       if (data?.type === "orivatis-map-select" && data.id) {
         const hike = realHikes.find((item) => item.id === data.id);
@@ -907,6 +907,19 @@ export default function Home() {
         typeof data.lng === "number"
       ) {
         setCreateMapPoint({ lat: data.lat, lng: data.lng });
+        return;
+      }
+
+      if (
+        data?.type === "orivatis-route-select" &&
+        Array.isArray(data.route) &&
+        data.route.length > 1
+      ) {
+        const points = simplifyRoute(data.route);
+        setCreateRoutePoints(points);
+        setCreateRouteName(data.name || "Διαδρομή OpenStreetMap");
+        setCreateRouteDistanceKm(routeDistanceKm(data.route));
+        showToast(`Επιλέχθηκε: ${data.name || "πεζοπορική διαδρομή"} ✓`);
       }
     };
 
@@ -2135,32 +2148,18 @@ export default function Home() {
                       )}
                     </div>
 
-                    <div className="createGpx">
-                      <div className="createGpxCopy">
-                        <strong>Πραγματική διαδρομή GPX</strong>
-                        <small>Ανέβασε ένα .gpx και το ORIVATIS θα εμφανίσει όλο το μονοπάτι πάνω στον χάρτη.</small>
-                      </div>
-                      <label className="createGpxButton">
-                        <input
-                          type="file"
-                          accept=".gpx,application/gpx+xml,application/xml,text/xml"
-                          onChange={(event) => void handleGpxUpload(event.target.files?.[0])}
-                        />
-                        {createRoutePoints.length > 1 ? "Αλλαγή GPX" : "Ανέβασε GPX"}
-                      </label>
-                      {createRoutePoints.length > 1 && (
-                        <div className="createGpxLoaded">
-                          <div>
-                            <strong>✓ {createRouteName || "Διαδρομή GPX"}</strong>
-                            <small>
-                              {createRouteDistanceKm ? `${createRouteDistanceKm.toFixed(1)} km · ` : ""}
-                              {createRoutePoints.length} σημεία χάρτη · πραγματική χάραξη
-                            </small>
-                          </div>
-                          <button type="button" onClick={clearCreateRoute}>Αφαίρεση</button>
+                    {createRoutePoints.length > 1 && (
+                      <div className="createRouteSelected">
+                        <div>
+                          <strong>✓ {createRouteName || "Πεζοπορική διαδρομή"}</strong>
+                          <small>
+                            Βρέθηκε από OpenStreetMap
+                            {createRouteDistanceKm ? ` · ${createRouteDistanceKm.toFixed(1)} km` : ""}
+                          </small>
                         </div>
-                      )}
-                    </div>
+                        <button type="button" onClick={clearCreateRoute}>Αλλαγή</button>
+                      </div>
+                    )}
 
                     <div className="createTwoCols">
                       <label className="createField">
