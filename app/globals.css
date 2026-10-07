@@ -6374,3 +6374,17 @@ html[data-theme="dark"] .mapQuickFilters button.active {
     bottom: 82px;
   }
 }
+
+
+/* Keep map controls clear when the hike preview bottom sheet is open. */
+@media (max-width: 820px) {
+  .mapFitButton.withPreview {
+    bottom: 330px;
+  }
+}
+
+@media (min-width: 821px) {
+  .mapFitButton.withPreview {
+    bottom: 330px;
+  }
+}
