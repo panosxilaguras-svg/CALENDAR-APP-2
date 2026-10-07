@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
   // endpoint never makes the UI lose the summit label.
   const query =
     "[out:json][timeout:6];(" +
-    "node(around:250," + lat + "," + lng + ")[natural=peak];" +
-    "node(around:250," + lat + "," + lng + ")[natural=volcano];" +
+    "node(around:700," + lat + "," + lng + ")[natural=peak];" +
+    "node(around:700," + lat + "," + lng + ")[natural=volcano];" +
     ");out body 30;";
 
   const endpoints = [
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         const meters = distanceMeters(lat, lng, peak);
         // Never guess a summit from a nearby mountain. The tap must be close
         // to the actual OSM peak node, otherwise return no name.
-        if (meters > 180) continue;
+        if (meters > 500) continue;
         const name =
           cleanName(peak.tags?.["name:el"]) ||
           cleanName(peak.tags?.["name:en"]) ||
