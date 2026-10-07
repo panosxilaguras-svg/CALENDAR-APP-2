@@ -5509,3 +5509,325 @@ h1 {
     object-position: center !important;
   }
 }
+
+
+/* =========================================================
+   Theme switcher
+   ========================================================= */
+.appearancePanel {
+  margin: 18px 0;
+  padding: 15px 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.appearancePanelCopy {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.appearanceIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: #edf2e8;
+  color: #173f2d;
+  font-size: 18px;
+}
+
+.appearancePanelCopy strong,
+.appearancePanelCopy small {
+  display: block;
+}
+
+.appearancePanelCopy strong {
+  font-size: 14px;
+}
+
+.appearancePanelCopy small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.themeSwitch {
+  width: 50px;
+  height: 29px;
+  padding: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: #d9ddd8;
+  transition: .2s ease;
+  flex: 0 0 auto;
+}
+
+.themeSwitch span {
+  display: block;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,.16);
+  transition: transform .2s ease;
+}
+
+.themeSwitch.active {
+  background: #ef6a3a;
+}
+
+.themeSwitch.active span {
+  transform: translateX(21px);
+}
+
+/* Dark theme — mobile-first, preserves all existing structure/functionality */
+html[data-theme="dark"],
+html[data-theme="dark"] body {
+  background: #09120d;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] {
+  --cream: #0b1510;
+  --paper: #111d16;
+  --ink: #f1eee5;
+  --muted: #9aa59d;
+  --line: rgba(238, 241, 232, .11);
+  --shadow: 0 16px 40px rgba(0, 0, 0, .30);
+  --forest: #245a40;
+  --forest-2: #2f6d4c;
+  --leaf: #a9c997;
+}
+
+html[data-theme="dark"] .appShell {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(66, 116, 82, .16), transparent 34%),
+    radial-gradient(circle at 94% 10%, rgba(239, 106, 58, .07), transparent 34%),
+    #0b1510;
+}
+
+html[data-theme="dark"] .main,
+html[data-theme="dark"] .explorePage,
+html[data-theme="dark"] .detailPage,
+html[data-theme="dark"] .createPage,
+html[data-theme="dark"] .messagesPage,
+html[data-theme="dark"] .profileCard {
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .profileCard,
+html[data-theme="dark"] .formCard,
+html[data-theme="dark"] .messagesCard,
+html[data-theme="dark"] .stat,
+html[data-theme="dark"] .hikeCard,
+html[data-theme="dark"] .exploreCard,
+html[data-theme="dark"] .messagesEmptyCard,
+html[data-theme="dark"] .groupChatShell,
+html[data-theme="dark"] .createSection,
+html[data-theme="dark"] .createPhotoUpload,
+html[data-theme="dark"] .appearancePanel,
+html[data-theme="dark"] .requestPanel,
+html[data-theme="dark"] .profileModal,
+html[data-theme="dark"] .detailOrganizerCard,
+html[data-theme="dark"] .detailMeetingPoint,
+html[data-theme="dark"] .detailRouteSoon,
+html[data-theme="dark"] .communityNotice {
+  background: #111d16;
+  border-color: rgba(238, 241, 232, .09);
+  color: var(--ink);
+  box-shadow: 0 12px 34px rgba(0,0,0,.18);
+}
+
+html[data-theme="dark"] .exploreSearchBox,
+html[data-theme="dark"] .exploreFilterButton,
+html[data-theme="dark"] .exploreMapButton,
+html[data-theme="dark"] .createBackButton,
+html[data-theme="dark"] .detailRoundButton,
+html[data-theme="dark"] .mobileBrandActions button,
+html[data-theme="dark"] .requestProfile,
+html[data-theme="dark"] .requestReject {
+  background: #15241b;
+  color: #eef3e9;
+  border-color: rgba(238, 241, 232, .10);
+}
+
+html[data-theme="dark"] .field input,
+html[data-theme="dark"] .field select,
+html[data-theme="dark"] .field textarea,
+html[data-theme="dark"] .createField input,
+html[data-theme="dark"] .createField textarea,
+html[data-theme="dark"] .groupChatComposer input {
+  background: #0d1812;
+  color: var(--ink);
+  border-color: rgba(238, 241, 232, .10);
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #708078;
+}
+
+html[data-theme="dark"] .createField > span,
+html[data-theme="dark"] .detailSection h3,
+html[data-theme="dark"] .groupChatHeader strong,
+html[data-theme="dark"] .messagesEmptyCard strong,
+html[data-theme="dark"] .communityNotice strong {
+  color: #f1eee5;
+}
+
+html[data-theme="dark"] .exploreChip {
+  background: #17251c;
+  color: #d9e0da;
+}
+
+html[data-theme="dark"] .exploreChip.active {
+  background: #dceebd;
+  color: #132218;
+}
+
+html[data-theme="dark"] .groupChatList {
+  background: #0d1812;
+  border-color: rgba(238, 241, 232, .08);
+}
+
+html[data-theme="dark"] .groupChatItem {
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .groupChatItem.active {
+  background: #18271e;
+}
+
+html[data-theme="dark"] .groupMessage {
+  background: #17251c;
+  color: #eff2ec;
+}
+
+html[data-theme="dark"] .groupMessage.mine {
+  background: #214a35;
+}
+
+html[data-theme="dark"] .messagesLiveBadge,
+html[data-theme="dark"] .infoBadge {
+  background: #1b3023;
+  color: #cfe7bd;
+}
+
+html[data-theme="dark"] .detailMetaItem,
+html[data-theme="dark"] .detailParticipant,
+html[data-theme="dark"] .requestRow {
+  background: #111d16;
+  border-color: rgba(238, 241, 232, .08);
+}
+
+html[data-theme="dark"] .detailMetaItem strong,
+html[data-theme="dark"] .detailOrganizerCard strong,
+html[data-theme="dark"] .detailParticipant strong,
+html[data-theme="dark"] .requestRow strong {
+  color: #f1eee5;
+}
+
+html[data-theme="dark"] .detailContent,
+html[data-theme="dark"] .detailTitleBlock,
+html[data-theme="dark"] .detailSection,
+html[data-theme="dark"] .profileHero,
+html[data-theme="dark"] .profileForm,
+html[data-theme="dark"] .requestPanel,
+html[data-theme="dark"] .messagesPageHeader,
+html[data-theme="dark"] .exploreHeader {
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .communityNotice p,
+html[data-theme="dark"] .detailMuted,
+html[data-theme="dark"] .emptyNote,
+html[data-theme="dark"] .publicProfileBio,
+html[data-theme="dark"] .detailOrganizerCard small,
+html[data-theme="dark"] .detailParticipant small,
+html[data-theme="dark"] .requestRow span {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .communityNotice a,
+html[data-theme="dark"] .profileLegalLinks a,
+html[data-theme="dark"] .communityLegalLinks a {
+  color: #b8d8a3;
+}
+
+html[data-theme="dark"] .appearanceIcon {
+  background: #203326;
+  color: #dceebd;
+}
+
+html[data-theme="dark"] .mobileNav {
+  background: rgba(8, 19, 13, .94);
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+html[data-theme="dark"] .mobileNav button.active {
+  background: rgba(255,255,255,.10);
+}
+
+html[data-theme="dark"] .mobileNav .plus {
+  background: #ef6a3a;
+  color: white;
+}
+
+html[data-theme="dark"] .mobileBrandLockup,
+html[data-theme="dark"] .exploreMapButton,
+html[data-theme="dark"] .exploreFilterButton {
+  color: #dceebd;
+}
+
+html[data-theme="dark"] .mobileBrandMark {
+  background: #203d2d;
+  color: #dceebd;
+}
+
+html[data-theme="dark"] .hero {
+  background:
+    linear-gradient(180deg, rgba(8,17,12,.90) 0%, rgba(8,17,12,.70) 31%, rgba(8,17,12,.18) 58%, rgba(5,11,8,.36) 100%),
+    url("https://images.unsplash.com/photo-1784549852145-cda190fd63cf?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=84&w=2200");
+  background-size: cover;
+  background-position: center 55%;
+  color: #f4f1e8;
+}
+
+html[data-theme="dark"] .hero h2,
+html[data-theme="dark"] .hero p,
+html[data-theme="dark"] .heroEyebrow {
+  color: #f4f1e8;
+}
+
+html[data-theme="dark"] .createDifficulty label span {
+  background: #17251c;
+  color: #d9e0da;
+  border-color: rgba(238,241,232,.08);
+}
+
+html[data-theme="dark"] .createDifficulty input:checked + span {
+  background: #dceebd;
+  color: #15241b;
+}
+
+html[data-theme="dark"] .createPhotoPicker {
+  background: #16271d;
+  color: #cfe7bd;
+  border-color: rgba(169,201,151,.30);
+}
+
+@media (max-width: 820px) {
+  html[data-theme="dark"] .profileCard {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+}
