@@ -217,6 +217,10 @@ export default function Home() {
   const [myJoinRequests, setMyJoinRequests] = useState<Record<string, { id: string; status: MyJoinStatus }>>({});
   const [photoViewerIndex, setPhotoViewerIndex] = useState<number | null>(null);
   const [theme, setTheme] = useState<ThemeMode>("light");
+  const [mapSearch, setMapSearch] = useState("");
+  const [mapQuickFilter, setMapQuickFilter] = useState("Όλες");
+  const [mapPreviewHike, setMapPreviewHike] = useState<Hike | null>(null);
+  const [mapResetToken, setMapResetToken] = useState(0);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("hikemazi-theme");
@@ -438,7 +442,7 @@ export default function Home() {
   }
 
   async function openHikeDetails(hike: Hike) {
-    setDetailReturnView(view === "home" ? "home" : "explore");
+    setDetailReturnView(view === "home" ? "home" : view === "map" ? "map" : "explore");
     setSelectedHike(hike);
     setDetailParticipants([]);
     setView("detail");
@@ -791,6 +795,82 @@ export default function Home() {
       return matchesDifficulty && matchesSearch;
     });
   }, [allHikes, filter, search]);
+
+  const mapHikes = useMemo(() => {
+    const query = mapSearch.trim().toLocaleLowerCase("el-GR");
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+
+    const startOfWeekend = new Date(now);
+    const daysUntilSaturday = (6 - now.getDay() + 7) % 7;
+    startOfWeekend.setDate(now.getDate() + daysUntilSaturday);
+    startOfWeekend.setHours(0, 0, 0, 0);
+
+    const endOfWeekend = new Date(startOfWeekend);
+    endOfWeekend.setDate(startOfWeekend.getDate() + 1);
+    endOfWeekend.setHours(23, 59, 59, 999);
+
+    return realHikes.filter((hike) => {
+      if (typeof hike.mapLat !== "number" || typeof hike.mapLng !== "number") return false;
+
+      const matchesSearch =
+        !query ||
+        hike.title.toLocaleLowerCase("el-GR").includes(query) ||
+        hike.location.toLocaleLowerCase("el-GR").includes(query);
+
+      if (!matchesSearch) return false;
+      if (mapQuickFilter === "Εύκολες" && hike.difficulty !== "Εύκολη") return false;
+
+      const hikeDate = hike.startsAt ? new Date(hike.startsAt) : null;
+
+      if (mapQuickFilter === "Αύριο") {
+        return Boolean(
+          hikeDate &&
+          hikeDate.getFullYear() === tomorrow.getFullYear() &&
+          hikeDate.getMonth() === tomorrow.getMonth() &&
+          hikeDate.getDate() === tomorrow.getDate()
+        );
+      }
+
+      if (mapQuickFilter === "Αυτό το ΣΚ") {
+        return Boolean(hikeDate && hikeDate >= startOfWeekend && hikeDate <= endOfWeekend);
+      }
+
+      return true;
+    });
+  }, [realHikes, mapSearch, mapQuickFilter]);
+
+  const mapFrameSrc = useMemo(() => {
+    const points = mapHikes.map((hike) => ({
+      id: hike.id ?? "",
+      lat: hike.mapLat,
+      lng: hike.mapLng,
+      difficulty: hike.difficulty
+    }));
+
+    return `/hikemazi-map.html?data=${encodeURIComponent(JSON.stringify(points))}&r=${mapResetToken}`;
+  }, [mapHikes, mapResetToken]);
+
+  useEffect(() => {
+    if (view !== "map") return;
+
+    const handleMapMessage = (event: MessageEvent) => {
+      const data = event.data as { type?: string; id?: string };
+      if (data?.type !== "hikemazi-map-select" || !data.id) return;
+
+      const hike = realHikes.find((item) => item.id === data.id);
+      if (hike) setMapPreviewHike(hike);
+    };
+
+    window.addEventListener("message", handleMapMessage);
+    return () => window.removeEventListener("message", handleMapMessage);
+  }, [view, realHikes]);
+
+  function resetMapViewport() {
+    setMapPreviewHike(null);
+    setMapResetToken((value) => value + 1);
+  }
 
   function showToast(message: string) {
     setToast(message);
@@ -1181,7 +1261,7 @@ export default function Home() {
         </aside>
 
         <main className="main">
-          {view !== "detail" && view !== "explore" && view !== "home" && (
+          {view !== "detail" && view !== "explore" && view !== "home" && view !== "map" && (
             <header className="topbar">
               <div>
                 <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
@@ -1710,20 +1790,91 @@ export default function Home() {
           )}
 
           {view === "map" && (
-            <section className="mapCard">
-              <div className="mapVisual">
-                <svg className="trailSvg" viewBox="0 0 900 500" preserveAspectRatio="none" aria-hidden="true">
-                  <path d="M 40 420 C 160 360, 160 210, 300 245 S 470 420, 560 300 S 680 90, 850 120" fill="none" stroke="#52765a" strokeWidth="10" strokeLinecap="round" strokeDasharray="1 22" />
-                  <path d="M 40 420 C 160 360, 160 210, 300 245 S 470 420, 560 300 S 680 90, 850 120" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-                <div className="mapPin" style={{ left: "18%", top: "63%" }}><span>🥾</span></div>
-                <div className="mapPin" style={{ left: "51%", top: "61%" }}><span>🥾</span></div>
-                <div className="mapPin" style={{ left: "76%", top: "29%" }}><span>🥾</span></div>
-                <div className="mapLegend">
-                  <strong>Πεζοπορίες κοντά σου</strong>
-                  <div className="emptyNote">Στην επόμενη φάση εδώ θα μπει πραγματικός χάρτης με GPS/GPX διαδρομές.</div>
+            <section className="discoveryMapPage">
+              <iframe
+                key={mapResetToken}
+                className="liveMapCanvas"
+                title="Χάρτης ενεργών πεζοποριών"
+                src={mapFrameSrc}
+              />
+
+              <div className="mapDiscoveryTop">
+                <div className="mapDiscoveryBrandRow">
+                  <button type="button" className="mapDiscoveryBack" onClick={() => setView("explore")} aria-label="Πίσω στις πεζοπορίες">←</button>
+                  <div>
+                    <strong>Ανακάλυψε πεζοπορίες</strong>
+                    <span>{mapHikes.length} ενεργές στον χάρτη</span>
+                  </div>
+                  <button type="button" className="mapDiscoveryProfile" onClick={() => setView("profile")} aria-label="Προφίλ">
+                    {profile?.avatarUrl ? (
+                      <img src={avatarPublicUrl(profile.avatarUrl) ?? ""} alt="" />
+                    ) : (
+                      initials(profile?.displayName || user?.email?.split("@")[0] || "Π").toUpperCase()
+                    )}
+                  </button>
+                </div>
+
+                <label className="mapDiscoverySearch">
+                  <span>⌕</span>
+                  <input
+                    value={mapSearch}
+                    onChange={(event) => {
+                      setMapSearch(event.target.value);
+                      setMapPreviewHike(null);
+                    }}
+                    placeholder="Περιοχή, βουνό ή πεζοπορία..."
+                  />
+                </label>
+
+                <div className="mapQuickFilters" role="group" aria-label="Φίλτρα χάρτη">
+                  {["Όλες", "Αύριο", "Αυτό το ΣΚ", "Εύκολες"].map((item) => (
+                    <button
+                      type="button"
+                      key={item}
+                      className={mapQuickFilter === item ? "active" : ""}
+                      onClick={() => {
+                        setMapQuickFilter(item);
+                        setMapPreviewHike(null);
+                      }}
+                    >
+                      {item}
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              <button className="mapFitButton" type="button" onClick={resetMapViewport} aria-label="Προβολή όλων των ενεργών πεζοποριών">⌖</button>
+
+              {!loadingHikes && mapHikes.length === 0 && (
+                <div className="mapNoResults">
+                  <strong>Δεν βρήκαμε ενεργή πεζοπορία εδώ.</strong>
+                  <span>Άλλαξε φίλτρο ή αναζήτησε άλλη περιοχή.</span>
+                </div>
+              )}
+
+              {mapPreviewHike && (
+                <article className="mapHikePreview">
+                  <button className="mapPreviewClose" type="button" onClick={() => setMapPreviewHike(null)} aria-label="Κλείσιμο">×</button>
+                  <div
+                    className="mapPreviewPhoto"
+                    style={mapPreviewHike.coverPhoto ? { backgroundImage: `url("${mapPreviewHike.coverPhoto}")` } : undefined}
+                  >
+                    <span className="mapPreviewDifficulty">{mapPreviewHike.difficulty}</span>
+                  </div>
+                  <div className="mapPreviewBody">
+                    <p>{mapPreviewHike.location}</p>
+                    <h3>{mapPreviewHike.title}</h3>
+                    <div className="mapPreviewMeta">
+                      <span>▣ {mapPreviewHike.day} {mapPreviewHike.month}</span>
+                      <span>↗ {mapPreviewHike.distance}</span>
+                      <span>♟ {mapPreviewHike.people}/{mapPreviewHike.maxParticipants ?? "—"}</span>
+                    </div>
+                    <button type="button" className="mapPreviewOpen" onClick={() => openHikeDetails(mapPreviewHike)}>
+                      Προβολή πεζοπορίας →
+                    </button>
+                  </div>
+                </article>
+              )}
             </section>
           )}
 
