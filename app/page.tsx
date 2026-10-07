@@ -2818,7 +2818,7 @@ export default function Home() {
 
       {coverEditor && <div className="coverEditorOverlay" role="dialog" aria-modal="true"><div className="coverEditorSheet">
         <div className="coverEditorHeader"><button type="button" onClick={()=>setCoverEditor(null)}>Ακύρωση</button><strong>Εξώφυλλο</strong><button type="button" onClick={()=>void saveCoverEditor()}>Έτοιμο</button></div>
-        <p>Σύρε τη φωτογραφία μέσα στο πλαίσιο και μεγέθυνέ την όσο θέλεις.</p>{/* cover editor v2 */}
+        <p>Σύρε τη φωτογραφία μέσα στο πλαίσιο και μεγέθυνέ την όσο θέλεις.</p>{/* cover editor v3 seeded-photo fix */}
         <div className="coverEditorStage" onPointerDown={(e)=>{e.currentTarget.setPointerCapture(e.pointerId);setCoverDragStart({x:e.clientX,y:e.clientY,cropX:coverEditor.x,cropY:coverEditor.y})}} onPointerMove={(e)=>moveCoverEditor(e.clientX,e.clientY)} onPointerUp={()=>setCoverDragStart(null)} onPointerCancel={()=>setCoverDragStart(null)}>
           <div className="coverEditorImage" style={{backgroundImage:`url("${coverEditor.url}")`,backgroundPosition:`${coverEditor.x}% ${coverEditor.y}%`,backgroundSize:`${coverEditor.zoom*100}%`}}/><div className="coverEditorFrame"><span>ΠΕΡΙΟΧΗ ΕΞΩΦΥΛΛΟΥ</span></div>
         </div>
