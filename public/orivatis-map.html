@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>ORIVATIS Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html,body{width:100%;height:100%;margin:0;background:#dce6d9;overflow:hidden}#map{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:#dce6d9}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .leaflet-control-attribution{font-size:8px;opacity:.72}
+    .leaflet-control-zoom{border:0!important;box-shadow:0 10px 28px rgba(22,37,28,.18)!important}
+    .leaflet-control-zoom a{border:0!important;width:38px!important;height:38px!important;line-height:38px!important;background:rgba(255,254,250,.96)!important;color:#173321!important}
+    .hm-shell{background:transparent!important;border:0!important}
+    .hm-pin{width:46px;height:46px;border:4px solid white;border-radius:50% 50% 50% 15px;display:grid;place-items:center;transform:rotate(-45deg);background:#173321;color:#dceebd;box-shadow:0 11px 26px rgba(18,35,24,.28)}
+    .hm-pin span{transform:rotate(45deg);font-size:19px;font-weight:900}
+    .hm-pin.hard{background:#ef6a3a;color:white}
+    .hm-pin.easy{background:#a9c997;color:#173321}
+    .hm-pick{width:38px;height:38px;border:4px solid white;border-radius:50% 50% 50% 13px;background:#ef6a3a;transform:rotate(-45deg);box-shadow:0 10px 24px rgba(90,45,28,.28)}
+    .pick-tip{position:absolute;z-index:500;left:50%;bottom:18px;transform:translateX(-50%);max-width:calc(100% - 30px);padding:10px 14px;border-radius:999px;background:rgba(255,254,250,.94);color:#173321;font-size:12px;font-weight:800;box-shadow:0 10px 30px rgba(20,35,25,.15);pointer-events:none;white-space:nowrap}
+    @media(max-width:820px){.leaflet-control-zoom{display:none}.pick-tip{font-size:11px;bottom:12px}}
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var mode = params.get('mode') || 'browse';
+      var detailMode = params.get('detail') === '1';
+      var hikes = [];
+      try { hikes = JSON.parse(params.get('data') || '[]'); } catch (_) {}
+
+      var map = L.map('map', {
+        zoomControl: false,
+        attributionControl: true,
+        minZoom: 5,
+        maxZoom: 18
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(map);
+
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      if (mode === 'pick') {
+        var initialLat = Number(params.get('lat'));
+        var initialLng = Number(params.get('lng'));
+        var hasInitial = Number.isFinite(initialLat) && Number.isFinite(initialLng);
+        var pickMarker = null;
+        var pickIcon = L.divIcon({
+          className: 'hm-shell',
+          html: '<div class="hm-pick"></div>',
+          iconSize: [42, 50],
+          iconAnchor: [21, 45]
+        });
+
+        function placePick(lat, lng, notify) {
+          if (pickMarker) pickMarker.setLatLng([lat, lng]);
+          else pickMarker = L.marker([lat, lng], { icon: pickIcon }).addTo(map);
+          if (notify) parent.postMessage({ type: 'orivatis-map-pick', lat: lat, lng: lng }, '*');
+        }
+
+        if (hasInitial) {
+          placePick(initialLat, initialLng, false);
+          map.setView([initialLat, initialLng], 10);
+        } else {
+          map.setView([38.35, 23.70], 6.2);
+        }
+
+        var tip = document.createElement('div');
+        tip.className = 'pick-tip';
+        tip.textContent = 'Πάτησε στον χάρτη για να ορίσεις το σημείο';
+        document.body.appendChild(tip);
+
+        map.on('click', function (event) {
+          placePick(event.latlng.lat, event.latlng.lng, true);
+          tip.textContent = '✓ Το σημείο αποθηκεύτηκε';
+          window.setTimeout(function () {
+            tip.textContent = 'Πάτησε αλλού για να αλλάξεις το σημείο';
+          }, 1200);
+        });
+        return;
+      }
+
+      var bounds = [];
+      hikes.forEach(function (hike) {
+        if (typeof hike.lat !== 'number' || typeof hike.lng !== 'number') return;
+        bounds.push([hike.lat, hike.lng]);
+
+        var route = Array.isArray(hike.route)
+          ? hike.route.filter(function (point) {
+              return Array.isArray(point) && point.length >= 2 &&
+                typeof point[0] === 'number' && typeof point[1] === 'number';
+            })
+          : [];
+
+        if (route.length > 1) {
+          route.forEach(function (point) { bounds.push([point[0], point[1]]); });
+
+          L.polyline(route, {
+            color: '#fffefa',
+            weight: detailMode ? 9 : 8,
+            opacity: .92,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(map);
+
+          L.polyline(route, {
+            color: '#ef6a3a',
+            weight: detailMode ? 5 : 4,
+            opacity: hike.approximate ? .78 : .96,
+            dashArray: hike.approximate ? '10 8' : null,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(map);
+        }
+
+        var cls = hike.difficulty === 'Δύσκολη' ? 'hard' : hike.difficulty === 'Εύκολη' ? 'easy' : 'moderate';
+        var icon = L.divIcon({
+          className: 'hm-shell',
+          html: '<div class="hm-pin ' + cls + '"><span>△</span></div>',
+          iconSize: [48, 56],
+          iconAnchor: [24, 51]
+        });
+
+        var marker = L.marker([hike.lat, hike.lng], { icon: icon }).addTo(map);
+        marker.on('click', function () {
+          parent.postMessage({ type: 'orivatis-map-select', id: hike.id }, '*');
+          map.flyTo([hike.lat, hike.lng], Math.max(map.getZoom(), 9), { duration: 0.45 });
+        });
+      });
+
+      if (bounds.length === 1) map.setView(bounds[0], detailMode ? 10.5 : 8.4);
+      else if (bounds.length > 1) map.fitBounds(bounds, { padding: detailMode ? [34, 34] : [70, 70], maxZoom: detailMode ? 13 : 10 });
+      else map.setView([38.35, 23.70], 6.2);
+
+      function refreshMapSize() {
+        map.invalidateSize({ pan: false });
+      }
+
+      requestAnimationFrame(refreshMapSize);
+      setTimeout(refreshMapSize, 80);
+      setTimeout(refreshMapSize, 260);
+      setTimeout(refreshMapSize, 700);
+      window.addEventListener('resize', refreshMapSize);
+      window.addEventListener('orientationchange', function () {
+        setTimeout(refreshMapSize, 120);
+      });
+
+      if ('ResizeObserver' in window) {
+        var observer = new ResizeObserver(function () { refreshMapSize(); });
+        observer.observe(document.getElementById('map'));
+      }
+    })();
+  </script>
+</body>
+</html>
