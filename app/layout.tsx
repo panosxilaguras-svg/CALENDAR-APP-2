@@ -25,7 +25,12 @@ export const metadata: Metadata = {
     title: "ORIVATIS",
     description: "Βρες πεζοπορίες, γνώρισε παρέα και ανέβα βουνό μαζί."
   },
-  manifest: "/manifest.webmanifest"
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/orivatis-icon.svg",
+    shortcut: "/orivatis-icon.svg",
+    apple: "/orivatis-icon.svg"
+  }
 };
 
 export const viewport: Viewport = {
