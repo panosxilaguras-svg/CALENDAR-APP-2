@@ -5480,3 +5480,32 @@ h1 {
     margin-bottom: 126px !important;
   }
 }
+
+
+/* Desktop lightbox: always show the entire photo */
+@media (min-width: 641px) {
+  .photoViewer {
+    overflow: hidden;
+    padding: 72px 92px 34px;
+  }
+
+  .photoViewerImageWrap {
+    width: auto;
+    height: auto;
+    max-width: calc(100vw - 220px);
+    max-height: calc(100dvh - 150px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .photoViewerImageWrap img {
+    display: block;
+    width: auto !important;
+    height: auto !important;
+    max-width: calc(100vw - 220px) !important;
+    max-height: calc(100dvh - 150px) !important;
+    object-fit: contain !important;
+    object-position: center !important;
+  }
+}
