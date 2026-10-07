@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
   // endpoint never makes the UI lose the summit label.
   const query =
     "[out:json][timeout:6];(" +
-    "node(around:700," + lat + "," + lng + ")[natural=peak];" +
-    "node(around:700," + lat + "," + lng + ")[natural=volcano];" +
+    "node(around:1000," + lat + "," + lng + ")[natural=peak];" +
+    "node(around:1000," + lat + "," + lng + ")[natural=volcano];" +
     ");out body 30;";
 
   const endpoints = [
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         const meters = distanceMeters(lat, lng, peak);
         // Never guess a summit from a nearby mountain. The tap must be close
         // to the actual OSM peak node, otherwise return no name.
-        if (meters > 500) continue;
+        if (meters > 850) continue;
         const name =
           cleanName(peak.tags?.["name:el"]) ||
           cleanName(peak.tags?.["name:en"]) ||
@@ -97,8 +97,10 @@ export async function GET(request: NextRequest) {
     if (response.ok) {
       const data = await response.json();
       const address = data?.address || {};
-      const isPeak = data?.type === "peak" || data?.type === "volcano" || Boolean(address.peak);
-      const name = isPeak
+      const category = cleanName(data?.category || data?.class);
+      const type = cleanName(data?.type);
+      const naturalFeature = category === "natural" || type === "peak" || type === "volcano";
+      const name = naturalFeature
         ? (cleanName(address.peak) || cleanName(data?.name) || cleanName(address.volcano))
         : "";
       if (name) return NextResponse.json({ name });
