@@ -2117,7 +2117,7 @@ export default function Home() {
                         </span>
                       </div>
                       <iframe
-                        key={`${editingHike?.id ?? "new-map-point"}-${createRoutePoints.length}`}
+                        key={`${editingHike?.id ?? "new-map-point"}-${createRouteName}-${createRoutePoints.length}`}
                         className="createMapPickerFrame"
                         title="Επιλογή σημείου πεζοπορίας"
                         src={`/orivatis-map.html?mode=pick${createMapPoint ? `&lat=${createMapPoint.lat}&lng=${createMapPoint.lng}` : ""}${createRoutePoints.length > 1 ? `&route=${encodeURIComponent(JSON.stringify(createRoutePoints))}` : ""}`}
