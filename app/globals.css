@@ -7175,3 +7175,16 @@ html[data-theme="dark"] .hero {
     margin-top: 96px !important;
   }
 }
+
+
+/* Mobile homepage — remove the empty strip above the hero */
+@media (max-width: 820px) {
+  .main.mainHomeView {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  .main.mainHomeView > .hero {
+    margin-top: 0 !important;
+  }
+}
