@@ -972,6 +972,11 @@ export default function Home() {
       return;
     }
 
+    if (!mapLatRaw || !mapLngRaw) {
+      showToast("Διάλεξε το σημείο της πεζοπορίας στον χάρτη.");
+      return;
+    }
+
     const startsAt = new Date(`${date}T${time}:00`);
     if (Number.isNaN(startsAt.getTime())) {
       showToast("Η ημερομηνία ή η ώρα δεν είναι σωστή.");
@@ -1934,6 +1939,35 @@ export default function Home() {
                       <input name="meetingPoint" defaultValue={editingHike?.meetingPoint ?? ""} placeholder="π.χ. Parking τελεφερίκ / Καταφύγιο Μπάφι" />
                       <small>Αυτό θα μας βοηθήσει αργότερα όταν συνδέσουμε τον χάρτη.</small>
                     </label>
+
+                    <div className="createMapPicker">
+                      <div className="createMapPickerHeader">
+                        <div>
+                          <strong>Σημείο στον χάρτη</strong>
+                          <small>Πάτησε πάνω στον χάρτη εκεί που γίνεται η πεζοπορία.</small>
+                        </div>
+                        <span className={createMapPoint ? "picked" : ""}>
+                          {createMapPoint ? "✓ Επιλέχθηκε" : "Απαραίτητο"}
+                        </span>
+                      </div>
+                      <iframe
+                        key={editingHike?.id ?? "new-map-point"}
+                        className="createMapPickerFrame"
+                        title="Επιλογή σημείου πεζοπορίας"
+                        src={`/hikemazi-map.html?mode=pick${typeof editingHike?.mapLat === "number" && typeof editingHike?.mapLng === "number" ? `&lat=${editingHike.mapLat}&lng=${editingHike.mapLng}` : ""}`}
+                      />
+                      <input name="mapLat" type="hidden" value={createMapPoint?.lat ?? ""} readOnly />
+                      <input name="mapLng" type="hidden" value={createMapPoint?.lng ?? ""} readOnly />
+                      {createMapPoint ? (
+                        <small className="createMapCoordinates">
+                          Το pin αποθηκεύτηκε · μπορείς να πατήσεις αλλού για αλλαγή.
+                        </small>
+                      ) : (
+                        <small className="createMapCoordinates">
+                          Χωρίς pin η πεζοπορία δεν μπορεί να δημοσιευτεί στον χάρτη του HikeMazi.
+                        </small>
+                      )}
+                    </div>
 
                     <div className="createTwoCols">
                       <label className="createField">
