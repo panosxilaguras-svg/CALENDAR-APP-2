@@ -152,7 +152,7 @@ const demoHikes: Hike[] = [
 
 const nav: { id: View; icon: string; label: string }[] = [
   { id: "home", icon: "⌂", label: "Αρχική" },
-  { id: "explore", icon: "⌁", label: "Πεζοπορίες" },
+  { id: "explore", icon: "〰", label: "Πεζοπορίες" },
   { id: "new", icon: "＋", label: "Νέα" },
   { id: "messages", icon: "✉", label: "Μηνύματα" },
   { id: "profile", icon: "◉", label: "Προφίλ" }
