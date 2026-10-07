@@ -1890,7 +1890,7 @@ export default function Home() {
                     placeholder="Αναζήτηση βουνού ή περιοχής..."
                   />
                 </div>
-                <button className="exploreFilterButton" aria-label="Φίλτρα">☷</button>
+                
               </div>
 
               <div className="exploreChips">
