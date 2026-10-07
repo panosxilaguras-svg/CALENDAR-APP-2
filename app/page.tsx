@@ -230,7 +230,7 @@ export default function Home() {
   const [createMapPoint, setCreateMapPoint] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem("hikemazi-theme");
+    const savedTheme = window.localStorage.getItem("orivatis-theme");
     const nextTheme: ThemeMode = savedTheme === "dark" ? "dark" : "light";
     setTheme(nextTheme);
     document.documentElement.dataset.theme = nextTheme;
@@ -239,7 +239,7 @@ export default function Home() {
   function toggleTheme() {
     const nextTheme: ThemeMode = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
-    window.localStorage.setItem("hikemazi-theme", nextTheme);
+    window.localStorage.setItem("orivatis-theme", nextTheme);
     document.documentElement.dataset.theme = nextTheme;
   }
 
@@ -859,7 +859,7 @@ export default function Home() {
       route: hike.routePoints ?? [],
       approximate: Boolean(hike.routeIsApproximate)
     }));
-    return `/hikemazi-map.html?data=${encodeURIComponent(JSON.stringify(points))}&r=${mapResetToken}`;
+    return `/orivatis-map.html?data=${encodeURIComponent(JSON.stringify(points))}&r=${mapResetToken}`;
   }, [mapHikes, mapResetToken]);
 
   const detailMapSrc = useMemo(() => {
@@ -876,7 +876,7 @@ export default function Home() {
       approximate: Boolean(selectedHike.routeIsApproximate)
     }];
 
-    return `/hikemazi-map.html?data=${encodeURIComponent(JSON.stringify(point))}&detail=1`;
+    return `/orivatis-map.html?data=${encodeURIComponent(JSON.stringify(point))}&detail=1`;
   }, [selectedHike]);
 
   useEffect(() => {
@@ -892,14 +892,14 @@ export default function Home() {
     const handleMapMessage = (event: MessageEvent) => {
       const data = event.data as { type?: string; id?: string; lat?: number; lng?: number };
 
-      if (data?.type === "hikemazi-map-select" && data.id) {
+      if (data?.type === "orivatis-map-select" && data.id) {
         const hike = realHikes.find((item) => item.id === data.id);
         if (hike) setMapPreviewHike(hike);
         return;
       }
 
       if (
-        data?.type === "hikemazi-map-pick" &&
+        data?.type === "orivatis-map-pick" &&
         typeof data.lat === "number" &&
         typeof data.lng === "number"
       ) {
@@ -1324,7 +1324,7 @@ export default function Home() {
           <div className="brand">
             <div className="brandMark">△</div>
             <div className="brandText">
-              HikeMazi
+              ORIVATIS
               <small>find your trail people</small>
             </div>
           </div>
@@ -1353,7 +1353,7 @@ export default function Home() {
               <div>
                 <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
                 <h1>{nav.find((x) => x.id === view)?.label}</h1>
-                <p className="subtitle">Το HikeMazi community για πεζοπορίες και παρέα.</p>
+                <p className="subtitle">Το ORIVATIS community για πεζοπορίες και παρέα.</p>
               </div>
               <button className="avatarButton" onClick={() => setView("profile")}>
                 {profile?.avatarUrl ? (
@@ -1376,7 +1376,7 @@ export default function Home() {
                         <path d="m9.7 13.7 2.5 3.2 2-2.1" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </button>
-                    <span className="mobileWordmark">HikeMazi</span>
+                    <span className="mobileWordmark">ORIVATIS</span>
                   </div>
                   <div className="mobileBrandActions">
                     <button aria-label="Αναζήτηση" onClick={() => document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" })}>
@@ -1828,7 +1828,7 @@ export default function Home() {
                 <section className="communityNotice compact detailLegalNotice">
                   <strong>Κοινωνική πεζοπορική συνάντηση</strong>
                   <p>
-                    Το HikeMazi φέρνει ανθρώπους σε επαφή για να πεζοπορούν μαζί. Η ανάρτηση δεν αποτελεί επαγγελματική ξενάγηση ή υπηρεσία συνοδείας και το μέλος που ξεκίνησε την παρέα δεν αναλαμβάνει, μόνο από αυτή την ιδιότητα, ρόλο επαγγελματία οδηγού.
+                    Το ORIVATIS φέρνει ανθρώπους σε επαφή για να πεζοπορούν μαζί. Η ανάρτηση δεν αποτελεί επαγγελματική ξενάγηση ή υπηρεσία συνοδείας και το μέλος που ξεκίνησε την παρέα δεν αναλαμβάνει, μόνο από αυτή την ιδιότητα, ρόλο επαγγελματία οδηγού.
                   </p>
                   <a href="/safety">Ασφάλεια & κανόνες</a>
                 </section>
@@ -2037,7 +2037,7 @@ export default function Home() {
                         key={editingHike?.id ?? "new-map-point"}
                         className="createMapPickerFrame"
                         title="Επιλογή σημείου πεζοπορίας"
-                        src={`/hikemazi-map.html?mode=pick${typeof editingHike?.mapLat === "number" && typeof editingHike?.mapLng === "number" ? `&lat=${editingHike.mapLat}&lng=${editingHike.mapLng}` : ""}`}
+                        src={`/orivatis-map.html?mode=pick${typeof editingHike?.mapLat === "number" && typeof editingHike?.mapLng === "number" ? `&lat=${editingHike.mapLat}&lng=${editingHike.mapLng}` : ""}`}
                       />
                       <input name="mapLat" type="hidden" value={createMapPoint?.lat ?? ""} readOnly />
                       <input name="mapLng" type="hidden" value={createMapPoint?.lng ?? ""} readOnly />
@@ -2047,7 +2047,7 @@ export default function Home() {
                         </small>
                       ) : (
                         <small className="createMapCoordinates">
-                          Χωρίς pin η πεζοπορία δεν μπορεί να δημοσιευτεί στον χάρτη του HikeMazi.
+                          Χωρίς pin η πεζοπορία δεν μπορεί να δημοσιευτεί στον χάρτη του ORIVATIS.
                         </small>
                       )}
                     </div>
@@ -2095,7 +2095,7 @@ export default function Home() {
                   </section>
 
                   <section className="communityNotice">
-                    <strong>Το HikeMazi είναι για παρέες, όχι για επαγγελματικές εκδρομές</strong>
+                    <strong>Το ORIVATIS είναι για παρέες, όχι για επαγγελματικές εκδρομές</strong>
                     <p>
                       Δημιουργείς μια κοινωνική συνάντηση μεταξύ χρηστών. Δεν επιτρέπεται μέσω αυτής της ανάρτησης χρέωση για συμμετοχή, ξενάγηση, καθοδήγηση ή οργανωμένη εκδρομή.
                     </p>
