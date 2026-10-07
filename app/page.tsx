@@ -2133,7 +2133,7 @@ export default function Home() {
                         key={`${editingHike?.id ?? "new-map-point"}-${createRouteName}-${createRoutePoints.length}`}
                         className="createMapPickerFrame"
                         title="Επιλογή σημείου πεζοπορίας"
-                        src={`/orivatis-map.html?mode=pick${createMapPoint ? `&lat=${createMapPoint.lat}&lng=${createMapPoint.lng}` : ""}${createRoutePoints.length > 1 ? `&route=${encodeURIComponent(JSON.stringify(createRoutePoints))}` : ""}`}
+                        src={`/orivatis-map.html?mode=pick${editingHike?.mapLat != null && editingHike?.mapLng != null ? `&lat=${editingHike.mapLat}&lng=${editingHike.mapLng}` : ""}${createRoutePoints.length > 1 ? `&route=${encodeURIComponent(JSON.stringify(createRoutePoints))}` : ""}`}
                       />
                       <input name="mapLat" type="hidden" value={createMapPoint?.lat ?? ""} readOnly />
                       <input name="mapLng" type="hidden" value={createMapPoint?.lng ?? ""} readOnly />
