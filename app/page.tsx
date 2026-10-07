@@ -600,8 +600,14 @@ export default function Home() {
     const updatedCover = { coverPhoto: finalCoverUrl, coverPosition: cropPosition, coverZoom: cropZoom };
     setEditingHike({ ...editingHike, ...updatedCover });
     setRealHikes((current) => current.map((hike) => hike.id === editingHike.id ? { ...hike, ...updatedCover } : hike));
-    setSelectedHike((current) => current?.id === editingHike.id ? { ...current, ...updatedCover } : current);
-    setMapPreviewHike((current) => current?.id === editingHike.id ? { ...current, ...updatedCover } : current);
+    setSelectedHike((current) => {
+      if (!current || current.id !== editingHike.id) return current;
+      return { ...current, ...updatedCover };
+    });
+    setMapPreviewHike((current) => {
+      if (!current || current.id !== editingHike.id) return current;
+      return { ...current, ...updatedCover };
+    });
     setCoverEditor(null);
     await loadHikes();
     showToast("Το εξώφυλλο άλλαξε ✓");
