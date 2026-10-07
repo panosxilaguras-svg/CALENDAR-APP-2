@@ -5831,3 +5831,77 @@ html[data-theme="dark"] .createPhotoPicker {
     box-shadow: none;
   }
 }
+
+
+/* =========================================================
+   Desktop homepage — single hero, full-width image
+   ========================================================= */
+@media (min-width: 821px) {
+  .hero {
+    width: 100%;
+    min-height: 470px;
+    padding: 52px;
+    border-radius: 26px;
+    display: flex;
+    align-items: flex-end;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(247,244,237,.88) 0%,
+        rgba(247,244,237,.66) 25%,
+        rgba(247,244,237,.18) 52%,
+        rgba(247,244,237,.02) 72%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(10,22,15,.02) 0%,
+        rgba(10,22,15,.08) 62%,
+        rgba(10,22,15,.26) 100%
+      ),
+      url("https://images.unsplash.com/photo-1784549852145-cda190fd63cf?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=88&w=2600");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 62% center;
+    box-shadow: 0 24px 60px rgba(18,32,23,.13);
+  }
+
+  .heroCopy {
+    max-width: 590px;
+  }
+
+  .hero h2 {
+    font-size: clamp(58px, 6vw, 86px);
+    line-height: .86;
+    margin: 14px 0 16px;
+  }
+
+  .hero p {
+    max-width: 520px;
+    font-size: 15px;
+  }
+
+  .heroActions {
+    margin-top: 24px;
+  }
+
+  html[data-theme="dark"] .hero {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(8,18,12,.82) 0%,
+        rgba(8,18,12,.58) 26%,
+        rgba(8,18,12,.18) 52%,
+        rgba(8,18,12,.02) 72%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(5,11,8,.02) 0%,
+        rgba(5,11,8,.12) 64%,
+        rgba(5,11,8,.38) 100%
+      ),
+      url("https://images.unsplash.com/photo-1784549852145-cda190fd63cf?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=88&w=2600");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 62% center;
+  }
+}
