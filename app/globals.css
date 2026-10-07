@@ -6717,3 +6717,41 @@ html[data-theme="dark"] .detailInlineMapMissing {
   border: 0;
   display: block;
 }
+
+
+/* ORIVATIS logo icon */
+.brandMark {
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+}
+.brandMark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+.mobileMountainLogo {
+  overflow: hidden;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+.mobileMountainLogo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.authMark {
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+  border-radius: 50%;
+}
+.authMark img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
