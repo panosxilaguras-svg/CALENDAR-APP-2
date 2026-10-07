@@ -130,7 +130,7 @@ export default function AuthPage() {
       <main className="authShell">
         <section className="authCard">
           <a className="authBack" href="/">← Πίσω</a>
-          <div className="authMark">△</div>
+          <div className="authMark"><img src="/orivatis-icon.svg" alt="" /></div>
           <p className="authEyebrow">ORIVATIS</p>
           <h1>Βάλε νέο κωδικό.</h1>
           <p className="authLead">Διάλεξε έναν νέο κωδικό με τουλάχιστον 6 χαρακτήρες.</p>
@@ -162,7 +162,7 @@ export default function AuthPage() {
       <main className="authShell">
         <section className="authCard">
           <a className="authBack" href="/">← Πίσω στις πεζοπορίες</a>
-          <div className="authMark">△</div>
+          <div className="authMark"><img src="/orivatis-icon.svg" alt="" /></div>
           <p className="authEyebrow">Είσαι μέσα</p>
           <h1>Καλώς ήρθες.</h1>
           <p className="authLead">{user.email}</p>
@@ -181,7 +181,7 @@ export default function AuthPage() {
     <main className="authShell">
       <section className="authCard">
         <a className="authBack" href="/">← Πίσω</a>
-        <div className="authMark">△</div>
+        <div className="authMark"><img src="/orivatis-icon.svg" alt="" /></div>
         <p className="authEyebrow">ORIVATIS</p>
         <h1>{mode === "signup" ? "Βρες την παρέα σου." : "Καλώς ήρθες πίσω."}</h1>
         <p className="authLead">
