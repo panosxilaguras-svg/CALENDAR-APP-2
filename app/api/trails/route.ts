@@ -64,3 +64,18 @@ export async function POST(request: NextRequest) {
     }, { status: 502 });
   }
 }
+
+
+// Compatibility for older cached map clients. Do not return 405: tell the
+// client that trail discovery has moved to the two-point POST routing flow.
+export async function GET() {
+  return NextResponse.json(
+    { error: "route_requires_start_and_end", upgrade: "two_point_routing" },
+    {
+      status: 409,
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    }
+  );
+}
