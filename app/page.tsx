@@ -31,6 +31,8 @@ type Hike = {
   organizerAvatar?: string | null;
   photoUrls?: string[];
   coverPhoto?: string | null;
+  coverPosition?: string;
+  coverZoom?: number;
   demo?: boolean;
 };
 
@@ -227,6 +229,11 @@ export default function Home() {
   const [selectedProfile, setSelectedProfile] = useState<PublicProfile | null>(null);
   const [profilePhotoViewerUrl, setProfilePhotoViewerUrl] = useState<string | null>(null);
   const [deletingExistingPhoto, setDeletingExistingPhoto] = useState<string | null>(null);
+  const [newPhotoPreviews, setNewPhotoPreviews] = useState<{ file: File; url: string }[]>([]);
+  const [newCoverIndex, setNewCoverIndex] = useState(0);
+  const [newCoverX, setNewCoverX] = useState(50);
+  const [newCoverY, setNewCoverY] = useState(50);
+  const [newCoverZoom, setNewCoverZoom] = useState(1);
   const [selectedHike, setSelectedHike] = useState<Hike | null>(null);
   const [detailReturnView, setDetailReturnView] = useState<View>("explore");
   const [detailParticipants, setDetailParticipants] = useState<HikeParticipant[]>([]);
@@ -379,8 +386,8 @@ export default function Home() {
           ? supabase.from("profiles").select("id, display_name, avatar_url").in("id", organizerIds)
           : Promise.resolve({ data: [] as { id: string; display_name: string; avatar_url: string | null }[] }),
         hikeIds.length
-          ? supabase.from("hike_photos").select("hike_id, storage_path, sort_order, created_at").in("hike_id", hikeIds).order("sort_order", { ascending: true }).order("created_at", { ascending: true })
-          : Promise.resolve({ data: [] as { hike_id: string; storage_path: string; sort_order: number; created_at: string }[] })
+          ? supabase.from("hike_photos").select("hike_id, storage_path, sort_order, created_at, is_cover, crop_x, crop_y, crop_zoom").in("hike_id", hikeIds).order("sort_order", { ascending: true }).order("created_at", { ascending: true })
+          : Promise.resolve({ data: [] as { hike_id: string; storage_path: string; sort_order: number; created_at: string; is_cover: boolean; crop_x: number; crop_y: number; crop_zoom: number }[] })
       ]);
 
       const participantCount = new Map<string, number>();
@@ -396,12 +403,14 @@ export default function Home() {
       );
 
       const photoMap = new Map<string, string[]>();
+      const coverMap = new Map<string, { url: string; x: number; y: number; zoom: number }>();
       for (const item of hikePhotos ?? []) {
         const url = hikePhotoPublicUrl(item.storage_path);
         if (!url) continue;
         const current = photoMap.get(item.hike_id) ?? [];
         current.push(url);
         photoMap.set(item.hike_id, current);
+        if (item.is_cover) coverMap.set(item.hike_id, { url, x: item.crop_x ?? 50, y: item.crop_y ?? 50, zoom: Number(item.crop_zoom ?? 1) });
       }
 
       setRealHikes(
@@ -418,7 +427,9 @@ export default function Home() {
             organizerName: organizer?.name ?? "Πεζοπόρος",
             organizerAvatar: organizer?.avatar ?? null,
             photoUrls: photos,
-            coverPhoto: photos[0] ?? null
+            coverPhoto: coverMap.get(item.id)?.url ?? photos[0] ?? null,
+            coverPosition: `${coverMap.get(item.id)?.x ?? 50}% ${coverMap.get(item.id)?.y ?? 50}%`,
+            coverZoom: coverMap.get(item.id)?.zoom ?? 1
           };
         })
       );
@@ -531,6 +542,44 @@ export default function Home() {
     setDeletingExistingPhoto(null);
     void loadHikes();
     showToast(storageError ? "Η φωτογραφία αφαιρέθηκε από την εκδρομή." : "Η φωτογραφία διαγράφηκε ✓");
+  }
+
+  async function setExistingPhotoAsCover(photoUrl: string) {
+    if (!user || !editingHike?.id) return;
+    const { data: rows, error } = await supabase.from("hike_photos").select("storage_path").eq("hike_id", editingHike.id);
+    if (error) return showToast(`Δεν άλλαξε το εξώφυλλο: ${error.message}`);
+    const row = (rows ?? []).find((item) => hikePhotoPublicUrl(item.storage_path) === photoUrl);
+    if (!row) return showToast("Δεν βρέθηκε η φωτογραφία.");
+    const currentCover = editingHike.coverPhoto;
+    if (currentCover !== photoUrl) {
+      await supabase.from("hike_photos").update({ is_cover: false }).eq("hike_id", editingHike.id).eq("is_cover", true);
+      const { error: coverError } = await supabase.from("hike_photos").update({ is_cover: true }).eq("hike_id", editingHike.id).eq("storage_path", row.storage_path);
+      if (coverError) return showToast(`Δεν άλλαξε το εξώφυλλο: ${coverError.message}`);
+    }
+    setEditingHike({ ...editingHike, coverPhoto: photoUrl, coverPosition: "50% 50%", coverZoom: 1 });
+    void loadHikes();
+    showToast("Νέο εξώφυλλο ✓");
+  }
+
+  async function saveExistingCoverCrop() {
+    if (!editingHike?.id || !editingHike.coverPhoto) return;
+    const { data: rows } = await supabase.from("hike_photos").select("storage_path").eq("hike_id", editingHike.id).eq("is_cover", true);
+    const row = rows?.[0];
+    if (!row) return;
+    const [xRaw, yRaw] = (editingHike.coverPosition ?? "50% 50%").split(" ");
+    const cropX = Math.round(parseFloat(xRaw) || 50);
+    const cropY = Math.round(parseFloat(yRaw) || 50);
+    const { error } = await supabase.from("hike_photos").update({ crop_x: cropX, crop_y: cropY, crop_zoom: editingHike.coverZoom ?? 1 }).eq("hike_id", editingHike.id).eq("storage_path", row.storage_path);
+    if (error) showToast(`Δεν αποθηκεύτηκε το κάδρο: ${error.message}`);
+    else { void loadHikes(); showToast("Το κάδρο αποθηκεύτηκε ✓"); }
+  }
+
+  function handleNewPhotos(files: FileList | null) {
+    newPhotoPreviews.forEach((item) => URL.revokeObjectURL(item.url));
+    const next = Array.from(files ?? []).slice(0, 10).map((file) => ({ file, url: URL.createObjectURL(file) }));
+    setNewPhotoPreviews(next);
+    setNewCoverIndex(0);
+    setNewCoverX(50); setNewCoverY(50); setNewCoverZoom(1);
   }
 
   function openPhotoViewer(index: number) {
@@ -1325,11 +1374,16 @@ export default function Home() {
         continue;
       }
 
+      const shouldBeCover = editingHike ? false : index === newCoverIndex;
       const { error: photoRowError } = await supabase.from("hike_photos").insert({
         hike_id: hikeId,
         storage_path: storagePath,
         sort_order: index,
-        uploaded_by: user.id
+        uploaded_by: user.id,
+        is_cover: shouldBeCover,
+        crop_x: shouldBeCover ? newCoverX : 50,
+        crop_y: shouldBeCover ? newCoverY : 50,
+        crop_zoom: shouldBeCover ? newCoverZoom : 1
       });
 
       if (photoRowError) photoUploadFailed = true;
@@ -1343,6 +1397,8 @@ export default function Home() {
     setCreateRoutePoints([]);
     setCreateRouteName("");
     setCreateRouteDistanceKm(null);
+    newPhotoPreviews.forEach((item) => URL.revokeObjectURL(item.url));
+    setNewPhotoPreviews([]);
     setView("home");
     showToast(
       photoUploadFailed
@@ -1688,7 +1744,7 @@ export default function Home() {
                     >
                       <div
                         className="cardVisual"
-                        style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(15,25,18,.06), rgba(15,25,18,.20)), url("${hike.coverPhoto}")`, backgroundPosition: hike.title === "Δίρφυς — Κορυφή Δέλφη" ? "center 72%" : "center" } : undefined}
+                        style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(15,25,18,.06), rgba(15,25,18,.20)), url("${hike.coverPhoto}")`, backgroundPosition: hike.coverPosition ?? "50% 50%", backgroundSize: `${(hike.coverZoom ?? 1) * 100}%` } : undefined}
                       >
                         <span className="cardBadge">{hike.demo ? `Demo · ${hike.difficulty}` : `Live · ${hike.difficulty}`}</span>
                         <span className="cardDate"><strong>{hike.day}</strong>{hike.month}</span>
@@ -1821,7 +1877,7 @@ export default function Home() {
                     <div
                       className="exploreThumb"
                       aria-hidden="true"
-                      style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(14,25,18,.04), rgba(14,25,18,.14)), url("${hike.coverPhoto}")`, backgroundPosition: hike.title === "Δίρφυς — Κορυφή Δέλφη" ? "center 72%" : "center" } : undefined}
+                      style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(14,25,18,.04), rgba(14,25,18,.14)), url("${hike.coverPhoto}")`, backgroundPosition: hike.coverPosition ?? "50% 50%", backgroundSize: `${(hike.coverZoom ?? 1) * 100}%` } : undefined}
                     >
                       <span className={`exploreDifficulty difficulty-${hike.difficulty}`}>{hike.difficulty}</span>
                       <span className="exploreHeart">♡</span>
@@ -1874,7 +1930,7 @@ export default function Home() {
             <section className="detailPage">
               <div
                 className={`detailHero detailHero-${selectedHike.difficulty}`}
-                style={selectedHike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(8,18,12,.08), rgba(8,18,12,.32)), url("${selectedHike.coverPhoto}")`, backgroundPosition: selectedHike.title === "Δίρφυς — Κορυφή Δέλφη" ? "center 72%" : "center" } : undefined}
+                style={selectedHike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(8,18,12,.08), rgba(8,18,12,.32)), url("${selectedHike.coverPhoto}")`, backgroundPosition: selectedHike.coverPosition ?? "50% 50%", backgroundSize: `${(selectedHike.coverZoom ?? 1) * 100}%` } : undefined}
               >
                 <div className="detailHeroTop">
                   <button
