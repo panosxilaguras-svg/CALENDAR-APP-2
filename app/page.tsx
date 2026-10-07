@@ -82,6 +82,7 @@ type PublicProfile = {
   city: string | null;
   experienceLevel: "beginner" | "intermediate" | "advanced" | null;
   bio: string | null;
+  instagramUsername: string | null;
 };
 
 type HikeParticipant = PublicProfile & {
@@ -433,6 +434,7 @@ export default function Home() {
     city: string | null;
     experience_level: PublicProfile["experienceLevel"];
     bio: string | null;
+    instagram_username: string | null;
   }): PublicProfile {
     return {
       id: row.id,
@@ -440,7 +442,8 @@ export default function Home() {
       avatarUrl: row.avatar_url,
       city: row.city,
       experienceLevel: row.experience_level,
-      bio: row.bio
+      bio: row.bio,
+      instagramUsername: row.instagram_username
     };
   }
 
@@ -470,7 +473,7 @@ export default function Home() {
   async function fetchPublicProfile(userId: string) {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, avatar_url, city, experience_level, bio")
+      .select("id, display_name, avatar_url, city, experience_level, bio, instagram_username")
       .eq("id", userId)
       .single();
 
@@ -579,7 +582,7 @@ export default function Home() {
     if (userIds.length) {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, city, experience_level, bio")
+        .select("id, display_name, avatar_url, city, experience_level, bio, instagram_username")
         .in("id", userIds);
 
       const profileMap = new Map((profiles ?? []).map((row) => [row.id, toPublicProfile(row)]));
@@ -1391,6 +1394,12 @@ export default function Home() {
     const city = String(form.get("city") ?? "").trim();
     const experienceLevel = String(form.get("experienceLevel") ?? "");
     const bio = String(form.get("bio") ?? "").trim();
+    const instagramUsername = String(form.get("instagramUsername") ?? "").trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "");
+
+    if (instagramUsername && !/^[A-Za-z0-9._]{1,30}$/.test(instagramUsername)) {
+      showToast("Βάλε έγκυρο Instagram username.");
+      return;
+    }
 
     if (!displayName) {
       showToast("Βάλε ένα όνομα στο προφίλ σου.");
@@ -1406,6 +1415,7 @@ export default function Home() {
         city: city || null,
         experience_level: experienceLevel || null,
         bio: bio || null,
+        instagram_username: instagramUsername || null,
         updated_at: new Date().toISOString()
       })
       .eq("id", user.id);
@@ -2600,6 +2610,17 @@ export default function Home() {
                         </select>
                       </div>
                       <div className="field full">
+                        <label>Instagram <span style={{ fontWeight: 500, opacity: .65 }}>(προαιρετικό)</span></label>
+                        <input
+                          name="instagramUsername"
+                          maxLength={30}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          defaultValue={profile?.instagramUsername ?? ""}
+                          placeholder="@username"
+                        />
+                      </div>
+                      <div className="field full">
                         <label>Λίγα λόγια για σένα</label>
                         <textarea
                           name="bio"
@@ -2712,6 +2733,16 @@ export default function Home() {
               </div>
             </div>
             <span className="profileLevel">{experienceLabel(selectedProfile.experienceLevel)}</span>
+            {selectedProfile.instagramUsername && (
+              <a
+                className="publicProfileInstagram"
+                href={`https://www.instagram.com/${encodeURIComponent(selectedProfile.instagramUsername)}/`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Instagram · @{selectedProfile.instagramUsername}
+              </a>
+            )}
             <p className="publicProfileBio">
               {selectedProfile.bio || "Ο χρήστης δεν έχει γράψει ακόμη περιγραφή."}
             </p>
