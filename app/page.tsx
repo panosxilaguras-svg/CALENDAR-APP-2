@@ -447,7 +447,9 @@ export default function Home() {
     setSelectedHike(hike);
     setDetailParticipants([]);
     setView("detail");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
 
     if (!hike.id || hike.demo) return;
 
@@ -852,6 +854,28 @@ export default function Home() {
     return `/hikemazi-map.html?data=${encodeURIComponent(JSON.stringify(points))}&r=${mapResetToken}`;
   }, [mapHikes, mapResetToken]);
 
+  const detailMapSrc = useMemo(() => {
+    if (!selectedHike || typeof selectedHike.mapLat !== "number" || typeof selectedHike.mapLng !== "number") {
+      return "";
+    }
+
+    const point = [{
+      id: selectedHike.id ?? "detail",
+      lat: selectedHike.mapLat,
+      lng: selectedHike.mapLng,
+      difficulty: selectedHike.difficulty
+    }];
+
+    return `/hikemazi-map.html?data=${encodeURIComponent(JSON.stringify(point))}&detail=1`;
+  }, [selectedHike]);
+
+  useEffect(() => {
+    if (view !== "map") return;
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+  }, [view]);
+
   useEffect(() => {
     if (view !== "map" && view !== "new") return;
 
@@ -880,6 +904,17 @@ export default function Home() {
   function resetMapViewport() {
     setMapPreviewHike(null);
     setMapResetToken((value) => value + 1);
+  }
+
+  function openDiscoveryMap() {
+    setMapSearch("");
+    setMapQuickFilter("Όλες");
+    setMapPreviewHike(null);
+    setMapResetToken((value) => value + 1);
+    setView("map");
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
   }
 
   function openHikeOnMap(hike: Hike) {
@@ -1300,7 +1335,7 @@ export default function Home() {
           </div>
         </aside>
 
-        <main className="main">
+        <main className={`main ${view === "map" ? "mainMapView" : ""}`}>
           {view !== "detail" && view !== "explore" && view !== "home" && view !== "map" && (
             <header className="topbar">
               <div>
@@ -1508,7 +1543,7 @@ export default function Home() {
                   <p className="exploreKicker">Βρες την επόμενη ομάδα σου</p>
                   <h2>Πεζοπορίες</h2>
                 </div>
-                <button className="exploreMapButton" onClick={() => setView("map")} aria-label="Άνοιγμα χάρτη">
+                <button className="exploreMapButton" onClick={openDiscoveryMap} aria-label="Άνοιγμα χάρτη">
                   <span>⌖</span>
                   Χάρτης
                 </button>
@@ -1747,18 +1782,33 @@ export default function Home() {
                   )}
                 </section>
 
-                <button
-                  className="detailRouteSoon detailMapLink"
-                  type="button"
-                  onClick={() => openHikeOnMap(selectedHike)}
-                >
-                  <div>
-                    <small>Χάρτης</small>
-                    <strong>Δες τη θέση της πεζοπορίας</strong>
-                    <p>Άνοιγμα στον χάρτη με το ενεργό pin.</p>
+                <section className="detailInlineMapSection">
+                  <div className="detailInlineMapHeader">
+                    <div>
+                      <small>Χάρτης</small>
+                      <strong>Θέση πεζοπορίας</strong>
+                    </div>
+                    {detailMapSrc && (
+                      <button type="button" onClick={() => openHikeOnMap(selectedHike)}>
+                        Άνοιγμα χάρτη
+                      </button>
+                    )}
                   </div>
-                  <span>⌖</span>
-                </button>
+
+                  {detailMapSrc ? (
+                    <div className="detailInlineMapWrap">
+                      <iframe
+                        className="detailInlineMapFrame"
+                        title={`Χάρτης ${selectedHike.title}`}
+                        src={detailMapSrc}
+                      />
+                    </div>
+                  ) : (
+                    <div className="detailInlineMapMissing">
+                      Δεν έχει οριστεί ακόμη σημείο στον χάρτη για αυτή την πεζοπορία.
+                    </div>
+                  )}
+                </section>
 
                 <section className="communityNotice compact detailLegalNotice">
                   <strong>Κοινωνική πεζοπορική συνάντηση</strong>
