@@ -33,6 +33,7 @@ type Hike = {
   coverPhoto?: string | null;
   coverPosition?: string;
   coverZoom?: number;
+  seededCoverPhoto?: string | null;
   demo?: boolean;
 };
 
@@ -431,7 +432,8 @@ export default function Home() {
             photoUrls: photos,
             coverPhoto: coverMap.get(item.id)?.url ?? photos[0] ?? null,
             coverPosition: `${coverMap.get(item.id)?.x ?? 50}% ${coverMap.get(item.id)?.y ?? 50}%`,
-            coverZoom: coverMap.get(item.id)?.zoom ?? 1
+            coverZoom: coverMap.get(item.id)?.zoom ?? 1,
+            seededCoverPhoto: !storedPhotos.length ? (seededPhotos[0] ?? null) : null
           };
         })
       );
@@ -560,7 +562,24 @@ export default function Home() {
     if (!editingHike?.id) return;
     const { data: rows, error } = await supabase.from("hike_photos").select("storage_path, is_cover").eq("hike_id", editingHike.id);
     if (error) return showToast(`Δεν άλλαξε το εξώφυλλο: ${error.message}`);
-    const target = (rows ?? []).find((item) => hikePhotoPublicUrl(item.storage_path) === coverEditor.url);
+    let target = (rows ?? []).find((item) => hikePhotoPublicUrl(item.storage_path) === coverEditor.url);
+    if (!target && coverEditor.url.startsWith("/")) {
+      try {
+        const response = await fetch(coverEditor.url);
+        if (!response.ok) throw new Error("seed fetch failed");
+        const blob = await response.blob();
+        const ext = coverEditor.url.split(".").pop()?.split("?")[0] || "webp";
+        const storagePath = `${user?.id}/hikes/${editingHike.id}/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("avatars").upload(storagePath, blob, { contentType: blob.type || `image/${ext}`, upsert: false });
+        if (uploadError) throw uploadError;
+        const { error: rowError } = await supabase.from("hike_photos").insert({ hike_id: editingHike.id, storage_path: storagePath, sort_order: (rows ?? []).length, uploaded_by: user?.id, is_cover: false });
+        if (rowError) { await supabase.storage.from("avatars").remove([storagePath]); throw rowError; }
+        target = { storage_path: storagePath, is_cover: false };
+        coverEditor.url = hikePhotoPublicUrl(storagePath) ?? coverEditor.url;
+      } catch {
+        return showToast("Δεν μπόρεσε να αποθηκευτεί αυτή η παλιά φωτογραφία. Δοκίμασε ξανά.");
+      }
+    }
     if (!target) return showToast("Δεν βρέθηκε η φωτογραφία.");
     const cropPosition = `${coverEditor.x}% ${coverEditor.y}%`;
     const cropZoom = coverEditor.zoom;
