@@ -103,140 +103,54 @@
           }).addTo(map);
         }
 
-        var discoveredRouteLayers = [];
-        var discoveredRoutes = [];
         var selectedRoute = pickRoute.length > 1 ? pickRoute : [];
+        var routeLayer = null;
+        var routeStart = null;
+        var routeEndMarker = null;
         var routePanel = document.createElement('div');
         routePanel.className = 'route-panel';
         document.body.appendChild(routePanel);
 
-        function clearDiscoveredRoutes() {
-          discoveredRouteLayers.forEach(function (layer) { map.removeLayer(layer); });
-          discoveredRouteLayers = [];
-          discoveredRoutes = [];
-          routePanel.className = 'route-panel';
-          routePanel.innerHTML = '';
+        function clearRoute() {
+          if (routeLayer) map.removeLayer(routeLayer);
+          if (routeEndMarker) map.removeLayer(routeEndMarker);
+          routeLayer = null;
+          routeEndMarker = null;
+          selectedRoute = [];
         }
 
-        function joinSegments(segments) {
-          if (!segments.length) return [];
-          var result = segments[0].slice();
-          for (var i = 1; i < segments.length; i++) {
-            var segment = segments[i].slice();
-            if (!segment.length) continue;
-            if (!result.length) { result = segment; continue; }
-            var last = result[result.length - 1];
-            var dStart = Math.abs(last[0] - segment[0][0]) + Math.abs(last[1] - segment[0][1]);
-            var end = segment[segment.length - 1];
-            var dEnd = Math.abs(last[0] - end[0]) + Math.abs(last[1] - end[1]);
-            if (dEnd < dStart) segment.reverse();
-            result = result.concat(segment);
-          }
-          return result;
-        }
-
-        function chooseRoute(index) {
-          if (!discoveredRoutes[index]) return;
-          selectedRoute = discoveredRoutes[index].points;
-          discoveredRouteLayers.forEach(function (layer, layerIndex) {
-            layer.setStyle({
-              color: layerIndex === index ? '#ef6a3a' : '#54745d',
-              weight: layerIndex === index ? 6 : 4,
-              opacity: layerIndex === index ? .98 : .62
-            });
-          });
-          Array.prototype.forEach.call(routePanel.querySelectorAll('.route-choice'), function (button, buttonIndex) {
-            button.classList.toggle('active', buttonIndex === index);
-          });
-          parent.postMessage({
-            type: 'orivatis-route-select',
-            route: selectedRoute,
-            name: discoveredRoutes[index].name
-          }, '*');
-          if (selectedRoute.length) {
-            placePick(selectedRoute[0][0], selectedRoute[0][1], true);
-            map.fitBounds(L.latLngBounds(selectedRoute), { padding: [28, 28], maxZoom: 15 });
-          }
-        }
-
-        async function discoverHikingRoutes(lat, lng) {
-          clearDiscoveredRoutes();
+        async function buildHikingRoute(start, end) {
           routePanel.className = 'route-panel show';
-          routePanel.innerHTML = '<span class="route-loading">Ψάχνω μονοπάτια γύρω από το σημείο…</span>';
-          var query = '[out:json][timeout:20];(' +
-            'relation(around:12000,' + lat + ',' + lng + ')[type=route][route~"^(hiking|foot|walking)$"];' +
-            'way(around:4500,' + lat + ',' + lng + ')[highway~"^(path|footway|track)$"];' +
-            ');out tags geom;';
+          routePanel.innerHTML = '<span class="route-loading">Υπολογίζω πεζοπορική διαδρομή…</span>';
           try {
-            var response = await fetch('/api/trails?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng), { cache: 'no-store' });
-            if (!response.ok) {
-              var errorText = '';
-              try { errorText = await response.text(); } catch (_) {}
-              throw new Error('api_' + response.status + (errorText ? '_' + errorText.slice(0, 80) : ''));
-            }
+            var response = await fetch('/api/trails', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ start: start, end: end })
+            });
             var json = await response.json();
-            var relationRoutes = (json.elements || []).filter(function (element) {
-              return element.type === 'relation';
-            }).map(function (relation) {
-              var segments = (relation.members || []).filter(function (member) {
-                return member.type === 'way' && Array.isArray(member.geometry) && member.geometry.length > 1 &&
-                  (!member.role || ['main','forward','backward','alternative','approach','excursion','connection'].indexOf(member.role) !== -1);
-              }).map(function (member) {
-                var points = member.geometry.map(function (point) { return [point.lat, point.lon]; });
-                if (member.role === 'backward') points.reverse();
-                return points;
-              });
-              return {
-                id: 'r' + relation.id,
-                name: (relation.tags && (relation.tags.name || relation.tags.ref)) || 'Πεζοπορική διαδρομή',
-                points: joinSegments(segments),
-                official: true
-              };
-            }).filter(function (route) { return route.points.length > 1; });
-
-            var pathWays = (json.elements || []).filter(function (element) {
-              return element.type === 'way' && Array.isArray(element.geometry) && element.geometry.length > 1;
-            }).map(function (way) {
-              return {
-                id: 'w' + way.id,
-                name: (way.tags && (way.tags.name || way.tags.ref || way.tags.trail_name)) || 'Μονοπάτι',
-                points: way.geometry.map(function (point) { return [point.lat, point.lon]; }),
-                official: false
-              };
-            });
-
-            discoveredRoutes = relationRoutes.length
-              ? relationRoutes.slice(0, 8)
-              : pathWays.slice(0, 8);
-
-            routePanel.innerHTML = '';
-            if (!discoveredRoutes.length) {
-              routePanel.innerHTML = '<span class="route-loading">Δεν βρέθηκε καταχωρημένη πεζοπορική διαδρομή εδώ.</span>';
-              window.setTimeout(function () { routePanel.className = 'route-panel'; }, 2600);
-              return;
-            }
-
-            discoveredRoutes.forEach(function (route, index) {
-              var layer = L.polyline(route.points, {
-                color: '#54745d', weight: 4, opacity: .62, lineCap: 'round', lineJoin: 'round'
-              }).addTo(map);
-              layer.on('click', function (event) {
-                if (event.originalEvent) L.DomEvent.stopPropagation(event.originalEvent);
-                chooseRoute(index);
-              });
-              discoveredRouteLayers.push(layer);
-              var button = document.createElement('button');
-              button.type = 'button';
-              button.className = 'route-choice';
-              button.textContent = route.name + (route.official ? '' : ' · τμήμα');
-              button.onclick = function () { chooseRoute(index); };
-              routePanel.appendChild(button);
-            });
-
-            if (discoveredRoutes.length === 1) chooseRoute(0);
+            if (!response.ok) throw new Error(json.error || 'route_failed');
+            var points = Array.isArray(json.route) ? json.route : [];
+            if (points.length < 2) throw new Error('empty_route');
+            clearRoute();
+            selectedRoute = points;
+            routeLayer = L.polyline(points, {
+              color: '#ef6a3a', weight: 6, opacity: .98, lineCap: 'round', lineJoin: 'round'
+            }).addTo(map);
+            routeEndMarker = L.circleMarker(end, {
+              radius: 8, color: '#fffefa', weight: 4, fillColor: '#173321', fillOpacity: 1
+            }).addTo(map);
+            map.fitBounds(routeLayer.getBounds(), { padding: [28, 28], maxZoom: 16 });
+            var km = typeof json.distanceKm === 'number' ? json.distanceKm : null;
+            routePanel.innerHTML = '<span class="route-loading">✓ Διαδρομή πεζοπορίας' + (km ? ' · ' + km.toFixed(1) + ' km' : '') + '</span>';
+            parent.postMessage({
+              type: 'orivatis-route-select',
+              route: points,
+              name: 'Πεζοπορική διαδρομή'
+            }, '*');
           } catch (error) {
-            var detail = error && error.message ? error.message : 'unknown';
-            routePanel.innerHTML = '<span class="route-loading">Σφάλμα μονοπατιών · ' + detail.replace(/[<>]/g, '') + '</span>';
+            var detail = error && error.message ? error.message : 'route_failed';
+            routePanel.innerHTML = '<span class="route-loading">Δεν βρέθηκε πεζοπορική διαδρομή · ' + detail.replace(/[<>]/g, '') + '</span>';
           }
         }
 
@@ -272,16 +186,26 @@
         tip.className = 'pick-tip';
         tip.textContent = pickRoute.length > 1
           ? '✓ Η πραγματική διαδρομή GPX είναι πάνω στον χάρτη'
-          : 'Βρες το βουνό και πάτησε ακριβώς στο σημείο';
+          : '1ο πάτημα: αφετηρία · 2ο πάτημα: προορισμός';
         document.body.appendChild(tip);
 
         map.on('click', function (event) {
-          placePick(event.latlng.lat, event.latlng.lng, true);
-          tip.textContent = 'Ψάχνω αυτόματα πεζοπορικές διαδρομές…';
-          discoverHikingRoutes(event.latlng.lat, event.latlng.lng);
-          window.setTimeout(function () {
-            tip.textContent = 'Πάτησε μονοπάτι για επιλογή ή αλλού για νέο σημείο';
-          }, 1200);
+          var point = [event.latlng.lat, event.latlng.lng];
+          if (!routeStart || selectedRoute.length > 1) {
+            clearRoute();
+            routeStart = point;
+            placePick(point[0], point[1], true);
+            routePanel.className = 'route-panel';
+            routePanel.innerHTML = '';
+            tip.textContent = 'Αφετηρία ✓ · πάτησε τώρα τον προορισμό';
+            return;
+          }
+          tip.textContent = 'Υπολογίζω τη διαδρομή πάνω στα μονοπάτια…';
+          buildHikingRoute(routeStart, point).then(function () {
+            tip.textContent = selectedRoute.length > 1
+              ? '✓ Η πεζοπορική διαδρομή είναι έτοιμη · πάτησε αλλού για νέα'
+              : 'Πάτησε ξανά προορισμό για νέα προσπάθεια';
+          });
         });
         return;
       }
