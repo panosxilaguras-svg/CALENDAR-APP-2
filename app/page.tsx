@@ -798,14 +798,46 @@ export default function Home() {
 
   const mapHikes = useMemo(() => {
     const query = mapSearch.trim().toLocaleLowerCase("el-GR");
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+
+    const startOfWeekend = new Date(now);
+    const daysUntilSaturday = (6 - now.getDay() + 7) % 7;
+    startOfWeekend.setDate(now.getDate() + daysUntilSaturday);
+    startOfWeekend.setHours(0, 0, 0, 0);
+
+    const endOfWeekend = new Date(startOfWeekend);
+    endOfWeekend.setDate(startOfWeekend.getDate() + 1);
+    endOfWeekend.setHours(23, 59, 59, 999);
+
     return realHikes.filter((hike) => {
       if (typeof hike.mapLat !== "number" || typeof hike.mapLng !== "number") return false;
+
       const matchesSearch =
         !query ||
         hike.title.toLocaleLowerCase("el-GR").includes(query) ||
         hike.location.toLocaleLowerCase("el-GR").includes(query);
-      const matchesDifficulty = mapQuickFilter !== "Εύκολες" || hike.difficulty === "Εύκολη";
-      return matchesSearch && matchesDifficulty;
+
+      if (!matchesSearch) return false;
+      if (mapQuickFilter === "Εύκολες" && hike.difficulty !== "Εύκολη") return false;
+
+      const hikeDate = hike.startsAt ? new Date(hike.startsAt) : null;
+
+      if (mapQuickFilter === "Αύριο") {
+        return Boolean(
+          hikeDate &&
+          hikeDate.getFullYear() === tomorrow.getFullYear() &&
+          hikeDate.getMonth() === tomorrow.getMonth() &&
+          hikeDate.getDate() === tomorrow.getDate()
+        );
+      }
+
+      if (mapQuickFilter === "Αυτό το ΣΚ") {
+        return Boolean(hikeDate && hikeDate >= startOfWeekend && hikeDate <= endOfWeekend);
+      }
+
+      return true;
     });
   }, [realHikes, mapSearch, mapQuickFilter]);
 
@@ -1784,7 +1816,7 @@ export default function Home() {
                 </label>
 
                 <div className="mapQuickFilters">
-                  {["Όλες", "Εύκολες"].map((item) => (
+                  {["Όλες", "Αύριο", "Αυτό το ΣΚ", "Εύκολες"].map((item) => (
                     <button
                       type="button"
                       key={item}
@@ -1797,13 +1829,37 @@ export default function Home() {
                 </div>
               </div>
 
-              <button className="mapFitButton" type="button" onClick={resetMapViewport} aria-label="Προβολή όλων">⌖</button>
+              <button className={`mapFitButton ${mapPreviewHike ? "withPreview" : ""}`} type="button" onClick={resetMapViewport} aria-label="Προβολή όλων">⌖</button>
 
               {!loadingHikes && mapHikes.length === 0 && (
                 <div className="mapNoResults">
                   <strong>Δεν βρήκαμε ενεργή πεζοπορία εδώ.</strong>
                   <span>Άλλαξε φίλτρο ή αναζήτησε άλλη περιοχή.</span>
                 </div>
+              )}
+
+              {mapPreviewHike && (
+                <article className="mapHikePreview">
+                  <button className="mapPreviewClose" type="button" onClick={() => setMapPreviewHike(null)} aria-label="Κλείσιμο">×</button>
+                  <div
+                    className="mapPreviewPhoto"
+                    style={mapPreviewHike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(10,20,14,.02), rgba(10,20,14,.20)), url("${mapPreviewHike.coverPhoto}")` } : undefined}
+                  >
+                    <span className="mapPreviewDifficulty">{mapPreviewHike.difficulty}</span>
+                  </div>
+                  <div className="mapPreviewBody">
+                    <p>⌖ {mapPreviewHike.location}</p>
+                    <h3>{mapPreviewHike.title}</h3>
+                    <div className="mapPreviewMeta">
+                      <span>▣ {mapPreviewHike.day} {mapPreviewHike.month}</span>
+                      <span>↗ {mapPreviewHike.distance}</span>
+                      <span>♟ {mapPreviewHike.people}/{mapPreviewHike.maxParticipants ?? "—"}</span>
+                    </div>
+                    <button type="button" className="mapPreviewOpen" onClick={() => openHikeDetails(mapPreviewHike)}>
+                      Προβολή πεζοπορίας →
+                    </button>
+                  </div>
+                </article>
               )}
             </section>
           )}
