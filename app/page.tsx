@@ -25,6 +25,8 @@ type Hike = {
   meetingPoint?: string | null;
   mapLat?: number | null;
   mapLng?: number | null;
+  routePoints?: [number, number][];
+  routeIsApproximate?: boolean;
   organizerName?: string;
   organizerAvatar?: string | null;
   photoUrls?: string[];
@@ -45,6 +47,8 @@ type DbHike = {
   meeting_point: string | null;
   map_lat: number | null;
   map_lng: number | null;
+  route_points: [number, number][] | null;
+  route_is_approximate: boolean;
 };
 
 type IncomingRequest = {
@@ -185,7 +189,9 @@ function dbHikeToCard(hike: DbHike): Hike {
     maxParticipants: hike.max_participants,
     meetingPoint: hike.meeting_point,
     mapLat: hike.map_lat,
-    mapLng: hike.map_lng
+    mapLng: hike.map_lng,
+    routePoints: Array.isArray(hike.route_points) ? hike.route_points : [],
+    routeIsApproximate: hike.route_is_approximate
   };
 }
 
@@ -290,7 +296,7 @@ export default function Home() {
 
     const { data, error } = await supabase
       .from("hikes")
-      .select("id, organizer_id, title, location_name, starts_at, difficulty, distance_km, description, max_participants, meeting_point, map_lat, map_lng")
+      .select("id, organizer_id, title, location_name, starts_at, difficulty, distance_km, description, max_participants, meeting_point, map_lat, map_lng, route_points, route_is_approximate")
       .eq("status", "open")
       .gte("starts_at", new Date().toISOString())
       .order("starts_at", { ascending: true })
@@ -849,7 +855,9 @@ export default function Home() {
       id: hike.id ?? "",
       lat: hike.mapLat,
       lng: hike.mapLng,
-      difficulty: hike.difficulty
+      difficulty: hike.difficulty,
+      route: hike.routePoints ?? [],
+      approximate: Boolean(hike.routeIsApproximate)
     }));
     return `/hikemazi-map.html?data=${encodeURIComponent(JSON.stringify(points))}&r=${mapResetToken}`;
   }, [mapHikes, mapResetToken]);
@@ -863,7 +871,9 @@ export default function Home() {
       id: selectedHike.id ?? "detail",
       lat: selectedHike.mapLat,
       lng: selectedHike.mapLng,
-      difficulty: selectedHike.difficulty
+      difficulty: selectedHike.difficulty,
+      route: selectedHike.routePoints ?? [],
+      approximate: Boolean(selectedHike.routeIsApproximate)
     }];
 
     return `/hikemazi-map.html?data=${encodeURIComponent(JSON.stringify(point))}&detail=1`;
@@ -1788,7 +1798,10 @@ export default function Home() {
                   <div className="detailInlineMapHeader">
                     <div>
                       <small>Χάρτης</small>
-                      <strong>Θέση πεζοπορίας</strong>
+                      <strong>{selectedHike.routePoints?.length ? "Μονοπάτι πεζοπορίας" : "Θέση πεζοπορίας"}</strong>
+                      {selectedHike.routePoints?.length && selectedHike.routeIsApproximate ? (
+                        <span className="detailMapNote">Ενδεικτική χάραξη · όχι για πλοήγηση</span>
+                      ) : null}
                     </div>
                     {detailMapSrc && (
                       <button type="button" onClick={() => openHikeOnMap(selectedHike)}>
