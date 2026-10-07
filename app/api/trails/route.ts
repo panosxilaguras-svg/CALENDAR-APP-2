@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const OVERPASS_ENDPOINTS = [
-  "https://overpass-api.de/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter"
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.nchc.org.tw/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+  "https://overpass-api.de/api/interpreter"
 ];
 
 export async function GET(request: NextRequest) {
@@ -25,13 +27,18 @@ export async function GET(request: NextRequest) {
     try {
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        headers: {
+          "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+          "user-agent": "ORIVATIS/1.0 (trail picker; https://orivatis.com)"
+        },
         body: "data=" + encodeURIComponent(query),
         cache: "no-store",
         signal: AbortSignal.timeout(15000)
       });
       if (!response.ok) {
         lastError = "overpass_" + response.status;
+        // Public instances may rate-limit independently. Immediately try the
+        // next provider instead of surfacing a transient 429 to the client.
         continue;
       }
       const data = await response.json();
