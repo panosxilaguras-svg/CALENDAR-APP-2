@@ -221,6 +221,7 @@ export default function Home() {
   const [mapQuickFilter, setMapQuickFilter] = useState("Όλες");
   const [mapPreviewHike, setMapPreviewHike] = useState<Hike | null>(null);
   const [mapResetToken, setMapResetToken] = useState(0);
+  const [createMapPoint, setCreateMapPoint] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("hikemazi-theme");
@@ -852,13 +853,26 @@ export default function Home() {
   }, [mapHikes, mapResetToken]);
 
   useEffect(() => {
-    if (view !== "map") return;
+    if (view !== "map" && view !== "new") return;
+
     const handleMapMessage = (event: MessageEvent) => {
-      const data = event.data as { type?: string; id?: string };
-      if (data?.type !== "hikemazi-map-select" || !data.id) return;
-      const hike = realHikes.find((item) => item.id === data.id);
-      if (hike) setMapPreviewHike(hike);
+      const data = event.data as { type?: string; id?: string; lat?: number; lng?: number };
+
+      if (data?.type === "hikemazi-map-select" && data.id) {
+        const hike = realHikes.find((item) => item.id === data.id);
+        if (hike) setMapPreviewHike(hike);
+        return;
+      }
+
+      if (
+        data?.type === "hikemazi-map-pick" &&
+        typeof data.lat === "number" &&
+        typeof data.lng === "number"
+      ) {
+        setCreateMapPoint({ lat: data.lat, lng: data.lng });
+      }
     };
+
     window.addEventListener("message", handleMapMessage);
     return () => window.removeEventListener("message", handleMapMessage);
   }, [view, realHikes]);
@@ -882,12 +896,18 @@ export default function Home() {
 
   function openNewHike() {
     setEditingHike(null);
+    setCreateMapPoint(null);
     setView("new");
   }
 
   function startEditHike(hike: Hike) {
     if (!user || !hike.id || hike.organizerId !== user.id) return;
     setEditingHike(hike);
+    setCreateMapPoint(
+      typeof hike.mapLat === "number" && typeof hike.mapLng === "number"
+        ? { lat: hike.mapLat, lng: hike.mapLng }
+        : null
+    );
     setView("new");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -924,6 +944,8 @@ export default function Home() {
     const maxRaw = String(form.get("maxParticipants") ?? "").trim();
     const description = String(form.get("description") ?? "").trim();
     const meetingPoint = String(form.get("meetingPoint") ?? "").trim();
+    const mapLatRaw = String(form.get("mapLat") ?? "").trim();
+    const mapLngRaw = String(form.get("mapLng") ?? "").trim();
     const communityAgreement = form.get("communityAgreement") === "on";
 
     if (!communityAgreement) {
@@ -972,6 +994,8 @@ export default function Home() {
       distance_km: distanceRaw ? Number(distanceRaw) : null,
       max_participants: maxRaw ? Number(maxRaw) : null,
       meeting_point: meetingPoint || null,
+      map_lat: mapLatRaw ? Number(mapLatRaw) : null,
+      map_lng: mapLngRaw ? Number(mapLngRaw) : null,
       meeting_type: "social",
       community_terms_accepted_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -1035,6 +1059,7 @@ export default function Home() {
     formElement.reset();
     const wasEditing = Boolean(editingHike?.id);
     setEditingHike(null);
+    setCreateMapPoint(null);
     setView("home");
     showToast(
       photoUploadFailed
