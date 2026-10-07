@@ -1322,7 +1322,7 @@ export default function Home() {
       <div className="desktopFrame">
         <aside className="sidebar">
           <div className="brand">
-            <div className="brandMark">△</div>
+            <div className="brandMark"><img src="/orivatis-icon.svg" alt="" /></div>
             <div className="brandText">
               ORIVATIS
               <small>find your trail people</small>
@@ -1371,10 +1371,7 @@ export default function Home() {
                 <div className="mobileHomeBrand">
                   <div className="mobileBrandIdentity">
                     <button className="mobileMountainLogo" aria-label="Αρχική" onClick={() => setView("home")}>
-                      <svg viewBox="0 0 32 32" aria-hidden="true">
-                        <path d="M3 25 12.2 9.5l4.4 7.2L20.2 11 29 25H3Z" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"/>
-                        <path d="m9.7 13.7 2.5 3.2 2-2.1" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                      <img src="/orivatis-icon.svg" alt="" />
                     </button>
                     <span className="mobileWordmark">ORIVATIS</span>
                   </div>
