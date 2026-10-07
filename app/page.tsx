@@ -81,6 +81,7 @@ type HikeParticipant = PublicProfile & {
 };
 
 type MyJoinStatus = "pending" | "accepted" | "rejected" | "cancelled";
+type ThemeMode = "light" | "dark";
 
 const demoHikes: Hike[] = [
   {
@@ -209,6 +210,21 @@ export default function Home() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [myJoinRequests, setMyJoinRequests] = useState<Record<string, { id: string; status: MyJoinStatus }>>({});
   const [photoViewerIndex, setPhotoViewerIndex] = useState<number | null>(null);
+  const [theme, setTheme] = useState<ThemeMode>("light");
+
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem("hikemazi-theme");
+    const nextTheme: ThemeMode = savedTheme === "dark" ? "dark" : "light";
+    setTheme(nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+  }, []);
+
+  function toggleTheme() {
+    const nextTheme: ThemeMode = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    window.localStorage.setItem("hikemazi-theme", nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -1999,6 +2015,25 @@ export default function Home() {
                     <span className="infoBadge">📨 {incomingRequests.length} νέα αιτήματα</span>
                     <span className="infoBadge">💬 {chatGroups.length} groups</span>
                   </div>
+
+                  <section className="appearancePanel">
+                    <div className="appearancePanelCopy">
+                      <span className="appearanceIcon">{theme === "dark" ? "☾" : "☀"}</span>
+                      <div>
+                        <strong>Εμφάνιση</strong>
+                        <small>{theme === "dark" ? "Dark theme ενεργό" : "Light theme ενεργό"}</small>
+                      </div>
+                    </div>
+                    <button
+                      className={`themeSwitch ${theme === "dark" ? "active" : ""}`}
+                      type="button"
+                      role="switch"
+                      aria-checked={theme === "dark"}
+                      onClick={toggleTheme}
+                    >
+                      <span />
+                    </button>
+                  </section>
 
                   <form className="profileForm" onSubmit={saveProfile} key={profile?.id ?? user.id}>
                     <div className="formGrid">
