@@ -1175,8 +1175,8 @@ export default function Home() {
         </aside>
 
         <main className="main">
-          {view !== "detail" && view !== "explore" && (
-            <header className={`topbar ${view === "home" ? "homeTopbar" : ""}`}>
+          {view !== "detail" && view !== "explore" && view !== "home" && (
+            <header className="topbar">
               <div>
                 <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
                 <h1>{view === "home" ? "Πάμε βουνό;" : view === "map" ? "Χάρτης" : nav.find((x) => x.id === view)?.label}</h1>
