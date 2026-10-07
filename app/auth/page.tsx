@@ -89,7 +89,7 @@ export default function AuthPage() {
     setLoading(true);
     setMessage("");
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://hikemazi.com"}/auth?reset=1`
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://orivatis.com"}/auth?reset=1`
     });
     setLoading(false);
 
@@ -131,7 +131,7 @@ export default function AuthPage() {
         <section className="authCard">
           <a className="authBack" href="/">← Πίσω</a>
           <div className="authMark">△</div>
-          <p className="authEyebrow">HikeMazi</p>
+          <p className="authEyebrow">ORIVATIS</p>
           <h1>Βάλε νέο κωδικό.</h1>
           <p className="authLead">Διάλεξε έναν νέο κωδικό με τουλάχιστον 6 χαρακτήρες.</p>
           <form onSubmit={updatePassword} className="authForm">
@@ -182,7 +182,7 @@ export default function AuthPage() {
       <section className="authCard">
         <a className="authBack" href="/">← Πίσω</a>
         <div className="authMark">△</div>
-        <p className="authEyebrow">HikeMazi</p>
+        <p className="authEyebrow">ORIVATIS</p>
         <h1>{mode === "signup" ? "Βρες την παρέα σου." : "Καλώς ήρθες πίσω."}</h1>
         <p className="authLead">
           {mode === "signup"
@@ -255,7 +255,7 @@ export default function AuthPage() {
             <label className="authTerms">
               <input name="termsAccepted" type="checkbox" required />
               <span>
-                Συμφωνώ με τους <a href="/terms">Όρους Χρήσης</a> και τους <a href="/safety">κανόνες ασφάλειας</a>. Καταλαβαίνω ότι το HikeMazi είναι πλατφόρμα κοινωνικών συναντήσεων και όχι υπηρεσία επαγγελματικής ξενάγησης ή συνοδείας.
+                Συμφωνώ με τους <a href="/terms">Όρους Χρήσης</a> και τους <a href="/safety">κανόνες ασφάλειας</a>. Καταλαβαίνω ότι το ORIVATIS είναι πλατφόρμα κοινωνικών συναντήσεων και όχι υπηρεσία επαγγελματικής ξενάγησης ή συνοδείας.
               </span>
             </label>
           )}
@@ -268,7 +268,7 @@ export default function AuthPage() {
         {message && <p className="authMessage">{message}</p>}
 
         <p className="authFine">
-          HikeMazi · Βρες παρέα για την επόμενη πεζοπορία σου.
+          ORIVATIS · Βρες παρέα για την επόμενη πεζοπορία σου.
         </p>
       </section>
     </main>
