@@ -219,6 +219,8 @@ export default function Home() {
   const [theme, setTheme] = useState<ThemeMode>("light");
   const [mapSearch, setMapSearch] = useState("");
   const [mapQuickFilter, setMapQuickFilter] = useState("Όλες");
+  const [mapPreviewHike, setMapPreviewHike] = useState<Hike | null>(null);
+  const [mapResetToken, setMapResetToken] = useState(0);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("hikemazi-theme");
@@ -806,6 +808,33 @@ export default function Home() {
       return matchesSearch && matchesDifficulty;
     });
   }, [realHikes, mapSearch, mapQuickFilter]);
+
+  const mapFrameSrc = useMemo(() => {
+    const points = mapHikes.map((hike) => ({
+      id: hike.id ?? "",
+      lat: hike.mapLat,
+      lng: hike.mapLng,
+      difficulty: hike.difficulty
+    }));
+    return `/hikemazi-map.html?data=${encodeURIComponent(JSON.stringify(points))}&r=${mapResetToken}`;
+  }, [mapHikes, mapResetToken]);
+
+  useEffect(() => {
+    if (view !== "map") return;
+    const handleMapMessage = (event: MessageEvent) => {
+      const data = event.data as { type?: string; id?: string };
+      if (data?.type !== "hikemazi-map-select" || !data.id) return;
+      const hike = realHikes.find((item) => item.id === data.id);
+      if (hike) setMapPreviewHike(hike);
+    };
+    window.addEventListener("message", handleMapMessage);
+    return () => window.removeEventListener("message", handleMapMessage);
+  }, [view, realHikes]);
+
+  function resetMapViewport() {
+    setMapPreviewHike(null);
+    setMapResetToken((value) => value + 1);
+  }
 
   function showToast(message: string) {
     setToast(message);
