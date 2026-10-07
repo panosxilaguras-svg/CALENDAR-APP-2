@@ -925,7 +925,7 @@ export default function Home() {
 
     setMapSearch(hike.title);
     setMapQuickFilter("Όλες");
-    setMapPreviewHike(hike);
+    setMapPreviewHike(null);
     setMapResetToken((value) => value + 1);
     setView("map");
     window.requestAnimationFrame(() => {
