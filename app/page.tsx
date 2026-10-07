@@ -910,6 +910,16 @@ export default function Home() {
         return;
       }
 
+      if (data?.type === "orivatis-summit-name" && typeof data.name === "string" && data.name.trim()) {
+        const locationInput = document.querySelector<HTMLInputElement>('input[name="location"]');
+        if (locationInput) {
+          locationInput.value = data.name.trim();
+          locationInput.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        showToast(`Κορυφή ${data.name.trim()} επιλέχθηκε ✓`);
+        return;
+      }
+
       if (
         data?.type === "orivatis-route-select" &&
         Array.isArray(data.route) &&
