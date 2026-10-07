@@ -6785,3 +6785,50 @@ html[data-theme="dark"] .detailInlineMapMissing {
   .createGpxButton{width:100%}
   .createGpxLoaded{align-items:flex-start}
 }
+
+
+/* Mobile create page viewport fix */
+@media (max-width: 820px) {
+  html,
+  body,
+  .appShell,
+  .desktopFrame,
+  .main {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .createPage {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .createPage *,
+  .createForm,
+  .createSection,
+  .createField,
+  .createMapPicker,
+  .createMapPickerFrame,
+  .createGpx {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .createMapPicker,
+  .createGpx {
+    width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .createPage {
+    width: calc(100vw - 24px);
+  }
+
+  .createTwoCols {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
