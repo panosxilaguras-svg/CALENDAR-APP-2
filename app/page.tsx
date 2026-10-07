@@ -1179,12 +1179,8 @@ export default function Home() {
             <header className="topbar">
               <div>
                 <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
-                <h1>{view === "home" ? "Πάμε βουνό;" : view === "map" ? "Χάρτης" : nav.find((x) => x.id === view)?.label}</h1>
-                <p className="subtitle">
-                  {view === "home"
-                    ? "Βρες την επόμενη πεζοπορία και την ομάδα που σου ταιριάζει."
-                    : "Το HikeMazi community για πεζοπορίες και παρέα."}
-                </p>
+                <h1>{view === "map" ? "Χάρτης" : nav.find((x) => x.id === view)?.label}</h1>
+                <p className="subtitle">Το HikeMazi community για πεζοπορίες και παρέα.</p>
               </div>
               <button className="avatarButton" onClick={() => setView("profile")}>
                 {profile?.avatarUrl ? (
