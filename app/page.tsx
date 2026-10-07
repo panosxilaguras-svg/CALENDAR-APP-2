@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 
@@ -23,6 +23,8 @@ type Hike = {
   distanceKm?: number | null;
   maxParticipants?: number | null;
   meetingPoint?: string | null;
+  mapLat?: number | null;
+  mapLng?: number | null;
   organizerName?: string;
   organizerAvatar?: string | null;
   photoUrls?: string[];
@@ -41,6 +43,8 @@ type DbHike = {
   description: string | null;
   max_participants: number | null;
   meeting_point: string | null;
+  map_lat: number | null;
+  map_lng: number | null;
 };
 
 type IncomingRequest = {
@@ -179,8 +183,46 @@ function dbHikeToCard(hike: DbHike): Hike {
     description: hike.description,
     distanceKm: hike.distance_km,
     maxParticipants: hike.max_participants,
-    meetingPoint: hike.meeting_point
+    meetingPoint: hike.meeting_point,
+    mapLat: hike.map_lat,
+    mapLng: hike.map_lng
   };
+}
+
+function loadLeaflet() {
+  if (typeof window === "undefined") return Promise.reject(new Error("Leaflet requires the browser."));
+
+  const browserWindow = window as typeof window & { L?: any };
+  if (browserWindow.L) return Promise.resolve(browserWindow.L);
+
+  if (!document.getElementById("leaflet-css")) {
+    const link = document.createElement("link");
+    link.id = "leaflet-css";
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    document.head.appendChild(link);
+  }
+
+  return new Promise<any>((resolve, reject) => {
+    const existing = document.getElementById("leaflet-js") as HTMLScriptElement | null;
+    const script = existing ?? document.createElement("script");
+
+    const finish = () => browserWindow.L ? resolve(browserWindow.L) : reject(new Error("Leaflet did not load."));
+
+    if (!existing) {
+      script.id = "leaflet-js";
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.async = true;
+      script.onload = finish;
+      script.onerror = () => reject(new Error("Leaflet failed to load."));
+      document.head.appendChild(script);
+    } else {
+      script.addEventListener("load", finish, { once: true });
+      window.setTimeout(() => {
+        if (browserWindow.L) resolve(browserWindow.L);
+      }, 50);
+    }
+  });
 }
 
 export default function Home() {
@@ -211,6 +253,11 @@ export default function Home() {
   const [myJoinRequests, setMyJoinRequests] = useState<Record<string, { id: string; status: MyJoinStatus }>>({});
   const [photoViewerIndex, setPhotoViewerIndex] = useState<number | null>(null);
   const [theme, setTheme] = useState<ThemeMode>("light");
+  const [mapSearch, setMapSearch] = useState("");
+  const [mapQuickFilter, setMapQuickFilter] = useState("Όλες");
+  const [mapPreviewHike, setMapPreviewHike] = useState<Hike | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const leafletMapRef = useRef<any>(null);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("hikemazi-theme");
@@ -279,7 +326,7 @@ export default function Home() {
 
     const { data, error } = await supabase
       .from("hikes")
-      .select("id, organizer_id, title, location_name, starts_at, difficulty, distance_km, description, max_participants, meeting_point")
+      .select("id, organizer_id, title, location_name, starts_at, difficulty, distance_km, description, max_participants, meeting_point, map_lat, map_lng")
       .eq("status", "open")
       .gte("starts_at", new Date().toISOString())
       .order("starts_at", { ascending: true })
@@ -432,7 +479,7 @@ export default function Home() {
   }
 
   async function openHikeDetails(hike: Hike) {
-    setDetailReturnView(view === "home" ? "home" : "explore");
+    setDetailReturnView(view === "home" ? "home" : view === "map" ? "map" : "explore");
     setSelectedHike(hike);
     setDetailParticipants([]);
     setView("detail");
@@ -785,6 +832,131 @@ export default function Home() {
       return matchesDifficulty && matchesSearch;
     });
   }, [allHikes, filter, search]);
+
+  const mapHikes = useMemo(() => {
+    const query = mapSearch.trim().toLocaleLowerCase("el-GR");
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+
+    const startOfWeekend = new Date(now);
+    const day = now.getDay();
+    const daysUntilSaturday = (6 - day + 7) % 7;
+    startOfWeekend.setDate(now.getDate() + daysUntilSaturday);
+    startOfWeekend.setHours(0, 0, 0, 0);
+    const endOfWeekend = new Date(startOfWeekend);
+    endOfWeekend.setDate(startOfWeekend.getDate() + 1);
+    endOfWeekend.setHours(23, 59, 59, 999);
+
+    return realHikes.filter((hike) => {
+      if (typeof hike.mapLat !== "number" || typeof hike.mapLng !== "number") return false;
+
+      const matchesSearch =
+        !query ||
+        hike.title.toLocaleLowerCase("el-GR").includes(query) ||
+        hike.location.toLocaleLowerCase("el-GR").includes(query);
+
+      if (!matchesSearch) return false;
+      if (mapQuickFilter === "Εύκολες" && hike.difficulty !== "Εύκολη") return false;
+
+      const hikeDate = hike.startsAt ? new Date(hike.startsAt) : null;
+      if (mapQuickFilter === "Αύριο") {
+        return Boolean(
+          hikeDate &&
+          hikeDate.getFullYear() === tomorrow.getFullYear() &&
+          hikeDate.getMonth() === tomorrow.getMonth() &&
+          hikeDate.getDate() === tomorrow.getDate()
+        );
+      }
+
+      if (mapQuickFilter === "Αυτό το ΣΚ") {
+        return Boolean(hikeDate && hikeDate >= startOfWeekend && hikeDate <= endOfWeekend);
+      }
+
+      return true;
+    });
+  }, [realHikes, mapSearch, mapQuickFilter]);
+
+  useEffect(() => {
+    if (view !== "map" || !mapContainerRef.current) return;
+
+    let cancelled = false;
+
+    loadLeaflet()
+      .then((L) => {
+        if (cancelled || !mapContainerRef.current) return;
+
+        const map = L.map(mapContainerRef.current, {
+          zoomControl: false,
+          attributionControl: true,
+          minZoom: 5,
+          maxZoom: 18
+        });
+
+        leafletMapRef.current = map;
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        L.control.zoom({ position: "bottomright" }).addTo(map);
+
+        const bounds: [number, number][] = [];
+
+        for (const hike of mapHikes) {
+          if (typeof hike.mapLat !== "number" || typeof hike.mapLng !== "number") continue;
+          bounds.push([hike.mapLat, hike.mapLng]);
+
+          const markerIcon = L.divIcon({
+            className: "hikeLeafletMarkerShell",
+            html: `<div class="hikeLeafletMarker hikeLeafletMarker-${hike.difficulty === "Δύσκολη" ? "hard" : hike.difficulty === "Εύκολη" ? "easy" : "moderate"}"><span>△</span></div>`,
+            iconSize: [48, 56],
+            iconAnchor: [24, 51]
+          });
+
+          const marker = L.marker([hike.mapLat, hike.mapLng], { icon: markerIcon }).addTo(map);
+          marker.on("click", () => {
+            setMapPreviewHike(hike);
+            map.flyTo([hike.mapLat!, hike.mapLng!], Math.max(map.getZoom(), 9), { duration: 0.45 });
+          });
+        }
+
+        if (bounds.length === 1) {
+          map.setView(bounds[0], 8.4);
+        } else if (bounds.length > 1) {
+          map.fitBounds(bounds, { padding: [70, 70], maxZoom: 8 });
+        } else {
+          map.setView([38.35, 23.70], 6.2);
+        }
+
+        window.setTimeout(() => map.invalidateSize(), 120);
+      })
+      .catch(() => showToast("Ο χάρτης δεν φόρτωσε. Δοκίμασε ξανά."));
+
+    return () => {
+      cancelled = true;
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+    };
+  }, [view, mapHikes]);
+
+  function resetMapViewport() {
+    const map = leafletMapRef.current;
+    if (!map) return;
+
+    const points = mapHikes
+      .filter((hike) => typeof hike.mapLat === "number" && typeof hike.mapLng === "number")
+      .map((hike) => [hike.mapLat!, hike.mapLng!] as [number, number]);
+
+    setMapPreviewHike(null);
+
+    if (points.length === 1) map.setView(points[0], 8.4);
+    else if (points.length > 1) map.fitBounds(points, { padding: [70, 70], maxZoom: 8 });
+    else map.setView([38.35, 23.70], 6.2);
+  }
 
   function showToast(message: string) {
     setToast(message);
@@ -1175,7 +1347,7 @@ export default function Home() {
         </aside>
 
         <main className="main">
-          {view !== "detail" && view !== "explore" && view !== "home" && (
+          {view !== "detail" && view !== "explore" && view !== "home" && view !== "map" && (
             <header className="topbar">
               <div>
                 <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
@@ -1704,20 +1876,86 @@ export default function Home() {
           )}
 
           {view === "map" && (
-            <section className="mapCard">
-              <div className="mapVisual">
-                <svg className="trailSvg" viewBox="0 0 900 500" preserveAspectRatio="none" aria-hidden="true">
-                  <path d="M 40 420 C 160 360, 160 210, 300 245 S 470 420, 560 300 S 680 90, 850 120" fill="none" stroke="#52765a" strokeWidth="10" strokeLinecap="round" strokeDasharray="1 22" />
-                  <path d="M 40 420 C 160 360, 160 210, 300 245 S 470 420, 560 300 S 680 90, 850 120" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-                <div className="mapPin" style={{ left: "18%", top: "63%" }}><span>🥾</span></div>
-                <div className="mapPin" style={{ left: "51%", top: "61%" }}><span>🥾</span></div>
-                <div className="mapPin" style={{ left: "76%", top: "29%" }}><span>🥾</span></div>
-                <div className="mapLegend">
-                  <strong>Πεζοπορίες κοντά σου</strong>
-                  <div className="emptyNote">Στην επόμενη φάση εδώ θα μπει πραγματικός χάρτης με GPS/GPX διαδρομές.</div>
+            <section className="discoveryMapPage">
+              <div ref={mapContainerRef} className="liveMapCanvas" aria-label="Χάρτης ενεργών πεζοποριών" />
+
+              <div className="mapDiscoveryTop">
+                <div className="mapDiscoveryBrandRow">
+                  <button type="button" className="mapDiscoveryBack" onClick={() => setView("explore")} aria-label="Πίσω στις πεζοπορίες">←</button>
+                  <div>
+                    <strong>Ανακάλυψε πεζοπορίες</strong>
+                    <span>{mapHikes.length} ενεργές στον χάρτη</span>
+                  </div>
+                  <button type="button" className="mapDiscoveryProfile" onClick={() => setView("profile")} aria-label="Προφίλ">
+                    {profile?.avatarUrl ? (
+                      <img src={avatarPublicUrl(profile.avatarUrl) ?? ""} alt="" />
+                    ) : (
+                      initials(profile?.displayName || user?.email?.split("@")[0] || "Π").toUpperCase()
+                    )}
+                  </button>
+                </div>
+
+                <label className="mapDiscoverySearch">
+                  <span>⌕</span>
+                  <input
+                    value={mapSearch}
+                    onChange={(event) => {
+                      setMapSearch(event.target.value);
+                      setMapPreviewHike(null);
+                    }}
+                    placeholder="Περιοχή, βουνό ή πεζοπορία..."
+                  />
+                </label>
+
+                <div className="mapQuickFilters" role="group" aria-label="Φίλτρα χάρτη">
+                  {["Όλες", "Αύριο", "Αυτό το ΣΚ", "Εύκολες"].map((item) => (
+                    <button
+                      type="button"
+                      key={item}
+                      className={mapQuickFilter === item ? "active" : ""}
+                      onClick={() => {
+                        setMapQuickFilter(item);
+                        setMapPreviewHike(null);
+                      }}
+                    >
+                      {item}
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              <button className="mapFitButton" type="button" onClick={resetMapViewport} aria-label="Προβολή όλων των ενεργών πεζοποριών">⌖</button>
+
+              {!loadingHikes && mapHikes.length === 0 && (
+                <div className="mapNoResults">
+                  <strong>Δεν βρήκαμε ενεργή πεζοπορία εδώ.</strong>
+                  <span>Άλλαξε φίλτρο ή αναζήτησε άλλη περιοχή.</span>
+                </div>
+              )}
+
+              {mapPreviewHike && (
+                <article className="mapHikePreview">
+                  <button className="mapPreviewClose" type="button" onClick={() => setMapPreviewHike(null)} aria-label="Κλείσιμο">×</button>
+                  <div
+                    className="mapPreviewPhoto"
+                    style={mapPreviewHike.coverPhoto ? { backgroundImage: `url("${mapPreviewHike.coverPhoto}")` } : undefined}
+                  >
+                    <span className={`mapPreviewDifficulty mapPreviewDifficulty-${mapPreviewHike.difficulty}`}>{mapPreviewHike.difficulty}</span>
+                  </div>
+                  <div className="mapPreviewBody">
+                    <p>{mapPreviewHike.location}</p>
+                    <h3>{mapPreviewHike.title}</h3>
+                    <div className="mapPreviewMeta">
+                      <span>▣ {mapPreviewHike.day} {mapPreviewHike.month}</span>
+                      <span>↗ {mapPreviewHike.distance}</span>
+                      <span>♟ {mapPreviewHike.people}/{mapPreviewHike.maxParticipants ?? "—"}</span>
+                    </div>
+                    <button type="button" className="mapPreviewOpen" onClick={() => openHikeDetails(mapPreviewHike)}>
+                      Προβολή πεζοπορίας →
+                    </button>
+                  </div>
+                </article>
+              )}
             </section>
           )}
 
