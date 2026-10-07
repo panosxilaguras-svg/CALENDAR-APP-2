@@ -442,7 +442,7 @@ export default function Home() {
   }
 
   async function openHikeDetails(hike: Hike) {
-    setDetailReturnView(view === "home" ? "home" : "explore");
+    setDetailReturnView(view === "home" ? "home" : view === "map" ? "map" : "explore");
     setSelectedHike(hike);
     setDetailParticipants([]);
     setView("detail");
@@ -1225,7 +1225,7 @@ export default function Home() {
         </aside>
 
         <main className="main">
-          {view !== "detail" && view !== "explore" && view !== "home" && (
+          {view !== "detail" && view !== "explore" && view !== "home" && view !== "map" && (
             <header className="topbar">
               <div>
                 <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
@@ -1754,20 +1754,57 @@ export default function Home() {
           )}
 
           {view === "map" && (
-            <section className="mapCard">
-              <div className="mapVisual">
-                <svg className="trailSvg" viewBox="0 0 900 500" preserveAspectRatio="none" aria-hidden="true">
-                  <path d="M 40 420 C 160 360, 160 210, 300 245 S 470 420, 560 300 S 680 90, 850 120" fill="none" stroke="#52765a" strokeWidth="10" strokeLinecap="round" strokeDasharray="1 22" />
-                  <path d="M 40 420 C 160 360, 160 210, 300 245 S 470 420, 560 300 S 680 90, 850 120" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-                <div className="mapPin" style={{ left: "18%", top: "63%" }}><span>🥾</span></div>
-                <div className="mapPin" style={{ left: "51%", top: "61%" }}><span>🥾</span></div>
-                <div className="mapPin" style={{ left: "76%", top: "29%" }}><span>🥾</span></div>
-                <div className="mapLegend">
-                  <strong>Πεζοπορίες κοντά σου</strong>
-                  <div className="emptyNote">Στην επόμενη φάση εδώ θα μπει πραγματικός χάρτης με GPS/GPX διαδρομές.</div>
+            <section className="discoveryMapPage">
+              <iframe
+                key={mapResetToken}
+                className="liveMapCanvas"
+                title="Χάρτης ενεργών πεζοποριών"
+                src={mapFrameSrc}
+              />
+
+              <div className="mapDiscoveryTop">
+                <div className="mapDiscoveryBrandRow">
+                  <button type="button" className="mapDiscoveryBack" onClick={() => setView("explore")} aria-label="Πίσω στις πεζοπορίες">←</button>
+                  <div>
+                    <strong>Ανακάλυψε πεζοπορίες</strong>
+                    <span>{mapHikes.length} ενεργές στον χάρτη</span>
+                  </div>
+                  <button type="button" className="mapDiscoveryProfile" onClick={() => setView("profile")} aria-label="Προφίλ">
+                    {initials(profile?.displayName || user?.email?.split("@")[0] || "Π").toUpperCase()}
+                  </button>
+                </div>
+
+                <label className="mapDiscoverySearch">
+                  <span>⌕</span>
+                  <input
+                    value={mapSearch}
+                    onChange={(event) => setMapSearch(event.target.value)}
+                    placeholder="Περιοχή, βουνό ή πεζοπορία..."
+                  />
+                </label>
+
+                <div className="mapQuickFilters">
+                  {["Όλες", "Εύκολες"].map((item) => (
+                    <button
+                      type="button"
+                      key={item}
+                      className={mapQuickFilter === item ? "active" : ""}
+                      onClick={() => setMapQuickFilter(item)}
+                    >
+                      {item}
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              <button className="mapFitButton" type="button" onClick={resetMapViewport} aria-label="Προβολή όλων">⌖</button>
+
+              {!loadingHikes && mapHikes.length === 0 && (
+                <div className="mapNoResults">
+                  <strong>Δεν βρήκαμε ενεργή πεζοπορία εδώ.</strong>
+                  <span>Άλλαξε φίλτρο ή αναζήτησε άλλη περιοχή.</span>
+                </div>
+              )}
             </section>
           )}
 
