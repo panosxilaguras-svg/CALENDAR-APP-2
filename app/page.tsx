@@ -2432,36 +2432,59 @@ export default function Home() {
 
                   <section className="createPhotoUpload">
                     <div>
-                      <strong>Φωτογραφίες</strong>
-                      <p>Ανέβασε έως 10 πραγματικές φωτογραφίες από τη διαδρομή. Η πρώτη θα γίνει cover.</p>
+                      <strong>Φωτογραφίες & εξώφυλλο</strong>
+                      <p>Ανέβασε έως 10 φωτογραφίες και διάλεξε ποια θέλεις να φαίνεται ως εξώφυλλο.</p>
                     </div>
                     {editingHike?.photoUrls?.length ? (
-                      <div className="createExistingPhotos">
-                        {editingHike.photoUrls.map((photo) => (
-                          <div className="createExistingPhoto" key={photo}>
-                            <img src={photo} alt="Φωτογραφία εκδρομής" />
-                            <button
-                              type="button"
-                              className="createExistingPhotoDelete"
-                              disabled={deletingExistingPhoto === photo}
-                              onClick={() => void deleteExistingHikePhoto(photo)}
-                              aria-label="Διαγραφή φωτογραφίας"
-                            >
-                              {deletingExistingPhoto === photo ? "…" : "×"}
-                            </button>
+                      <>
+                        <div className="createExistingPhotos">
+                          {editingHike.photoUrls.map((photo) => (
+                            <div className={`createExistingPhoto ${editingHike.coverPhoto === photo ? "isCover" : ""}`} key={photo}>
+                              <button type="button" className="coverPhotoChoice" onClick={() => void setExistingPhotoAsCover(photo)} aria-label="Ορισμός ως εξώφυλλο">
+                                <img src={photo} alt="Φωτογραφία εκδρομής" />
+                                {editingHike.coverPhoto === photo && <span>Εξώφυλλο ✓</span>}
+                              </button>
+                              <button type="button" className="createExistingPhotoDelete" disabled={deletingExistingPhoto === photo} onClick={() => void deleteExistingHikePhoto(photo)} aria-label="Διαγραφή φωτογραφίας">
+                                {deletingExistingPhoto === photo ? "…" : "×"}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        {editingHike.coverPhoto && (
+                          <div className="coverCropEditor">
+                            <strong>Ρύθμιση εξωφύλλου</strong>
+                            <div className="coverCropPreview" style={{ backgroundImage: `url("${editingHike.coverPhoto}")`, backgroundPosition: editingHike.coverPosition ?? "50% 50%", backgroundSize: `${(editingHike.coverZoom ?? 1) * 100}%` }} />
+                            <label>Οριζόντια θέση <input type="range" min="0" max="100" value={parseFloat((editingHike.coverPosition ?? "50% 50%").split(" ")[0]) || 50} onChange={(e) => setEditingHike({ ...editingHike, coverPosition: `${e.target.value}% ${(editingHike.coverPosition ?? "50% 50%").split(" ")[1]}` })} /></label>
+                            <label>Κάθετη θέση <input type="range" min="0" max="100" value={parseFloat((editingHike.coverPosition ?? "50% 50%").split(" ")[1]) || 50} onChange={(e) => setEditingHike({ ...editingHike, coverPosition: `${(editingHike.coverPosition ?? "50% 50%").split(" ")[0]} ${e.target.value}%` })} /></label>
+                            <label>Zoom <input type="range" min="1" max="2.5" step="0.05" value={editingHike.coverZoom ?? 1} onChange={(e) => setEditingHike({ ...editingHike, coverZoom: Number(e.target.value) })} /></label>
+                            <button type="button" className="coverCropSave" onClick={() => void saveExistingCoverCrop()}>Αποθήκευση κάδρου</button>
                           </div>
-                        ))}
-                      </div>
+                        )}
+                      </>
                     ) : null}
                     <label className="createPhotoPicker">
                       <span>＋ Επιλογή φωτογραφιών</span>
-                      <input
-                        name="photos"
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/heic"
-                        multiple
-                      />
+                      <input name="photos" type="file" accept="image/jpeg,image/png,image/webp,image/heic" multiple onChange={(e) => handleNewPhotos(e.target.files)} />
                     </label>
+                    {newPhotoPreviews.length > 0 && (
+                      <>
+                        <div className="createExistingPhotos">
+                          {newPhotoPreviews.map((photo, index) => (
+                            <button type="button" key={photo.url} className={`newPhotoChoice ${newCoverIndex === index ? "isCover" : ""}`} onClick={() => { setNewCoverIndex(index); setNewCoverX(50); setNewCoverY(50); setNewCoverZoom(1); }}>
+                              <img src={photo.url} alt="" />
+                              {newCoverIndex === index && <span>Εξώφυλλο ✓</span>}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="coverCropEditor">
+                          <strong>Ρύθμιση νέου εξωφύλλου</strong>
+                          <div className="coverCropPreview" style={{ backgroundImage: `url("${newPhotoPreviews[newCoverIndex]?.url}")`, backgroundPosition: `${newCoverX}% ${newCoverY}%`, backgroundSize: `${newCoverZoom * 100}%` }} />
+                          <label>Οριζόντια θέση <input type="range" min="0" max="100" value={newCoverX} onChange={(e) => setNewCoverX(Number(e.target.value))} /></label>
+                          <label>Κάθετη θέση <input type="range" min="0" max="100" value={newCoverY} onChange={(e) => setNewCoverY(Number(e.target.value))} /></label>
+                          <label>Zoom <input type="range" min="1" max="2.5" step="0.05" value={newCoverZoom} onChange={(e) => setNewCoverZoom(Number(e.target.value))} /></label>
+                        </div>
+                      </>
+                    )}
                     <small>Μέχρι 50 MB η καθεμία · JPG, PNG, WebP ή HEIC.</small>
                   </section>
 
