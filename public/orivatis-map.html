@@ -126,7 +126,7 @@
             var response = await fetch('/api/trails', {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ start: start, end: end })
+              body: JSON.stringify(start ? { start: start, end: end } : { auto: true, end: end })
             });
             var json = await response.json();
             if (!response.ok) throw new Error(json.error || 'route_failed');
@@ -185,26 +185,21 @@
         var tip = document.createElement('div');
         tip.className = 'pick-tip';
         tip.textContent = pickRoute.length > 1
-          ? '✓ Η πραγματική διαδρομή GPX είναι πάνω στον χάρτη'
-          : '1ο πάτημα: αφετηρία · 2ο πάτημα: προορισμός';
+          ? '✓ Η πεζοπορική διαδρομή είναι πάνω στον χάρτη'
+          : 'Πάτησε την κορυφή · η διαδρομή θα βρεθεί αυτόματα';
         document.body.appendChild(tip);
 
         map.on('click', function (event) {
-          var point = [event.latlng.lat, event.latlng.lng];
-          if (!routeStart || selectedRoute.length > 1) {
-            clearRoute();
-            routeStart = point;
-            placePick(point[0], point[1], true);
-            routePanel.className = 'route-panel';
-            routePanel.innerHTML = '';
-            tip.textContent = 'Αφετηρία ✓ · πάτησε τώρα τον προορισμό';
-            return;
-          }
-          tip.textContent = 'Υπολογίζω τη διαδρομή πάνω στα μονοπάτια…';
-          buildHikingRoute(routeStart, point).then(function () {
+          var summit = [event.latlng.lat, event.latlng.lng];
+          clearRoute();
+          placePick(summit[0], summit[1], true);
+          routePanel.className = 'route-panel show';
+          routePanel.innerHTML = '<span class="route-loading">Βρίσκω αφετηρία και πεζοπορικό μονοπάτι…</span>';
+          tip.textContent = 'Βρίσκω αυτόματα τη διαδρομή προς την κορυφή…';
+          buildHikingRoute(null, summit).then(function () {
             tip.textContent = selectedRoute.length > 1
-              ? '✓ Η πεζοπορική διαδρομή είναι έτοιμη · πάτησε αλλού για νέα'
-              : 'Πάτησε ξανά προορισμό για νέα προσπάθεια';
+              ? '✓ Η πεζοπορική διαδρομή είναι έτοιμη · πάτησε άλλη κορυφή για αλλαγή'
+              : 'Δεν βρέθηκε διαδρομή · πάτησε άλλη κορυφή';
           });
         });
         return;
