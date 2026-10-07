@@ -234,6 +234,8 @@ export default function Home() {
   const [newCoverX, setNewCoverX] = useState(50);
   const [newCoverY, setNewCoverY] = useState(50);
   const [newCoverZoom, setNewCoverZoom] = useState(1);
+  const [coverEditor, setCoverEditor] = useState<{ url: string; existing: boolean; index?: number; x: number; y: number; zoom: number } | null>(null);
+  const [coverDragStart, setCoverDragStart] = useState<{ x: number; y: number; cropX: number; cropY: number } | null>(null);
   const [selectedHike, setSelectedHike] = useState<Hike | null>(null);
   const [detailReturnView, setDetailReturnView] = useState<View>("explore");
   const [detailParticipants, setDetailParticipants] = useState<HikeParticipant[]>([]);
@@ -544,34 +546,32 @@ export default function Home() {
     showToast(storageError ? "Η φωτογραφία αφαιρέθηκε από την εκδρομή." : "Η φωτογραφία διαγράφηκε ✓");
   }
 
-  async function setExistingPhotoAsCover(photoUrl: string) {
-    if (!user || !editingHike?.id) return;
-    const { data: rows, error } = await supabase.from("hike_photos").select("storage_path").eq("hike_id", editingHike.id);
-    if (error) return showToast(`Δεν άλλαξε το εξώφυλλο: ${error.message}`);
-    const row = (rows ?? []).find((item) => hikePhotoPublicUrl(item.storage_path) === photoUrl);
-    if (!row) return showToast("Δεν βρέθηκε η φωτογραφία.");
-    const currentCover = editingHike.coverPhoto;
-    if (currentCover !== photoUrl) {
-      await supabase.from("hike_photos").update({ is_cover: false }).eq("hike_id", editingHike.id).eq("is_cover", true);
-      const { error: coverError } = await supabase.from("hike_photos").update({ is_cover: true }).eq("hike_id", editingHike.id).eq("storage_path", row.storage_path);
-      if (coverError) return showToast(`Δεν άλλαξε το εξώφυλλο: ${coverError.message}`);
-    }
-    setEditingHike({ ...editingHike, coverPhoto: photoUrl, coverPosition: "50% 50%", coverZoom: 1 });
-    void loadHikes();
-    showToast("Νέο εξώφυλλο ✓");
+  function openExistingCoverEditor(photoUrl: string) {
+    const current = editingHike?.coverPhoto === photoUrl;
+    const [xRaw, yRaw] = (current ? editingHike?.coverPosition : "50% 50%")!.split(" ");
+    setCoverEditor({ url: photoUrl, existing: true, x: parseFloat(xRaw) || 50, y: parseFloat(yRaw) || 50, zoom: current ? (editingHike?.coverZoom ?? 1) : 1 });
   }
-
-  async function saveExistingCoverCrop() {
-    if (!editingHike?.id || !editingHike.coverPhoto) return;
-    const { data: rows } = await supabase.from("hike_photos").select("storage_path").eq("hike_id", editingHike.id).eq("is_cover", true);
-    const row = rows?.[0];
-    if (!row) return;
-    const [xRaw, yRaw] = (editingHike.coverPosition ?? "50% 50%").split(" ");
-    const cropX = Math.round(parseFloat(xRaw) || 50);
-    const cropY = Math.round(parseFloat(yRaw) || 50);
-    const { error } = await supabase.from("hike_photos").update({ crop_x: cropX, crop_y: cropY, crop_zoom: editingHike.coverZoom ?? 1 }).eq("hike_id", editingHike.id).eq("storage_path", row.storage_path);
-    if (error) showToast(`Δεν αποθηκεύτηκε το κάδρο: ${error.message}`);
-    else { void loadHikes(); showToast("Το κάδρο αποθηκεύτηκε ✓"); }
+  function openNewCoverEditor(index: number) {
+    setCoverEditor({ url: newPhotoPreviews[index].url, existing: false, index, x: index === newCoverIndex ? newCoverX : 50, y: index === newCoverIndex ? newCoverY : 50, zoom: index === newCoverIndex ? newCoverZoom : 1 });
+  }
+  async function saveCoverEditor() {
+    if (!coverEditor) return;
+    if (!coverEditor.existing) { setNewCoverIndex(coverEditor.index ?? 0); setNewCoverX(coverEditor.x); setNewCoverY(coverEditor.y); setNewCoverZoom(coverEditor.zoom); setCoverEditor(null); return; }
+    if (!editingHike?.id) return;
+    const { data: rows, error } = await supabase.from("hike_photos").select("storage_path, is_cover").eq("hike_id", editingHike.id);
+    if (error) return showToast(`Δεν άλλαξε το εξώφυλλο: ${error.message}`);
+    const target = (rows ?? []).find((item) => hikePhotoPublicUrl(item.storage_path) === coverEditor.url);
+    if (!target) return showToast("Δεν βρέθηκε η φωτογραφία.");
+    const oldCover = (rows ?? []).find((item) => item.is_cover && item.storage_path !== target.storage_path);
+    if (oldCover) { const { error: e } = await supabase.from("hike_photos").update({ is_cover:false }).eq("hike_id",editingHike.id).eq("storage_path",oldCover.storage_path); if(e) return showToast(`Δεν άλλαξε το εξώφυλλο: ${e.message}`); }
+    const { error: saveError } = await supabase.from("hike_photos").update({ is_cover:true,crop_x:Math.round(coverEditor.x),crop_y:Math.round(coverEditor.y),crop_zoom:coverEditor.zoom }).eq("hike_id",editingHike.id).eq("storage_path",target.storage_path);
+    if (saveError) return showToast(`Δεν άλλαξε το εξώφυλλο: ${saveError.message}`);
+    setEditingHike({...editingHike,coverPhoto:coverEditor.url,coverPosition:`${coverEditor.x}% ${coverEditor.y}%`,coverZoom:coverEditor.zoom});
+    setCoverEditor(null); await loadHikes(); showToast("Το εξώφυλλο αποθηκεύτηκε ✓");
+  }
+  function moveCoverEditor(clientX:number,clientY:number) {
+    if(!coverDragStart||!coverEditor)return;
+    setCoverEditor({...coverEditor,x:Math.max(0,Math.min(100,coverDragStart.cropX-(clientX-coverDragStart.x)/3)),y:Math.max(0,Math.min(100,coverDragStart.cropY-(clientY-coverDragStart.y)/3))});
   }
 
   function handleNewPhotos(files: FileList | null) {
@@ -2431,60 +2431,10 @@ export default function Home() {
                   </section>
 
                   <section className="createPhotoUpload">
-                    <div>
-                      <strong>Φωτογραφίες & εξώφυλλο</strong>
-                      <p>Ανέβασε έως 10 φωτογραφίες και διάλεξε ποια θέλεις να φαίνεται ως εξώφυλλο.</p>
-                    </div>
-                    {editingHike?.photoUrls?.length ? (
-                      <>
-                        <div className="createExistingPhotos">
-                          {editingHike.photoUrls.map((photo) => (
-                            <div className={`createExistingPhoto ${editingHike.coverPhoto === photo ? "isCover" : ""}`} key={photo}>
-                              <button type="button" className="coverPhotoChoice" onClick={() => void setExistingPhotoAsCover(photo)} aria-label="Ορισμός ως εξώφυλλο">
-                                <img src={photo} alt="Φωτογραφία εκδρομής" />
-                                {editingHike.coverPhoto === photo && <span>Εξώφυλλο ✓</span>}
-                              </button>
-                              <button type="button" className="createExistingPhotoDelete" disabled={deletingExistingPhoto === photo} onClick={() => void deleteExistingHikePhoto(photo)} aria-label="Διαγραφή φωτογραφίας">
-                                {deletingExistingPhoto === photo ? "…" : "×"}
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                        {editingHike.coverPhoto && (
-                          <div className="coverCropEditor">
-                            <strong>Ρύθμιση εξωφύλλου</strong>
-                            <div className="coverCropPreview" style={{ backgroundImage: `url("${editingHike.coverPhoto}")`, backgroundPosition: editingHike.coverPosition ?? "50% 50%", backgroundSize: `${(editingHike.coverZoom ?? 1) * 100}%` }} />
-                            <label>Οριζόντια θέση <input type="range" min="0" max="100" value={parseFloat((editingHike.coverPosition ?? "50% 50%").split(" ")[0]) || 50} onChange={(e) => setEditingHike({ ...editingHike, coverPosition: `${e.target.value}% ${(editingHike.coverPosition ?? "50% 50%").split(" ")[1]}` })} /></label>
-                            <label>Κάθετη θέση <input type="range" min="0" max="100" value={parseFloat((editingHike.coverPosition ?? "50% 50%").split(" ")[1]) || 50} onChange={(e) => setEditingHike({ ...editingHike, coverPosition: `${(editingHike.coverPosition ?? "50% 50%").split(" ")[0]} ${e.target.value}%` })} /></label>
-                            <label>Zoom <input type="range" min="1" max="2.5" step="0.05" value={editingHike.coverZoom ?? 1} onChange={(e) => setEditingHike({ ...editingHike, coverZoom: Number(e.target.value) })} /></label>
-                            <button type="button" className="coverCropSave" onClick={() => void saveExistingCoverCrop()}>Αποθήκευση κάδρου</button>
-                          </div>
-                        )}
-                      </>
-                    ) : null}
-                    <label className="createPhotoPicker">
-                      <span>＋ Επιλογή φωτογραφιών</span>
-                      <input name="photos" type="file" accept="image/jpeg,image/png,image/webp,image/heic" multiple onChange={(e) => handleNewPhotos(e.target.files)} />
-                    </label>
-                    {newPhotoPreviews.length > 0 && (
-                      <>
-                        <div className="createExistingPhotos">
-                          {newPhotoPreviews.map((photo, index) => (
-                            <button type="button" key={photo.url} className={`newPhotoChoice ${newCoverIndex === index ? "isCover" : ""}`} onClick={() => { setNewCoverIndex(index); setNewCoverX(50); setNewCoverY(50); setNewCoverZoom(1); }}>
-                              <img src={photo.url} alt="" />
-                              {newCoverIndex === index && <span>Εξώφυλλο ✓</span>}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="coverCropEditor">
-                          <strong>Ρύθμιση νέου εξωφύλλου</strong>
-                          <div className="coverCropPreview" style={{ backgroundImage: `url("${newPhotoPreviews[newCoverIndex]?.url}")`, backgroundPosition: `${newCoverX}% ${newCoverY}%`, backgroundSize: `${newCoverZoom * 100}%` }} />
-                          <label>Οριζόντια θέση <input type="range" min="0" max="100" value={newCoverX} onChange={(e) => setNewCoverX(Number(e.target.value))} /></label>
-                          <label>Κάθετη θέση <input type="range" min="0" max="100" value={newCoverY} onChange={(e) => setNewCoverY(Number(e.target.value))} /></label>
-                          <label>Zoom <input type="range" min="1" max="2.5" step="0.05" value={newCoverZoom} onChange={(e) => setNewCoverZoom(Number(e.target.value))} /></label>
-                        </div>
-                      </>
-                    )}
+                    <div><strong>Φωτογραφίες & εξώφυλλο</strong><p>Διάλεξε φωτογραφία και ρύθμισε το κάδρο όπως ακριβώς θέλεις να φαίνεται.</p></div>
+                    {editingHike?.photoUrls?.length ? <div className="createExistingPhotos">{editingHike.photoUrls.map((photo)=><div className={`createExistingPhoto ${editingHike.coverPhoto===photo?"isCover":""}`} key={photo}><img src={photo} alt="Φωτογραφία εκδρομής"/><button type="button" className="photoCoverButton" onClick={()=>openExistingCoverEditor(photo)}>{editingHike.coverPhoto===photo?"✓ Εξώφυλλο":"Κάνε εξώφυλλο"}</button><button type="button" className="createExistingPhotoDelete" disabled={deletingExistingPhoto===photo} onClick={()=>void deleteExistingHikePhoto(photo)} aria-label="Διαγραφή φωτογραφίας">{deletingExistingPhoto===photo?"…":"×"}</button></div>)}</div>:null}
+                    <label className="createPhotoPicker"><span>＋ Επιλογή φωτογραφιών</span><input name="photos" type="file" accept="image/jpeg,image/png,image/webp,image/heic" multiple onChange={(e)=>handleNewPhotos(e.target.files)}/></label>
+                    {newPhotoPreviews.length>0&&<div className="createExistingPhotos">{newPhotoPreviews.map((photo,index)=><div className={`createExistingPhoto ${newCoverIndex===index?"isCover":""}`} key={photo.url}><img src={photo.url} alt=""/><button type="button" className="photoCoverButton" onClick={()=>openNewCoverEditor(index)}>{newCoverIndex===index?"✓ Εξώφυλλο":"Κάνε εξώφυλλο"}</button></div>)}</div>}
                     <small>Μέχρι 50 MB η καθεμία · JPG, PNG, WebP ή HEIC.</small>
                   </section>
 
@@ -2828,6 +2778,16 @@ export default function Home() {
           </section>
         </div>
       )}
+
+      {coverEditor && <div className="coverEditorOverlay" role="dialog" aria-modal="true"><div className="coverEditorSheet">
+        <div className="coverEditorHeader"><button type="button" onClick={()=>setCoverEditor(null)}>Ακύρωση</button><strong>Εξώφυλλο</strong><button type="button" onClick={()=>void saveCoverEditor()}>Έτοιμο</button></div>
+        <p>Σύρε τη φωτογραφία μέσα στο πλαίσιο και μεγέθυνέ την όσο θέλεις.</p>
+        <div className="coverEditorStage" onPointerDown={(e)=>{e.currentTarget.setPointerCapture(e.pointerId);setCoverDragStart({x:e.clientX,y:e.clientY,cropX:coverEditor.x,cropY:coverEditor.y})}} onPointerMove={(e)=>moveCoverEditor(e.clientX,e.clientY)} onPointerUp={()=>setCoverDragStart(null)} onPointerCancel={()=>setCoverDragStart(null)}>
+          <div className="coverEditorImage" style={{backgroundImage:`url("${coverEditor.url}")`,backgroundPosition:`${coverEditor.x}% ${coverEditor.y}%`,backgroundSize:`${coverEditor.zoom*100}%`}}/><div className="coverEditorFrame"><span>ΠΕΡΙΟΧΗ ΕΞΩΦΥΛΛΟΥ</span></div>
+        </div>
+        <div className="coverZoomRow"><span>−</span><input type="range" min="1" max="2.5" step="0.05" value={coverEditor.zoom} onChange={(e)=>setCoverEditor({...coverEditor,zoom:Number(e.target.value)})}/><span>＋</span></div>
+        <button type="button" className="coverEditorDone" onClick={()=>void saveCoverEditor()}>Χρήση ως εξώφυλλο</button>
+      </div></div>}
 
       {profilePhotoViewerUrl && (
         <div className="photoViewer" role="dialog" aria-modal="true" aria-label="Φωτογραφία προφίλ" onClick={() => setProfilePhotoViewerUrl(null)}>
