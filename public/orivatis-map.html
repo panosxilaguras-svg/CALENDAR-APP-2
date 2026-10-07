@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>HikeMazi Map</title>
+  <title>ORIVATIS Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     html,body{width:100%;height:100%;margin:0;background:#dce6d9;overflow:hidden}#map{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:#dce6d9}
@@ -61,7 +61,7 @@
         function placePick(lat, lng, notify) {
           if (pickMarker) pickMarker.setLatLng([lat, lng]);
           else pickMarker = L.marker([lat, lng], { icon: pickIcon }).addTo(map);
-          if (notify) parent.postMessage({ type: 'hikemazi-map-pick', lat: lat, lng: lng }, '*');
+          if (notify) parent.postMessage({ type: 'orivatis-map-pick', lat: lat, lng: lng }, '*');
         }
 
         if (hasInitial) {
@@ -129,7 +129,7 @@
 
         var marker = L.marker([hike.lat, hike.lng], { icon: icon }).addTo(map);
         marker.on('click', function () {
-          parent.postMessage({ type: 'hikemazi-map-select', id: hike.id }, '*');
+          parent.postMessage({ type: 'orivatis-map-select', id: hike.id }, '*');
           map.flyTo([hike.lat, hike.lng], Math.max(map.getZoom(), 9), { duration: 0.45 });
         });
       });

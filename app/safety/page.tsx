@@ -1,20 +1,20 @@
 export const metadata = {
   title: "Ασφάλεια & κανόνες",
-  description: "Κανόνες ασφάλειας και κοινωνικών πεζοπορικών συναντήσεων στο HikeMazi."
+  description: "Κανόνες ασφάλειας και κοινωνικών πεζοπορικών συναντήσεων στο ORIVATIS."
 };
 
 export default function SafetyPage() {
   return (
     <main className="legalPage">
       <div className="legalShell">
-        <a className="legalBack" href="/">← HikeMazi</a>
-        <p className="legalKicker">Κοινότητα HikeMazi</p>
+        <a className="legalBack" href="/">← ORIVATIS</a>
+        <p className="legalKicker">Κοινότητα ORIVATIS</p>
         <h1>Ασφάλεια & κανόνες</h1>
 
         <section>
           <h2>Παρέα, όχι επαγγελματική καθοδήγηση</h2>
           <p>
-            Οι πεζοπορίες στο HikeMazi είναι συναντήσεις μεταξύ μελών. Το άτομο που δημιουργεί την ανάρτηση απλώς ξεκινά την παρέα και δεν αποκτά από αυτόν τον λόγο ιδιότητα επαγγελματία οδηγού, ξεναγού ή συνοδού.
+            Οι πεζοπορίες στο ORIVATIS είναι συναντήσεις μεταξύ μελών. Το άτομο που δημιουργεί την ανάρτηση απλώς ξεκινά την παρέα και δεν αποκτά από αυτόν τον λόγο ιδιότητα επαγγελματία οδηγού, ξεναγού ή συνοδού.
           </p>
         </section>
 
@@ -47,7 +47,7 @@ export default function SafetyPage() {
         </section>
 
         <div className="legalCallout">
-          <strong>Το HikeMazi δεν εγγυάται μια διαδρομή</strong>
+          <strong>Το ORIVATIS δεν εγγυάται μια διαδρομή</strong>
           <p>
             Οι πληροφορίες προέρχονται από μέλη της κοινότητας. Χρησιμοποίησέ τες ως σημείο συνεννόησης, όχι ως επαγγελματική εκτίμηση κινδύνου ή οδηγία ασφαλείας.
           </p>
@@ -55,7 +55,7 @@ export default function SafetyPage() {
 
         <div className="legalFooterLinks">
           <a href="/terms">Όροι χρήσης</a>
-          <a href="/">Επιστροφή στο HikeMazi</a>
+          <a href="/">Επιστροφή στο ORIVATIS</a>
         </div>
       </div>
     </main>
