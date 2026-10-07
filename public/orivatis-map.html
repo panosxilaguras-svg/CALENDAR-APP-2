@@ -145,6 +145,7 @@
             var name = response.ok && typeof json.name === 'string' ? json.name.trim() : '';
             if (name) {
               tip.textContent = '📍 Κορυφή ' + name + ' · ✓ Επιλέχθηκε';
+              parent.postMessage({ type: 'orivatis-summit-name', name: name, lat: lat, lng: lng }, '*');
               pickMarker.bindTooltip('Κορυφή ' + name, {
                 permanent: true,
                 direction: 'top',
