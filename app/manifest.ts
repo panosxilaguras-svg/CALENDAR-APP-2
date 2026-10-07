@@ -10,6 +10,9 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#f3f0e8",
     theme_color: "#16251c",
     lang: "el",
-    categories: ["social", "sports", "travel"]
+    categories: ["social", "sports", "travel"],
+    icons: [
+      { src: "/orivatis-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }
+    ]
   };
 }
