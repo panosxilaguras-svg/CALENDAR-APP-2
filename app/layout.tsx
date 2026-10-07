@@ -2,27 +2,27 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://hikemazi.com"),
+  metadataBase: new URL("https://orivatis.com"),
   title: {
-    default: "HikeMazi",
-    template: "%s | HikeMazi"
+    default: "ORIVATIS",
+    template: "%s | ORIVATIS"
   },
-  applicationName: "HikeMazi",
+  applicationName: "ORIVATIS",
   description: "Βρες πεζοπορίες, γνώρισε παρέα και ανέβα βουνό μαζί.",
   alternates: {
     canonical: "/"
   },
   openGraph: {
-    title: "HikeMazi",
+    title: "ORIVATIS",
     description: "Βρες πεζοπορίες, γνώρισε παρέα και ανέβα βουνό μαζί.",
-    url: "https://hikemazi.com",
-    siteName: "HikeMazi",
+    url: "https://orivatis.com",
+    siteName: "ORIVATIS",
     locale: "el_GR",
     type: "website"
   },
   twitter: {
     card: "summary",
-    title: "HikeMazi",
+    title: "ORIVATIS",
     description: "Βρες πεζοπορίες, γνώρισε παρέα και ανέβα βουνό μαζί."
   },
   manifest: "/manifest.webmanifest"
