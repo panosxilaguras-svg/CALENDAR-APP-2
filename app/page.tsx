@@ -224,6 +224,8 @@ export default function Home() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<PublicProfile | null>(null);
+  const [profilePhotoViewerUrl, setProfilePhotoViewerUrl] = useState<string | null>(null);
+  const [deletingExistingPhoto, setDeletingExistingPhoto] = useState<string | null>(null);
   const [selectedHike, setSelectedHike] = useState<Hike | null>(null);
   const [detailReturnView, setDetailReturnView] = useState<View>("explore");
   const [detailParticipants, setDetailParticipants] = useState<HikeParticipant[]>([]);
@@ -483,6 +485,49 @@ export default function Home() {
   async function openPublicProfile(userId: string) {
     const nextProfile = await fetchPublicProfile(userId);
     if (nextProfile) setSelectedProfile(nextProfile);
+  }
+
+  async function deleteExistingHikePhoto(photoUrl: string) {
+    if (!user || !editingHike?.id || deletingExistingPhoto) return;
+    if (!window.confirm("Να διαγραφεί αυτή η φωτογραφία από την εκδρομή;")) return;
+
+    setDeletingExistingPhoto(photoUrl);
+    const { data: rows, error: lookupError } = await supabase
+      .from("hike_photos")
+      .select("storage_path")
+      .eq("hike_id", editingHike.id);
+
+    if (lookupError) {
+      setDeletingExistingPhoto(null);
+      showToast(`Δεν βρέθηκε η φωτογραφία: ${lookupError.message}`);
+      return;
+    }
+
+    const row = (rows ?? []).find((item) => hikePhotoPublicUrl(item.storage_path) === photoUrl);
+    if (!row) {
+      setDeletingExistingPhoto(null);
+      showToast("Δεν βρέθηκε η συγκεκριμένη φωτογραφία.");
+      return;
+    }
+
+    const { error: deleteRowError } = await supabase
+      .from("hike_photos")
+      .delete()
+      .eq("hike_id", editingHike.id)
+      .eq("storage_path", row.storage_path);
+
+    if (deleteRowError) {
+      setDeletingExistingPhoto(null);
+      showToast(`Δεν διαγράφηκε η φωτογραφία: ${deleteRowError.message}`);
+      return;
+    }
+
+    const { error: storageError } = await supabase.storage.from("avatars").remove([row.storage_path]);
+    const nextPhotos = (editingHike.photoUrls ?? []).filter((photo) => photo !== photoUrl);
+    setEditingHike({ ...editingHike, photoUrls: nextPhotos, coverPhoto: nextPhotos[0] ?? null });
+    setDeletingExistingPhoto(null);
+    void loadHikes();
+    showToast(storageError ? "Η φωτογραφία αφαιρέθηκε από την εκδρομή." : "Η φωτογραφία διαγράφηκε ✓");
   }
 
   function openPhotoViewer(index: number) {
@@ -2327,7 +2372,18 @@ export default function Home() {
                     {editingHike?.photoUrls?.length ? (
                       <div className="createExistingPhotos">
                         {editingHike.photoUrls.map((photo) => (
-                          <img src={photo} alt="" key={photo} />
+                          <div className="createExistingPhoto" key={photo}>
+                            <img src={photo} alt="Φωτογραφία εκδρομής" />
+                            <button
+                              type="button"
+                              className="createExistingPhotoDelete"
+                              disabled={deletingExistingPhoto === photo}
+                              onClick={() => void deleteExistingHikePhoto(photo)}
+                              aria-label="Διαγραφή φωτογραφίας"
+                            >
+                              {deletingExistingPhoto === photo ? "…" : "×"}
+                            </button>
+                          </div>
                         ))}
                       </div>
                     ) : null}
@@ -2631,9 +2687,21 @@ export default function Home() {
           <section className="profileModal" onClick={(event) => event.stopPropagation()}>
             <button className="modalClose" onClick={() => setSelectedProfile(null)}>×</button>
             <div className="publicProfileHero">
-              <div className="publicProfileAvatar">
+              <div
+                className={`publicProfileAvatar ${selectedProfile.avatarUrl ? "publicProfileAvatarClickable" : ""}`}
+                role={selectedProfile.avatarUrl ? "button" : undefined}
+                tabIndex={selectedProfile.avatarUrl ? 0 : undefined}
+                onClick={() => selectedProfile.avatarUrl && setProfilePhotoViewerUrl(avatarPublicUrl(selectedProfile.avatarUrl))}
+                onKeyDown={(event) => {
+                  if (selectedProfile.avatarUrl && (event.key === "Enter" || event.key === " ")) {
+                    event.preventDefault();
+                    setProfilePhotoViewerUrl(avatarPublicUrl(selectedProfile.avatarUrl));
+                  }
+                }}
+                aria-label={selectedProfile.avatarUrl ? "Άνοιγμα φωτογραφίας προφίλ" : undefined}
+              >
                 {selectedProfile.avatarUrl ? (
-                  <img src={avatarPublicUrl(selectedProfile.avatarUrl) ?? ""} alt="" />
+                  <img src={avatarPublicUrl(selectedProfile.avatarUrl) ?? ""} alt={`Φωτογραφία προφίλ ${selectedProfile.displayName}`} />
                 ) : (
                   initials(selectedProfile.displayName).toUpperCase()
                 )}
@@ -2648,6 +2716,15 @@ export default function Home() {
               {selectedProfile.bio || "Ο χρήστης δεν έχει γράψει ακόμη περιγραφή."}
             </p>
           </section>
+        </div>
+      )}
+
+      {profilePhotoViewerUrl && (
+        <div className="photoViewer" role="dialog" aria-modal="true" aria-label="Φωτογραφία προφίλ" onClick={() => setProfilePhotoViewerUrl(null)}>
+          <button className="photoViewerClose" type="button" onClick={() => setProfilePhotoViewerUrl(null)} aria-label="Κλείσιμο">×</button>
+          <div className="photoViewerImageWrap" onClick={(event) => event.stopPropagation()}>
+            <img src={profilePhotoViewerUrl} alt="Φωτογραφία προφίλ" />
+          </div>
         </div>
       )}
 
