@@ -1182,13 +1182,13 @@ export default function Home() {
       .getAll("photos")
       .filter((item): item is File => item instanceof File && item.size > 0);
 
-    if (photoFiles.length > 5) {
-      showToast("Μπορείς να ανεβάσεις έως 5 φωτογραφίες.");
+    if (photoFiles.length > 10) {
+      showToast("Μπορείς να ανεβάσεις έως 10 φωτογραφίες.");
       return;
     }
 
-    if (photoFiles.some((file) => file.size > 25 * 1024 * 1024)) {
-      showToast("Κάθε φωτογραφία πρέπει να είναι έως 25 MB.");
+    if (photoFiles.some((file) => file.size > 50 * 1024 * 1024)) {
+      showToast("Κάθε φωτογραφία πρέπει να είναι έως 50 MB.");
       return;
     }
 
@@ -1384,8 +1384,8 @@ export default function Home() {
       return;
     }
 
-    if (file.size > 25 * 1024 * 1024) {
-      showToast("Η φωτογραφία πρέπει να είναι έως 25 MB.");
+    if (file.size > 50 * 1024 * 1024) {
+      showToast("Η φωτογραφία πρέπει να είναι έως 50 MB.");
       return;
     }
 
@@ -2322,7 +2322,7 @@ export default function Home() {
                   <section className="createPhotoUpload">
                     <div>
                       <strong>Φωτογραφίες</strong>
-                      <p>Ανέβασε έως 5 πραγματικές φωτογραφίες από τη διαδρομή. Η πρώτη θα γίνει cover.</p>
+                      <p>Ανέβασε έως 10 πραγματικές φωτογραφίες από τη διαδρομή. Η πρώτη θα γίνει cover.</p>
                     </div>
                     {editingHike?.photoUrls?.length ? (
                       <div className="createExistingPhotos">
@@ -2340,7 +2340,7 @@ export default function Home() {
                         multiple
                       />
                     </label>
-                    <small>Μέχρι 25 MB η καθεμία · JPG, PNG, WebP ή HEIC.</small>
+                    <small>Μέχρι 50 MB η καθεμία · JPG, PNG, WebP ή HEIC.</small>
                   </section>
 
                   <div className="createActions">
