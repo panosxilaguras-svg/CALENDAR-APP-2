@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "HikeMazi",
-    short_name: "HikeMazi",
+    name: "ORIVATIS",
+    short_name: "ORIVATIS",
     description: "Βρες πεζοπορίες, γνώρισε παρέα και ανέβα βουνό μαζί.",
     start_url: "/",
     display: "standalone",
