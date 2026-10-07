@@ -217,10 +217,6 @@ export default function Home() {
   const [myJoinRequests, setMyJoinRequests] = useState<Record<string, { id: string; status: MyJoinStatus }>>({});
   const [photoViewerIndex, setPhotoViewerIndex] = useState<number | null>(null);
   const [theme, setTheme] = useState<ThemeMode>("light");
-  const [mapSearch, setMapSearch] = useState("");
-  const [mapQuickFilter, setMapQuickFilter] = useState("Όλες");
-  const [mapPreviewHike, setMapPreviewHike] = useState<Hike | null>(null);
-  const [mapResetToken, setMapResetToken] = useState(0);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("hikemazi-theme");
@@ -442,7 +438,7 @@ export default function Home() {
   }
 
   async function openHikeDetails(hike: Hike) {
-    setDetailReturnView(view === "home" ? "home" : view === "map" ? "map" : "explore");
+    setDetailReturnView(view === "home" ? "home" : "explore");
     setSelectedHike(hike);
     setDetailParticipants([]);
     setView("detail");
@@ -795,138 +791,6 @@ export default function Home() {
       return matchesDifficulty && matchesSearch;
     });
   }, [allHikes, filter, search]);
-
-  const mapHikes = useMemo(() => {
-    const query = mapSearch.trim().toLocaleLowerCase("el-GR");
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(now.getDate() + 1);
-
-    const startOfWeekend = new Date(now);
-    const day = now.getDay();
-    const daysUntilSaturday = (6 - day + 7) % 7;
-    startOfWeekend.setDate(now.getDate() + daysUntilSaturday);
-    startOfWeekend.setHours(0, 0, 0, 0);
-    const endOfWeekend = new Date(startOfWeekend);
-    endOfWeekend.setDate(startOfWeekend.getDate() + 1);
-    endOfWeekend.setHours(23, 59, 59, 999);
-
-    return realHikes.filter((hike) => {
-      if (typeof hike.mapLat !== "number" || typeof hike.mapLng !== "number") return false;
-
-      const matchesSearch =
-        !query ||
-        hike.title.toLocaleLowerCase("el-GR").includes(query) ||
-        hike.location.toLocaleLowerCase("el-GR").includes(query);
-
-      if (!matchesSearch) return false;
-      if (mapQuickFilter === "Εύκολες" && hike.difficulty !== "Εύκολη") return false;
-
-      const hikeDate = hike.startsAt ? new Date(hike.startsAt) : null;
-      if (mapQuickFilter === "Αύριο") {
-        return Boolean(
-          hikeDate &&
-          hikeDate.getFullYear() === tomorrow.getFullYear() &&
-          hikeDate.getMonth() === tomorrow.getMonth() &&
-          hikeDate.getDate() === tomorrow.getDate()
-        );
-      }
-
-      if (mapQuickFilter === "Αυτό το ΣΚ") {
-        return Boolean(hikeDate && hikeDate >= startOfWeekend && hikeDate <= endOfWeekend);
-      }
-
-      return true;
-    });
-  }, [realHikes, mapSearch, mapQuickFilter]);
-
-  const mapFrameHtml = useMemo(() => {
-    const mapPoints = mapHikes.map((hike) => ({
-      id: hike.id ?? "",
-      lat: hike.mapLat,
-      lng: hike.mapLng,
-      difficulty: hike.difficulty
-    }));
-
-    const safePoints = JSON.stringify(mapPoints).replace(/</g, "\\u003c");
-
-    return `<!doctype html>
-<html lang="el">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    html,body,#map{width:100%;height:100%;margin:0;background:#dce6d9;overflow:hidden}
-    .leaflet-control-attribution{font-size:8px;opacity:.72}
-    .leaflet-control-zoom{border:0!important;box-shadow:0 10px 28px rgba(22,37,28,.18)!important}
-    .leaflet-control-zoom a{border:0!important;width:38px!important;height:38px!important;line-height:38px!important;background:rgba(255,254,250,.96)!important;color:#173321!important}
-    .hm-shell{background:transparent!important;border:0!important}
-    .hm-pin{width:46px;height:46px;border:4px solid white;border-radius:50% 50% 50% 15px;display:grid;place-items:center;transform:rotate(-45deg);background:#173321;color:#dceebd;box-shadow:0 11px 26px rgba(18,35,24,.28)}
-    .hm-pin span{transform:rotate(45deg);font-size:19px;font-weight:900}
-    .hm-pin.hard{background:#ef6a3a;color:white}
-    .hm-pin.easy{background:#a9c997;color:#173321}
-  </style>
-</head>
-<body>
-  <div id="map"></div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
-  <script>
-    (function(){
-      var hikes = ${safePoints};
-      var map = L.map('map',{zoomControl:false,attributionControl:true,minZoom:5,maxZoom:18});
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-        maxZoom:19,
-        attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      }).addTo(map);
-      L.control.zoom({position:'bottomright'}).addTo(map);
-
-      var bounds=[];
-      hikes.forEach(function(hike){
-        if(typeof hike.lat!=='number'||typeof hike.lng!=='number') return;
-        bounds.push([hike.lat,hike.lng]);
-        var cls = hike.difficulty === 'Δύσκολη' ? 'hard' : hike.difficulty === 'Εύκολη' ? 'easy' : 'moderate';
-        var icon = L.divIcon({
-          className:'hm-shell',
-          html:'<div class="hm-pin '+cls+'"><span>△</span></div>',
-          iconSize:[48,56],
-          iconAnchor:[24,51]
-        });
-        var marker=L.marker([hike.lat,hike.lng],{icon:icon}).addTo(map);
-        marker.on('click',function(){
-          parent.postMessage({type:'hikemazi-map-select',id:hike.id},'*');
-          map.flyTo([hike.lat,hike.lng],Math.max(map.getZoom(),9),{duration:.45});
-        });
-      });
-
-      if(bounds.length===1) map.setView(bounds[0],8.4);
-      else if(bounds.length>1) map.fitBounds(bounds,{padding:[70,70],maxZoom:8});
-      else map.setView([38.35,23.70],6.2);
-    })();
-  <\/script>
-</body>
-</html>`;
-  }, [mapHikes, mapResetToken]);
-
-  useEffect(() => {
-    if (view !== "map") return;
-
-    const handleMapMessage = (event: MessageEvent) => {
-      const data = event.data as { type?: string; id?: string };
-      if (data?.type !== "hikemazi-map-select" || !data.id) return;
-
-      const hike = realHikes.find((item) => item.id === data.id);
-      if (hike) setMapPreviewHike(hike);
-    };
-
-    window.addEventListener("message", handleMapMessage);
-    return () => window.removeEventListener("message", handleMapMessage);
-  }, [view, realHikes]);
-
-  function resetMapViewport() {
-    setMapPreviewHike(null);
-    setMapResetToken((value) => value + 1);
-  }
 
   function showToast(message: string) {
     setToast(message);
@@ -1317,7 +1181,7 @@ export default function Home() {
         </aside>
 
         <main className="main">
-          {view !== "detail" && view !== "explore" && view !== "home" && view !== "map" && (
+          {view !== "detail" && view !== "explore" && view !== "home" && (
             <header className="topbar">
               <div>
                 <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
@@ -1846,92 +1710,20 @@ export default function Home() {
           )}
 
           {view === "map" && (
-            <section className="discoveryMapPage">
-              <iframe
-                key={mapResetToken}
-                className="liveMapCanvas"
-                title="Χάρτης ενεργών πεζοποριών"
-                srcDoc={mapFrameHtml}
-                sandbox="allow-scripts"
-              />
-
-              <div className="mapDiscoveryTop">
-                <div className="mapDiscoveryBrandRow">
-                  <button type="button" className="mapDiscoveryBack" onClick={() => setView("explore")} aria-label="Πίσω στις πεζοπορίες">←</button>
-                  <div>
-                    <strong>Ανακάλυψε πεζοπορίες</strong>
-                    <span>{mapHikes.length} ενεργές στον χάρτη</span>
-                  </div>
-                  <button type="button" className="mapDiscoveryProfile" onClick={() => setView("profile")} aria-label="Προφίλ">
-                    {profile?.avatarUrl ? (
-                      <img src={avatarPublicUrl(profile.avatarUrl) ?? ""} alt="" />
-                    ) : (
-                      initials(profile?.displayName || user?.email?.split("@")[0] || "Π").toUpperCase()
-                    )}
-                  </button>
-                </div>
-
-                <label className="mapDiscoverySearch">
-                  <span>⌕</span>
-                  <input
-                    value={mapSearch}
-                    onChange={(event) => {
-                      setMapSearch(event.target.value);
-                      setMapPreviewHike(null);
-                    }}
-                    placeholder="Περιοχή, βουνό ή πεζοπορία..."
-                  />
-                </label>
-
-                <div className="mapQuickFilters" role="group" aria-label="Φίλτρα χάρτη">
-                  {["Όλες", "Αύριο", "Αυτό το ΣΚ", "Εύκολες"].map((item) => (
-                    <button
-                      type="button"
-                      key={item}
-                      className={mapQuickFilter === item ? "active" : ""}
-                      onClick={() => {
-                        setMapQuickFilter(item);
-                        setMapPreviewHike(null);
-                      }}
-                    >
-                      {item}
-                    </button>
-                  ))}
+            <section className="mapCard">
+              <div className="mapVisual">
+                <svg className="trailSvg" viewBox="0 0 900 500" preserveAspectRatio="none" aria-hidden="true">
+                  <path d="M 40 420 C 160 360, 160 210, 300 245 S 470 420, 560 300 S 680 90, 850 120" fill="none" stroke="#52765a" strokeWidth="10" strokeLinecap="round" strokeDasharray="1 22" />
+                  <path d="M 40 420 C 160 360, 160 210, 300 245 S 470 420, 560 300 S 680 90, 850 120" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+                <div className="mapPin" style={{ left: "18%", top: "63%" }}><span>🥾</span></div>
+                <div className="mapPin" style={{ left: "51%", top: "61%" }}><span>🥾</span></div>
+                <div className="mapPin" style={{ left: "76%", top: "29%" }}><span>🥾</span></div>
+                <div className="mapLegend">
+                  <strong>Πεζοπορίες κοντά σου</strong>
+                  <div className="emptyNote">Στην επόμενη φάση εδώ θα μπει πραγματικός χάρτης με GPS/GPX διαδρομές.</div>
                 </div>
               </div>
-
-              <button className="mapFitButton" type="button" onClick={resetMapViewport} aria-label="Προβολή όλων των ενεργών πεζοποριών">⌖</button>
-
-              {!loadingHikes && mapHikes.length === 0 && (
-                <div className="mapNoResults">
-                  <strong>Δεν βρήκαμε ενεργή πεζοπορία εδώ.</strong>
-                  <span>Άλλαξε φίλτρο ή αναζήτησε άλλη περιοχή.</span>
-                </div>
-              )}
-
-              {mapPreviewHike && (
-                <article className="mapHikePreview">
-                  <button className="mapPreviewClose" type="button" onClick={() => setMapPreviewHike(null)} aria-label="Κλείσιμο">×</button>
-                  <div
-                    className="mapPreviewPhoto"
-                    style={mapPreviewHike.coverPhoto ? { backgroundImage: `url("${mapPreviewHike.coverPhoto}")` } : undefined}
-                  >
-                    <span className={`mapPreviewDifficulty mapPreviewDifficulty-${mapPreviewHike.difficulty}`}>{mapPreviewHike.difficulty}</span>
-                  </div>
-                  <div className="mapPreviewBody">
-                    <p>{mapPreviewHike.location}</p>
-                    <h3>{mapPreviewHike.title}</h3>
-                    <div className="mapPreviewMeta">
-                      <span>▣ {mapPreviewHike.day} {mapPreviewHike.month}</span>
-                      <span>↗ {mapPreviewHike.distance}</span>
-                      <span>♟ {mapPreviewHike.people}/{mapPreviewHike.maxParticipants ?? "—"}</span>
-                    </div>
-                    <button type="button" className="mapPreviewOpen" onClick={() => openHikeDetails(mapPreviewHike)}>
-                      Προβολή πεζοπορίας →
-                    </button>
-                  </div>
-                </article>
-              )}
             </section>
           )}
 
