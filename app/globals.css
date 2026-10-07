@@ -6991,3 +6991,14 @@ html[data-theme="dark"] .detailInlineMapMissing {
   background: #e7ebe1;
   transform: translateY(-1px);
 }
+
+
+.coverPhotoChoice,.newPhotoChoice{position:relative;width:76px;height:76px;padding:0;border:0;border-radius:14px;overflow:hidden;background:transparent;cursor:pointer;flex:0 0 76px}
+.coverPhotoChoice img,.newPhotoChoice img{width:100%;height:100%;object-fit:cover;display:block}
+.createExistingPhoto.isCover,.newPhotoChoice.isCover{outline:3px solid #426b4d;outline-offset:2px}
+.coverPhotoChoice span,.newPhotoChoice span{position:absolute;left:5px;bottom:5px;padding:4px 7px;border-radius:999px;background:rgba(24,58,35,.9);color:#fff;font-size:9px;font-weight:800}
+.coverCropEditor{display:grid;gap:10px;margin-top:14px;padding:14px;border-radius:18px;background:rgba(239,243,235,.85)}
+.coverCropPreview{width:100%;aspect-ratio:16/9;border-radius:15px;background-repeat:no-repeat;background-color:#dfe6dc;overflow:hidden}
+.coverCropEditor label{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;font-size:12px;font-weight:750}
+.coverCropEditor input[type="range"]{width:100%;accent-color:#426b4d}
+.coverCropSave{width:max-content;border:0;border-radius:999px;padding:9px 13px;background:#284d34;color:#fff;font-weight:800;cursor:pointer}
