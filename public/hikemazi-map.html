@@ -6,7 +6,7 @@
   <title>HikeMazi Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    html,body,#map{width:100%;height:100%;margin:0;background:#dce6d9;overflow:hidden}
+    html,body{width:100%;height:100%;margin:0;background:#dce6d9;overflow:hidden}#map{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;background:#dce6d9}
     body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     .leaflet-control-attribution{font-size:8px;opacity:.72}
     .leaflet-control-zoom{border:0!important;box-shadow:0 10px 28px rgba(22,37,28,.18)!important}
@@ -108,6 +108,24 @@
       if (bounds.length === 1) map.setView(bounds[0], 8.4);
       else if (bounds.length > 1) map.fitBounds(bounds, { padding: [70, 70], maxZoom: 8 });
       else map.setView([38.35, 23.70], 6.2);
+
+      function refreshMapSize() {
+        map.invalidateSize({ pan: false });
+      }
+
+      requestAnimationFrame(refreshMapSize);
+      setTimeout(refreshMapSize, 80);
+      setTimeout(refreshMapSize, 260);
+      setTimeout(refreshMapSize, 700);
+      window.addEventListener('resize', refreshMapSize);
+      window.addEventListener('orientationchange', function () {
+        setTimeout(refreshMapSize, 120);
+      });
+
+      if ('ResizeObserver' in window) {
+        var observer = new ResizeObserver(function () { refreshMapSize(); });
+        observer.observe(document.getElementById('map'));
+      }
     })();
   </script>
 </body>
