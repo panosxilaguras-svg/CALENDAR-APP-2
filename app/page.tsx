@@ -1187,8 +1187,8 @@ export default function Home() {
       return;
     }
 
-    if (photoFiles.some((file) => file.size > 8 * 1024 * 1024)) {
-      showToast("Κάθε φωτογραφία πρέπει να είναι έως 8 MB.");
+    if (photoFiles.some((file) => file.size > 25 * 1024 * 1024)) {
+      showToast("Κάθε φωτογραφία πρέπει να είναι έως 25 MB.");
       return;
     }
 
@@ -1384,8 +1384,8 @@ export default function Home() {
       return;
     }
 
-    if (file.size > 8 * 1024 * 1024) {
-      showToast("Η φωτογραφία πρέπει να είναι έως 2 MB.");
+    if (file.size > 25 * 1024 * 1024) {
+      showToast("Η φωτογραφία πρέπει να είναι έως 25 MB.");
       return;
     }
 
@@ -2340,7 +2340,7 @@ export default function Home() {
                         multiple
                       />
                     </label>
-                    <small>Μέχρι 8 MB η καθεμία · JPG, PNG, WebP ή HEIC.</small>
+                    <small>Μέχρι 25 MB η καθεμία · JPG, PNG, WebP ή HEIC.</small>
                   </section>
 
                   <div className="createActions">
