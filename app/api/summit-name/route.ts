@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
   // endpoint never makes the UI lose the summit label.
   const query =
     "[out:json][timeout:6];(" +
-    "node(around:1800," + lat + "," + lng + ")[natural=peak];" +
-    "node(around:1800," + lat + "," + lng + ")[natural=volcano];" +
+    "node(around:250," + lat + "," + lng + ")[natural=peak];" +
+    "node(around:250," + lat + "," + lng + ")[natural=volcano];" +
     ");out body 30;";
 
   const endpoints = [
@@ -58,6 +58,10 @@ export async function GET(request: NextRequest) {
       peaks.sort((a, b) => distanceMeters(lat, lng, a) - distanceMeters(lat, lng, b));
 
       for (const peak of peaks) {
+        const meters = distanceMeters(lat, lng, peak);
+        // Never guess a summit from a nearby mountain. The tap must be close
+        // to the actual OSM peak node, otherwise return no name.
+        if (meters > 180) continue;
         const name =
           cleanName(peak.tags?.["name:el"]) ||
           cleanName(peak.tags?.["name:en"]) ||
@@ -65,7 +69,7 @@ export async function GET(request: NextRequest) {
           cleanName(peak.tags?.alt_name);
         if (name) {
           return NextResponse.json(
-            { name, distanceMeters: Math.round(distanceMeters(lat, lng, peak)) },
+            { name, distanceMeters: Math.round(meters) },
             { headers: { "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800" } }
           );
         }
@@ -75,8 +79,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Final fallback: Nominatim reverse geocoding often knows the named peak
-  // even when Overpass mirrors are rate-limited.
+  // Final fallback is intentionally strict: reverse geocoding may return a
+  // nearby mountain name, so only accept results explicitly classified as a peak.
   try {
     const response = await fetch(
       "https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&lat=" +
@@ -93,11 +97,10 @@ export async function GET(request: NextRequest) {
     if (response.ok) {
       const data = await response.json();
       const address = data?.address || {};
-      const name =
-        cleanName(data?.name) ||
-        cleanName(address.peak) ||
-        cleanName(address.volcano) ||
-        cleanName(address.mountain);
+      const isPeak = data?.type === "peak" || data?.type === "volcano" || Boolean(address.peak);
+      const name = isPeak
+        ? (cleanName(address.peak) || cleanName(data?.name) || cleanName(address.volcano))
+        : "";
       if (name) return NextResponse.json({ name });
     }
   } catch {}
