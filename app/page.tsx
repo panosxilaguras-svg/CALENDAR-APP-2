@@ -882,6 +882,20 @@ export default function Home() {
     setMapResetToken((value) => value + 1);
   }
 
+  function openHikeOnMap(hike: Hike) {
+    if (typeof hike.mapLat !== "number" || typeof hike.mapLng !== "number") {
+      showToast("Δεν έχει οριστεί ακόμη σημείο στον χάρτη για αυτή την πεζοπορία.");
+      return;
+    }
+
+    setMapSearch(hike.title);
+    setMapQuickFilter("Όλες");
+    setMapPreviewHike(hike);
+    setMapResetToken((value) => value + 1);
+    setView("map");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function showToast(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(""), 3000);
@@ -1733,14 +1747,18 @@ export default function Home() {
                   )}
                 </section>
 
-                <section className="detailRouteSoon">
+                <button
+                  className="detailRouteSoon detailMapLink"
+                  type="button"
+                  onClick={() => openHikeOnMap(selectedHike)}
+                >
                   <div>
-                    <small>Διαδρομή</small>
-                    <strong>Χάρτης μονοπατιού</strong>
-                    <p>Θα προστεθεί στο επόμενο βήμα.</p>
+                    <small>Χάρτης</small>
+                    <strong>Δες τη θέση της πεζοπορίας</strong>
+                    <p>Άνοιγμα στον χάρτη με το ενεργό pin.</p>
                   </div>
                   <span>⌖</span>
-                </section>
+                </button>
 
                 <section className="communityNotice compact detailLegalNotice">
                   <strong>Κοινωνική πεζοπορική συνάντηση</strong>
