@@ -562,12 +562,29 @@ export default function Home() {
     if (error) return showToast(`Δεν άλλαξε το εξώφυλλο: ${error.message}`);
     const target = (rows ?? []).find((item) => hikePhotoPublicUrl(item.storage_path) === coverEditor.url);
     if (!target) return showToast("Δεν βρέθηκε η φωτογραφία.");
+    const cropPosition = `${coverEditor.x}% ${coverEditor.y}%`;
+    const cropZoom = coverEditor.zoom;
     const oldCover = (rows ?? []).find((item) => item.is_cover && item.storage_path !== target.storage_path);
-    if (oldCover) { const { error: e } = await supabase.from("hike_photos").update({ is_cover:false }).eq("hike_id",editingHike.id).eq("storage_path",oldCover.storage_path); if(e) return showToast(`Δεν άλλαξε το εξώφυλλο: ${e.message}`); }
-    const { error: saveError } = await supabase.from("hike_photos").update({ is_cover:true,crop_x:Math.round(coverEditor.x),crop_y:Math.round(coverEditor.y),crop_zoom:coverEditor.zoom }).eq("hike_id",editingHike.id).eq("storage_path",target.storage_path);
-    if (saveError) return showToast(`Δεν άλλαξε το εξώφυλλο: ${saveError.message}`);
-    setEditingHike({...editingHike,coverPhoto:coverEditor.url,coverPosition:`${coverEditor.x}% ${coverEditor.y}%`,coverZoom:coverEditor.zoom});
-    setCoverEditor(null); await loadHikes(); showToast("Το εξώφυλλο αποθηκεύτηκε ✓");
+    if (oldCover) {
+      const { error: clearError } = await supabase.from("hike_photos").update({ is_cover: false }).eq("hike_id", editingHike.id).eq("storage_path", oldCover.storage_path);
+      if (clearError) return showToast(`Δεν άλλαξε το εξώφυλλο: ${clearError.message}`);
+    }
+    const { data: savedCover, error: saveError } = await supabase.from("hike_photos")
+      .update({ is_cover: true, crop_x: Math.round(coverEditor.x), crop_y: Math.round(coverEditor.y), crop_zoom: cropZoom })
+      .eq("hike_id", editingHike.id)
+      .eq("storage_path", target.storage_path)
+      .select("storage_path, is_cover, crop_x, crop_y, crop_zoom")
+      .single();
+    if (saveError || !savedCover?.is_cover) return showToast(`Δεν άλλαξε το εξώφυλλο: ${saveError?.message ?? "η αλλαγή δεν επιβεβαιώθηκε"}`);
+
+    const updatedCover = { coverPhoto: coverEditor.url, coverPosition: cropPosition, coverZoom: cropZoom };
+    setEditingHike({ ...editingHike, ...updatedCover });
+    setRealHikes((current) => current.map((hike) => hike.id === editingHike.id ? { ...hike, ...updatedCover } : hike));
+    setSelectedHike((current) => current?.id === editingHike.id ? { ...current, ...updatedCover } : current);
+    setMapPreviewHike((current) => current?.id === editingHike.id ? { ...current, ...updatedCover } : current);
+    setCoverEditor(null);
+    await loadHikes();
+    showToast("Το εξώφυλλο άλλαξε ✓");
   }
   function moveCoverEditor(clientX:number,clientY:number) {
     if(!coverDragStart||!coverEditor)return;
