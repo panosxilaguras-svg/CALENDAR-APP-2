@@ -28,6 +28,7 @@
     (function () {
       var params = new URLSearchParams(location.search);
       var mode = params.get('mode') || 'browse';
+      var detailMode = params.get('detail') === '1';
       var hikes = [];
       try { hikes = JSON.parse(params.get('data') || '[]'); } catch (_) {}
 
@@ -90,6 +91,34 @@
         if (typeof hike.lat !== 'number' || typeof hike.lng !== 'number') return;
         bounds.push([hike.lat, hike.lng]);
 
+        var route = Array.isArray(hike.route)
+          ? hike.route.filter(function (point) {
+              return Array.isArray(point) && point.length >= 2 &&
+                typeof point[0] === 'number' && typeof point[1] === 'number';
+            })
+          : [];
+
+        if (route.length > 1) {
+          route.forEach(function (point) { bounds.push([point[0], point[1]]); });
+
+          L.polyline(route, {
+            color: '#fffefa',
+            weight: detailMode ? 9 : 8,
+            opacity: .92,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(map);
+
+          L.polyline(route, {
+            color: '#ef6a3a',
+            weight: detailMode ? 5 : 4,
+            opacity: hike.approximate ? .78 : .96,
+            dashArray: hike.approximate ? '10 8' : null,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(map);
+        }
+
         var cls = hike.difficulty === 'Δύσκολη' ? 'hard' : hike.difficulty === 'Εύκολη' ? 'easy' : 'moderate';
         var icon = L.divIcon({
           className: 'hm-shell',
@@ -105,8 +134,8 @@
         });
       });
 
-      if (bounds.length === 1) map.setView(bounds[0], 8.4);
-      else if (bounds.length > 1) map.fitBounds(bounds, { padding: [70, 70], maxZoom: 8 });
+      if (bounds.length === 1) map.setView(bounds[0], detailMode ? 10.5 : 8.4);
+      else if (bounds.length > 1) map.fitBounds(bounds, { padding: detailMode ? [34, 34] : [70, 70], maxZoom: detailMode ? 13 : 10 });
       else map.setView([38.35, 23.70], 6.2);
 
       function refreshMapSize() {
