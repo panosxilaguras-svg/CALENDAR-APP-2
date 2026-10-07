@@ -7002,3 +7002,17 @@ html[data-theme="dark"] .detailInlineMapMissing {
 .coverCropEditor label{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;font-size:12px;font-weight:750}
 .coverCropEditor input[type="range"]{width:100%;accent-color:#426b4d}
 .coverCropSave{width:max-content;border:0;border-radius:999px;padding:9px 13px;background:#284d34;color:#fff;font-weight:800;cursor:pointer}
+
+
+.photoCoverButton{position:absolute;left:5px;right:5px;bottom:5px;z-index:2;border:0;border-radius:9px;padding:6px 4px;background:rgba(19,54,31,.92);color:#fff;font-size:9px;font-weight:850;cursor:pointer}
+.createExistingPhoto.isCover{outline:3px solid #315d3c;outline-offset:3px}
+.coverEditorOverlay{position:fixed;inset:0;z-index:1200;display:flex;align-items:flex-end;justify-content:center;background:rgba(7,14,10,.72);backdrop-filter:blur(8px)}
+.coverEditorSheet{width:min(100%,560px);padding:16px 16px calc(20px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;background:#f8f7f1;color:#172219}
+.coverEditorHeader{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-bottom:6px}.coverEditorHeader button{border:0;background:none;font-weight:800;color:#315d3c;font-size:15px}.coverEditorHeader button:first-child{text-align:left}.coverEditorHeader button:last-child{text-align:right}.coverEditorSheet>p{margin:6px 0 16px;text-align:center;color:#687069;font-size:13px}
+.coverEditorStage{position:relative;width:100%;aspect-ratio:4/5;overflow:hidden;border-radius:18px;background:#111;touch-action:none;user-select:none}
+.coverEditorImage{position:absolute;inset:0;background-repeat:no-repeat;background-color:#111}
+.coverEditorFrame{position:absolute;left:5%;right:5%;top:29%;aspect-ratio:16/9;border:3px solid #fff;border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.5);pointer-events:none}
+.coverEditorFrame:before,.coverEditorFrame:after{content:"";position:absolute;background:rgba(255,255,255,.45)}.coverEditorFrame:before{left:33.33%;top:0;bottom:0;width:1px;box-shadow:calc(33.33% * 3) 0 0 rgba(255,255,255,.45)}.coverEditorFrame:after{top:50%;left:0;right:0;height:1px}
+.coverEditorFrame span{position:absolute;left:50%;top:-27px;transform:translateX(-50%);white-space:nowrap;color:#fff;font-size:10px;font-weight:900;letter-spacing:.08em}
+.coverZoomRow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;margin:17px 4px 12px}.coverZoomRow input{width:100%;accent-color:#315d3c}.coverZoomRow span{font-size:20px;font-weight:800}
+.coverEditorDone{width:100%;border:0;border-radius:15px;padding:15px;background:#173b26;color:#fff;font-size:15px;font-weight:900}
