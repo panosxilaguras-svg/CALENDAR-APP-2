@@ -1670,7 +1670,7 @@ export default function Home() {
           </div>
         </aside>
 
-        <main className={`main ${view === "map" ? "mainMapView" : ""} ${view === "new" ? "mainCreateView" : ""}`}>
+        <main className={`main ${view === "home" ? "mainHomeView" : ""} ${view === "map" ? "mainMapView" : ""} ${view === "new" ? "mainCreateView" : ""}`}>
           {view !== "detail" && view !== "explore" && view !== "home" && view !== "map" && (
             <header className="topbar">
               <div>
