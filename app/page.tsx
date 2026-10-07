@@ -562,20 +562,21 @@ export default function Home() {
     if (!editingHike?.id) return;
     const { data: rows, error } = await supabase.from("hike_photos").select("storage_path, is_cover").eq("hike_id", editingHike.id);
     if (error) return showToast(`Δεν άλλαξε το εξώφυλλο: ${error.message}`);
-    let target = (rows ?? []).find((item) => hikePhotoPublicUrl(item.storage_path) === coverEditor.url);
-    if (!target && coverEditor.url.startsWith("/")) {
+    let finalCoverUrl = coverEditor.url;
+    let target = (rows ?? []).find((item) => hikePhotoPublicUrl(item.storage_path) === finalCoverUrl);
+    if (!target && finalCoverUrl.startsWith("/")) {
       try {
-        const response = await fetch(coverEditor.url);
+        const response = await fetch(finalCoverUrl);
         if (!response.ok) throw new Error("seed fetch failed");
         const blob = await response.blob();
-        const ext = coverEditor.url.split(".").pop()?.split("?")[0] || "webp";
+        const ext = finalCoverUrl.split(".").pop()?.split("?")[0] || "webp";
         const storagePath = `${user?.id}/hikes/${editingHike.id}/${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabase.storage.from("avatars").upload(storagePath, blob, { contentType: blob.type || `image/${ext}`, upsert: false });
         if (uploadError) throw uploadError;
         const { error: rowError } = await supabase.from("hike_photos").insert({ hike_id: editingHike.id, storage_path: storagePath, sort_order: (rows ?? []).length, uploaded_by: user?.id, is_cover: false });
         if (rowError) { await supabase.storage.from("avatars").remove([storagePath]); throw rowError; }
         target = { storage_path: storagePath, is_cover: false };
-        coverEditor.url = hikePhotoPublicUrl(storagePath) ?? coverEditor.url;
+        finalCoverUrl = hikePhotoPublicUrl(storagePath) ?? finalCoverUrl;
       } catch {
         return showToast("Δεν μπόρεσε να αποθηκευτεί αυτή η παλιά φωτογραφία. Δοκίμασε ξανά.");
       }
@@ -596,7 +597,7 @@ export default function Home() {
       .single();
     if (saveError || !savedCover?.is_cover) return showToast(`Δεν άλλαξε το εξώφυλλο: ${saveError?.message ?? "η αλλαγή δεν επιβεβαιώθηκε"}`);
 
-    const updatedCover = { coverPhoto: coverEditor.url, coverPosition: cropPosition, coverZoom: cropZoom };
+    const updatedCover = { coverPhoto: finalCoverUrl, coverPosition: cropPosition, coverZoom: cropZoom };
     setEditingHike({ ...editingHike, ...updatedCover });
     setRealHikes((current) => current.map((hike) => hike.id === editingHike.id ? { ...hike, ...updatedCover } : hike));
     setSelectedHike((current) => current?.id === editingHike.id ? { ...current, ...updatedCover } : current);
