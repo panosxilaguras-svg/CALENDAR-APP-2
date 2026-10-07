@@ -1013,7 +1013,7 @@ export default function Home() {
     return total;
   }
 
-  function simplifyRoute(points: [number, number][], maxPoints = 900) {
+  function simplifyRoute(points: [number, number][], maxPoints = 350) {
     if (points.length <= maxPoints) return points;
     const step = (points.length - 1) / (maxPoints - 1);
     const simplified: [number, number][] = [];
@@ -1138,7 +1138,7 @@ export default function Home() {
       location_name: location,
       starts_at: startsAt.toISOString(),
       difficulty: mapDifficultyToDb(difficulty),
-      distance_km: distanceRaw ? Number(distanceRaw) : null,
+      distance_km: distanceRaw ? Number(distanceRaw) : createRouteDistanceKm ? Number(createRouteDistanceKm.toFixed(1)) : null,
       max_participants: maxRaw ? Number(maxRaw) : null,
       meeting_point: meetingPoint || null,
       map_lat: mapLatRaw ? Number(mapLatRaw) : null,
