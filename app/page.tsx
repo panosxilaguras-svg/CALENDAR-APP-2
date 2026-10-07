@@ -228,6 +228,9 @@ export default function Home() {
   const [mapPreviewHike, setMapPreviewHike] = useState<Hike | null>(null);
   const [mapResetToken, setMapResetToken] = useState(0);
   const [createMapPoint, setCreateMapPoint] = useState<{ lat: number; lng: number } | null>(null);
+  const [createRoutePoints, setCreateRoutePoints] = useState<[number, number][]>([]);
+  const [createRouteName, setCreateRouteName] = useState("");
+  const [createRouteDistanceKm, setCreateRouteDistanceKm] = useState<number | null>(null);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("orivatis-theme");
@@ -958,6 +961,9 @@ export default function Home() {
   function openNewHike() {
     setEditingHike(null);
     setCreateMapPoint(null);
+    setCreateRoutePoints([]);
+    setCreateRouteName("");
+    setCreateRouteDistanceKm(null);
     setView("new");
   }
 
@@ -969,6 +975,9 @@ export default function Home() {
         ? { lat: hike.mapLat, lng: hike.mapLng }
         : null
     );
+    setCreateRoutePoints(hike.routePoints ?? []);
+    setCreateRouteName(hike.routePoints?.length ? "Αποθηκευμένη διαδρομή" : "");
+    setCreateRouteDistanceKm(hike.distanceKm ?? null);
     setView("new");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -984,6 +993,78 @@ export default function Home() {
     if (!iso) return "";
     const date = new Date(iso);
     return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+  }
+
+  function routeDistanceKm(points: [number, number][]) {
+    const earthRadiusKm = 6371;
+    let total = 0;
+    for (let index = 1; index < points.length; index += 1) {
+      const [lat1, lng1] = points[index - 1];
+      const [lat2, lng2] = points[index];
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLng = ((lng2 - lng1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLng / 2) ** 2;
+      total += earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+    return total;
+  }
+
+  function simplifyRoute(points: [number, number][], maxPoints = 350) {
+    if (points.length <= maxPoints) return points;
+    const step = (points.length - 1) / (maxPoints - 1);
+    const simplified: [number, number][] = [];
+    for (let index = 0; index < maxPoints; index += 1) {
+      simplified.push(points[Math.round(index * step)]);
+    }
+    return simplified;
+  }
+
+  async function handleGpxUpload(file?: File) {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".gpx") && !file.type.includes("xml")) {
+      showToast("Διάλεξε αρχείο GPX.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Το GPX πρέπει να είναι έως 5 MB.");
+      return;
+    }
+
+    try {
+      const xml = new DOMParser().parseFromString(await file.text(), "application/xml");
+      if (xml.querySelector("parsererror")) throw new Error("invalid xml");
+
+      const trackNodes = Array.from(xml.querySelectorAll("trkpt"));
+      const routeNodes = trackNodes.length ? trackNodes : Array.from(xml.querySelectorAll("rtept"));
+      const rawPoints = routeNodes
+        .map((node) => [Number(node.getAttribute("lat")), Number(node.getAttribute("lon"))] as [number, number])
+        .filter(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180);
+
+      if (rawPoints.length < 2) {
+        showToast("Δεν βρήκα έγκυρη διαδρομή μέσα στο GPX.");
+        return;
+      }
+
+      const distance = routeDistanceKm(rawPoints);
+      const points = simplifyRoute(rawPoints);
+      setCreateRoutePoints(points);
+      setCreateRouteName(file.name);
+      setCreateRouteDistanceKm(distance);
+      setCreateMapPoint({ lat: points[0][0], lng: points[0][1] });
+      showToast(`Η διαδρομή φορτώθηκε ✓ · ${distance.toFixed(1)} km`);
+    } catch {
+      showToast("Δεν μπόρεσα να διαβάσω αυτό το GPX.");
+    }
+  }
+
+  function clearCreateRoute() {
+    setCreateRoutePoints([]);
+    setCreateRouteName("");
+    setCreateRouteDistanceKm(null);
   }
 
   async function submitHike(event: FormEvent<HTMLFormElement>) {
@@ -1057,11 +1138,13 @@ export default function Home() {
       location_name: location,
       starts_at: startsAt.toISOString(),
       difficulty: mapDifficultyToDb(difficulty),
-      distance_km: distanceRaw ? Number(distanceRaw) : null,
+      distance_km: distanceRaw ? Number(distanceRaw) : createRouteDistanceKm ? Number(createRouteDistanceKm.toFixed(1)) : null,
       max_participants: maxRaw ? Number(maxRaw) : null,
       meeting_point: meetingPoint || null,
       map_lat: mapLatRaw ? Number(mapLatRaw) : null,
       map_lng: mapLngRaw ? Number(mapLngRaw) : null,
+      route_points: createRoutePoints.length > 1 ? createRoutePoints : null,
+      route_is_approximate: false,
       meeting_type: "social",
       community_terms_accepted_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -1126,6 +1209,9 @@ export default function Home() {
     const wasEditing = Boolean(editingHike?.id);
     setEditingHike(null);
     setCreateMapPoint(null);
+    setCreateRoutePoints([]);
+    setCreateRouteName("");
+    setCreateRouteDistanceKm(null);
     setView("home");
     showToast(
       photoUploadFailed
@@ -2031,10 +2117,10 @@ export default function Home() {
                         </span>
                       </div>
                       <iframe
-                        key={editingHike?.id ?? "new-map-point"}
+                        key={`${editingHike?.id ?? "new-map-point"}-${createRouteName}-${createRoutePoints.length}`}
                         className="createMapPickerFrame"
                         title="Επιλογή σημείου πεζοπορίας"
-                        src={`/orivatis-map.html?mode=pick${typeof editingHike?.mapLat === "number" && typeof editingHike?.mapLng === "number" ? `&lat=${editingHike.mapLat}&lng=${editingHike.mapLng}` : ""}`}
+                        src={`/orivatis-map.html?mode=pick${createMapPoint ? `&lat=${createMapPoint.lat}&lng=${createMapPoint.lng}` : ""}${createRoutePoints.length > 1 ? `&route=${encodeURIComponent(JSON.stringify(createRoutePoints))}` : ""}`}
                       />
                       <input name="mapLat" type="hidden" value={createMapPoint?.lat ?? ""} readOnly />
                       <input name="mapLng" type="hidden" value={createMapPoint?.lng ?? ""} readOnly />
@@ -2046,6 +2132,33 @@ export default function Home() {
                         <small className="createMapCoordinates">
                           Χωρίς pin η πεζοπορία δεν μπορεί να δημοσιευτεί στον χάρτη του ORIVATIS.
                         </small>
+                      )}
+                    </div>
+
+                    <div className="createGpx">
+                      <div className="createGpxCopy">
+                        <strong>Πραγματική διαδρομή GPX</strong>
+                        <small>Ανέβασε ένα .gpx και το ORIVATIS θα εμφανίσει όλο το μονοπάτι πάνω στον χάρτη.</small>
+                      </div>
+                      <label className="createGpxButton">
+                        <input
+                          type="file"
+                          accept=".gpx,application/gpx+xml,application/xml,text/xml"
+                          onChange={(event) => void handleGpxUpload(event.target.files?.[0])}
+                        />
+                        {createRoutePoints.length > 1 ? "Αλλαγή GPX" : "Ανέβασε GPX"}
+                      </label>
+                      {createRoutePoints.length > 1 && (
+                        <div className="createGpxLoaded">
+                          <div>
+                            <strong>✓ {createRouteName || "Διαδρομή GPX"}</strong>
+                            <small>
+                              {createRouteDistanceKm ? `${createRouteDistanceKm.toFixed(1)} km · ` : ""}
+                              {createRoutePoints.length} σημεία χάρτη · πραγματική χάραξη
+                            </small>
+                          </div>
+                          <button type="button" onClick={clearCreateRoute}>Αφαίρεση</button>
+                        </div>
                       )}
                     </div>
 

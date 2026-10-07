@@ -6755,3 +6755,33 @@ html[data-theme="dark"] .detailInlineMapMissing {
   display: block;
   object-fit: cover;
 }
+
+
+/* GPX route upload */
+.createGpx{
+  margin-top:14px;padding:16px;border:1px solid var(--line,#dedbd1);border-radius:18px;
+  background:rgba(255,255,255,.48);display:flex;align-items:center;gap:14px;flex-wrap:wrap
+}
+.createGpxCopy{display:flex;flex-direction:column;gap:4px;flex:1 1 280px;min-width:0}
+.createGpxCopy strong{font-size:14px;color:var(--ink,#173321)}
+.createGpxCopy small{font-size:12px;line-height:1.45;color:var(--muted,#6f746e)}
+.createGpxButton{
+  position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;
+  min-height:42px;padding:0 16px;border-radius:999px;background:#173321;color:#fff;
+  font-size:12px;font-weight:800;cursor:pointer
+}
+.createGpxButton input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.createGpxLoaded{
+  flex:1 0 100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border-radius:14px;background:#edf3e8
+}
+.createGpxLoaded>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.createGpxLoaded strong{font-size:12px;color:#173321;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.createGpxLoaded small{font-size:11px;color:#647064}
+.createGpxLoaded button{
+  border:0;background:transparent;color:#9a4d35;font-weight:800;font-size:11px;cursor:pointer;padding:8px
+}
+@media(max-width:640px){
+  .createGpxButton{width:100%}
+  .createGpxLoaded{align-items:flex-start}
+}
