@@ -2851,49 +2851,44 @@ export default function Home() {
       </div>
 
       {selectedProfile && (
-        <div className="modalBackdrop" onClick={() => setSelectedProfile(null)}>
-          <section className="profileModal" onClick={(event) => event.stopPropagation()}>
-            <button className="modalClose" onClick={() => setSelectedProfile(null)}>×</button>
-            <div className="publicProfileHero">
-              <div
-                className={`publicProfileAvatar ${selectedProfile.avatarUrl ? "publicProfileAvatarClickable" : ""}`}
-                role={selectedProfile.avatarUrl ? "button" : undefined}
-                tabIndex={selectedProfile.avatarUrl ? 0 : undefined}
-                onClick={() => selectedProfile.avatarUrl && setProfilePhotoViewerUrl(avatarPublicUrl(selectedProfile.avatarUrl))}
-                onKeyDown={(event) => {
-                  if (selectedProfile.avatarUrl && (event.key === "Enter" || event.key === " ")) {
-                    event.preventDefault();
-                    setProfilePhotoViewerUrl(avatarPublicUrl(selectedProfile.avatarUrl));
-                  }
-                }}
-                aria-label={selectedProfile.avatarUrl ? "Άνοιγμα φωτογραφίας προφίλ" : undefined}
-              >
-                {selectedProfile.avatarUrl ? (
-                  <img src={avatarPublicUrl(selectedProfile.avatarUrl) ?? ""} alt={`Φωτογραφία προφίλ ${selectedProfile.displayName}`} />
-                ) : (
-                  initials(selectedProfile.displayName).toUpperCase()
-                )}
+        <div className="publicProfilePage" role="dialog" aria-modal="true" aria-label={`Προφίλ ${selectedProfile.displayName}`}>
+          <div className="publicProfilePageInner">
+            <button type="button" className="publicProfileBack" onClick={() => setSelectedProfile(null)}>‹ Επιστροφή</button>
+            <section className="publicProfileCard">
+              <div className="publicProfileCover" />
+              <div className="publicProfileIdentity">
+                <button type="button" className="publicProfileAvatarLarge" onClick={() => selectedProfile.avatarUrl && setProfilePhotoViewerUrl(avatarPublicUrl(selectedProfile.avatarUrl))} aria-label="Προβολή φωτογραφίας προφίλ">
+                  {selectedProfile.avatarUrl ? <img src={avatarPublicUrl(selectedProfile.avatarUrl) ?? ""} alt="" /> : <span>{initials(selectedProfile.displayName).toUpperCase()}</span>}
+                </button>
+                <div><h2>{selectedProfile.displayName}</h2><p>{selectedProfile.city || "Περιοχή δεν έχει δηλωθεί"} · {experienceLabel(selectedProfile.experienceLevel)}</p></div>
               </div>
-              <div>
-                <h2>{selectedProfile.displayName}</h2>
-                <p>{selectedProfile.city || "Περιοχή δεν έχει δηλωθεί"}</p>
-              </div>
-            </div>
-            <span className="profileLevel">{experienceLabel(selectedProfile.experienceLevel)}</span>
-            {selectedProfile.instagramUsername && (
-              <a
-                className="publicProfileInstagram"
-                href={`https://www.instagram.com/${encodeURIComponent(selectedProfile.instagramUsername)}/`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Instagram · @{selectedProfile.instagramUsername}
-              </a>
-            )}
-            <p className="publicProfileBio">
-              {selectedProfile.bio || "Ο χρήστης δεν έχει γράψει ακόμη περιγραφή."}
-            </p>
-          </section>
+              {selectedProfile.bio && <p className="publicProfileDescription">{selectedProfile.bio}</p>}
+              {selectedProfile.instagramUsername && <a className="publicProfileSocial" href={`https://www.instagram.com/${encodeURIComponent(selectedProfile.instagramUsername)}/`} target="_blank" rel="noopener noreferrer">◎ Instagram · @{selectedProfile.instagramUsername}</a>}
+              <section className="publicProfileSection">
+                <h3>Φωτογραφίες εξορμήσεων</h3>
+                {realHikes.filter((hike) => hike.organizerId === selectedProfile.id).flatMap((hike) => hike.photoUrls?.length ? hike.photoUrls : hike.coverPhoto ? [hike.coverPhoto] : []).length ? (
+                  <div className="publicProfilePhotos">
+                    {realHikes.filter((hike) => hike.organizerId === selectedProfile.id).flatMap((hike) => hike.photoUrls?.length ? hike.photoUrls : hike.coverPhoto ? [hike.coverPhoto] : []).slice(0,3).map((url,index) => (
+                      <button type="button" key={index} onClick={() => {setProfileGalleryIndex(index);setProfilePhotoViewerUrl(url);}}><img src={url} alt={`Φωτογραφία ${index+1}`} loading="lazy"/></button>
+                    ))}
+                  </div>
+                ) : <p className="profileEmptyNote">Δεν υπάρχουν ακόμη φωτογραφίες εξορμήσεων.</p>}
+              </section>
+              <section className="publicProfileSection">
+                <h3>Οι πεζοπορίες μου</h3>
+                {realHikes.filter((hike) => hike.organizerId === selectedProfile.id).length ? (
+                  <div className="profileHikeList">
+                    {realHikes.filter((hike) => hike.organizerId === selectedProfile.id).slice(0,6).map((hike) => (
+                      <button type="button" className="profileHikeRow" key={hike.id ?? hike.title} onClick={() => {setSelectedProfile(null);openHikeDetails(hike);}}>
+                        {hike.coverPhoto || hike.photoUrls?.[0] ? <img src={hike.coverPhoto || hike.photoUrls?.[0]} alt="" /> : <span className="profileHikeFallback">⛰</span>}
+                        <span className="profileHikeText"><strong>{hike.title}</strong><small>{hike.day} {hike.month} · {hike.location}</small></span><span>›</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : <p className="profileEmptyNote">Δεν έχει οργανώσει ακόμη πεζοπορίες.</p>}
+              </section>
+            </section>
+          </div>
         </div>
       )}
 
