@@ -7690,3 +7690,51 @@ html[data-theme="dark"] .hero {
   .messagesPage .groupChatHeader{display:flex!important;align-items:center!important;gap:10px!important}
   .messagesPage .groupChatHeader>div{flex:1!important;min-width:0!important}
 }
+
+/* Mobile chat repair: prevent old horizontal/grid chat rules from leaking through */
+@media(max-width:700px){
+  .messagesPage{min-width:0!important;overflow:hidden!important}
+  .messagesPage .groupChatShell{
+    display:block!important;width:100%!important;min-width:0!important;
+    height:auto!important;min-height:0!important;overflow:hidden!important;
+    border-radius:18px!important;
+  }
+  .messagesPage .groupChatList{
+    position:static!important;float:none!important;
+    display:flex!important;flex-direction:column!important;
+    width:100%!important;min-width:0!important;max-width:100%!important;
+    height:auto!important;overflow:visible!important;
+    padding:14px!important;margin:0!important;box-sizing:border-box!important;
+    background:transparent!important;
+  }
+  .messagesPage .groupChatItem{
+    display:flex!important;position:relative!important;float:none!important;
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    box-sizing:border-box!important;overflow:hidden!important;
+    transform:none!important;flex-shrink:0!important;
+    margin:0 0 10px!important;
+  }
+  .messagesPage .groupChatItemText{display:block!important;min-width:0!important;flex:1 1 auto!important;overflow:hidden!important}
+  .messagesPage .groupChatItemText strong{overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+  .messagesPage .groupChatRole{flex:0 0 auto!important}
+  .messagesPage .groupChatPane{
+    display:none!important;position:static!important;
+    float:none!important;width:100%!important;min-width:0!important;
+    max-width:100%!important;overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+  .messagesPage .groupChatShell.chatMobileOpen .groupChatList{display:none!important}
+  .messagesPage .groupChatShell.chatMobileOpen .groupChatPane{
+    display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;
+    min-height:0!important;
+  }
+  .messagesPage .groupChatMessages{
+    min-height:280px!important;max-height:55dvh!important;
+    overflow-x:hidden!important;overflow-y:auto!important;
+    padding:14px!important;box-sizing:border-box!important;
+  }
+  .messagesPage .groupChatHeader{min-width:0!important;box-sizing:border-box!important;padding:12px!important}
+  .messagesPage .groupChatHeader>div{min-width:0!important;flex:1 1 auto!important}
+  .messagesPage .groupChatHeader strong{white-space:normal!important;overflow-wrap:anywhere!important}
+  .messagesPage .groupChatComposer{min-width:0!important;width:100%!important;box-sizing:border-box!important}
+}
