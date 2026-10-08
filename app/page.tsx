@@ -1872,33 +1872,35 @@ export default function Home() {
                       </div>
                       <div className="cardBody">
                         <div className="cardHeadingCompact">
-                        <button className="cardTitleButton" onClick={(event) => { event.stopPropagation(); openHikeDetails(hike); }}>
-                          <h3>{hike.title}</h3>
-                        </button>
-                        <div className="organizerLine">
-                          {hike.organizerAvatar ? (
-                            <img src={avatarPublicUrl(hike.organizerAvatar) ?? ""} alt="" />
-                          ) : (
-                            <span>{initials(hike.organizerName || "Ο")}</span>
-                          )}
-                          <button
-                            type="button"
-                            disabled={hike.demo || !hike.organizerId}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              if (hike.organizerId) openPublicProfile(hike.organizerId);
-                            }}
-                          >
-                            {hike.organizerName || (hike.demo ? "Demo organizer" : "Πεζοπόρος")}
-                          </button>
-                        </div>
+                          <div className="cardHeadingText">
+                            <button className="cardTitleButton" onClick={(event) => { event.stopPropagation(); openHikeDetails(hike); }}>
+                              <h3>{hike.title}</h3>
+                            </button>
+                            <div className="cardLocation"><span aria-hidden="true">📍</span><strong>{hike.location.split(",").slice(0, 2).join(",").trim()}</strong></div>
+                          </div>
+                          <div className="organizerLine">
+                            {hike.organizerAvatar ? (
+                              <img src={avatarPublicUrl(hike.organizerAvatar) ?? ""} alt="" />
+                            ) : (
+                              <span>{initials(hike.organizerName || "Ο")}</span>
+                            )}
+                            <button
+                              type="button"
+                              disabled={hike.demo || !hike.organizerId}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                if (hike.organizerId) openPublicProfile(hike.organizerId);
+                              }}
+                            >
+                              {hike.organizerName || (hike.demo ? "Demo organizer" : "Πεζοπόρος")}
+                            </button>
+                          </div>
                         </div>
                         <div className="cardMeta cardMetaStructured">
-                          <div className="cardLocation"><span aria-hidden="true">📍</span><strong>{hike.location}</strong></div>
                           <div className="cardMetaFacts">
-                            <span><small aria-hidden="true">🥾</small><strong>{hike.distance}</strong></span>
-                            <span><small aria-hidden="true">🕒</small><strong>{hike.start}</strong></span>
-                            <span><small aria-hidden="true">👥</small><strong>{hike.people}{hike.maxParticipants ? `/${hike.maxParticipants}` : ""}</strong></span>
+                            <span><small aria-hidden="true">🥾</small><strong>{hike.distance}</strong><em>Απόσταση</em></span>
+                            <span><small aria-hidden="true">🕒</small><strong>{hike.start}</strong><em>Αναχώρηση</em></span>
+                            <span><small aria-hidden="true">👥</small><strong>{hike.people}{hike.maxParticipants ? `/${hike.maxParticipants}` : ""}</strong><em>Συμμετοχές</em></span>
                           </div>
                         </div>
                         <div className="peopleRow">
