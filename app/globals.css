@@ -8373,3 +8373,29 @@ html[data-theme="dark"] .hero {
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
 }
+
+/* Hike browse cards: hard-clip the cover to the card's rounded bounds.
+   Prevent iOS Safari background paint from bleeding beyond the cover edge. */
+.exploreList .exploreCard {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  clip-path: inset(0 round 17px) !important;
+  background-clip: padding-box !important;
+}
+.exploreList .exploreCard .exploreThumb {
+  position: relative !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  align-self: stretch !important;
+  overflow: hidden !important;
+  border-radius: 0 !important;
+  background-clip: padding-box !important;
+}
+.exploreList .exploreCard .exploreInfo {
+  position: relative !important;
+  min-width: 0 !important;
+  z-index: 1 !important;
+}
