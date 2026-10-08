@@ -8080,3 +8080,51 @@ html[data-theme="dark"] .hero {
   -webkit-text-fill-color: #193627 !important;
   text-shadow: none !important;
 }
+
+/* Mobile notification action buttons: override inherited hero toolbar button sizing */
+.hero .mobileHomeBrand .mobileBrandActions .requestNotificationDropdown .requestNotificationActions {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+.hero .mobileHomeBrand .mobileBrandActions .requestNotificationDropdown .requestNotificationActions button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: static !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  padding: 8px 5px !important;
+  margin: 0 !important;
+  border-radius: 11px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+.hero .mobileHomeBrand .mobileBrandActions .requestNotificationDropdown .requestNotificationActions button:nth-child(1) {
+  color: #234735 !important;
+  background: #f4f7f2 !important;
+  border: 1px solid #d9e3d9 !important;
+}
+.hero .mobileHomeBrand .mobileBrandActions .requestNotificationDropdown .requestNotificationActions button:nth-child(2) {
+  color: #ffffff !important;
+  background: #1a402b !important;
+  border: 1px solid #1a402b !important;
+}
+.hero .mobileHomeBrand .mobileBrandActions .requestNotificationDropdown .requestNotificationActions button:nth-child(3) {
+  color: #994f44 !important;
+  background: #fff4f1 !important;
+  border: 1px solid #f3ded7 !important;
+}
