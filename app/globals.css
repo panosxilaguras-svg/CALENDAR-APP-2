@@ -7404,3 +7404,20 @@ html[data-theme="dark"] .hero {
 .profileRedesigned .profileEditButton{top:12px;right:12px}
 .profileRedesigned .profileMorePhotos{margin-left:17px;margin-right:17px;width:calc(100% - 34px)}
 }
+
+/* Profile final polish: quiet edit action and centered footer */
+.profileRedesigned .profileEditButton{
+  width:43px!important;height:43px!important;min-width:43px!important;
+  padding:0!important;display:grid!important;place-items:center!important;
+  border:1px solid rgba(255,255,255,.65)!important;
+  background:rgba(19,43,32,.22)!important;color:#fff!important;
+  font-size:22px!important;line-height:1!important;
+  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+  box-shadow:none!important;
+}
+.profileRedesigned .profileLegalLinks{
+  display:flex!important;justify-content:center!important;align-items:center!important;
+  flex-wrap:wrap!important;gap:12px 24px!important;text-align:center!important;
+}
+.profileRedesigned .requestPanel h3,.profileRedesigned .requestPanel .emptyNote{text-align:center}
+.profileRedesigned .profileSettingsTitle{text-align:center}
