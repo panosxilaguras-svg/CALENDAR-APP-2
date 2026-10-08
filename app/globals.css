@@ -7833,3 +7833,44 @@ html[data-theme="dark"] .hero {
    align-self:center!important;
  }
 }
+
+/* Center the hikes search and difficulty filters on mobile */
+@media(max-width:700px){
+  .browsePage .browseControls,
+  .hikesPage .browseControls,
+  .browseControls{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    box-sizing:border-box!important;
+  }
+  .browseControls .hikeSearch{
+    display:block!important;
+    width:min(100%,540px)!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+    box-sizing:border-box!important;
+  }
+  .browseControls .filters{
+    display:flex!important;
+    flex-wrap:wrap!important;
+    justify-content:center!important;
+    align-items:center!important;
+    gap:9px!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:12px auto 0!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+  }
+  .browseControls .filters .chip{
+    flex:0 0 auto!important;
+    text-align:center!important;
+  }
+}
