@@ -8050,3 +8050,5 @@ html[data-theme="dark"] .hero {
  .hero .mobileHomeBrand .mobileBrandActions .requestNotificationActions{display:flex!important;gap:8px!important;flex-wrap:wrap!important}
  .hero .mobileHomeBrand .mobileBrandActions .requestNotificationActions button{padding:9px 12px!important;font-size:13px!important}
 }
+
+/* ORIVATIS notification deployment sync 2026-10-08: trigger production build after Vercel team transfer. */
