@@ -74,6 +74,7 @@ type ChatMessage = {
   id: number;
   senderId: string;
   senderName: string;
+  senderAvatarUrl: string | null;
   body: string;
   createdAt: string;
 };
@@ -847,16 +848,16 @@ export default function Home() {
     }
 
     const senderIds = [...new Set(messages.map((message) => message.sender_id))];
-    let nameByUser = new Map<string, string>();
+    let nameByUser = new Map<string, { name: string; avatarUrl: string | null }>();
 
     if (senderIds.length) {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, display_name")
+        .select("id, display_name, avatar_url")
         .in("id", senderIds);
 
       nameByUser = new Map(
-        (profiles ?? []).map((profile) => [profile.id, profile.display_name || "Πεζοπόρος"])
+        (profiles ?? []).map((profile) => [profile.id, { name: profile.display_name || "Πεζοπόρος", avatarUrl: profile.avatar_url ?? null }])
       );
     }
 
@@ -864,7 +865,8 @@ export default function Home() {
       messages.map((message) => ({
         id: message.id,
         senderId: message.sender_id,
-        senderName: nameByUser.get(message.sender_id) || "Πεζοπόρος",
+        senderName: nameByUser.get(message.sender_id)?.name || "Πεζοπόρος",
+        senderAvatarUrl: nameByUser.get(message.sender_id)?.avatarUrl ?? null,
         body: message.body,
         createdAt: message.created_at
       }))
@@ -2574,11 +2576,29 @@ export default function Home() {
                             key={message.id}
                             className={`groupMessage ${message.senderId === user.id ? "mine" : ""}`}
                           >
-                            <div className="groupMessageMeta">
-                              <strong>{message.senderId === user.id ? "Εσύ" : message.senderName}</strong>
-                              <span>{new Date(message.createdAt).toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })}</span>
+                            <div className="groupMessageWithAvatar">
+                              <button
+                                type="button"
+                                className="groupMessageAvatarButton"
+                                aria-label={`Προβολή προφίλ: ${message.senderName}`}
+                                onClick={() => message.senderId === user.id ? setView("profile") : openPublicProfile(message.senderId)}
+                              >
+                                {message.senderAvatarUrl ? (
+                                  <img src={avatarPublicUrl(message.senderAvatarUrl) ?? ""} alt="" />
+                                ) : (
+                                  <span>{initials(message.senderName).toUpperCase()}</span>
+                                )}
+                              </button>
+                              <div className="groupMessageContent">
+                                <div className="groupMessageMeta">
+                                  <button type="button" className="groupMessageNameButton" onClick={() => message.senderId === user.id ? setView("profile") : openPublicProfile(message.senderId)}>
+                                    {message.senderId === user.id ? "Εσύ" : message.senderName}
+                                  </button>
+                                  <span>{new Date(message.createdAt).toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })}</span>
+                                </div>
+                                <p>{message.body}</p>
+                              </div>
                             </div>
-                            <p>{message.body}</p>
                           </div>
                         ))
                       )}
