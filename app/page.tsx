@@ -1693,7 +1693,7 @@ export default function Home() {
             aria-expanded={showRequestNotifications}
             onClick={() => { setShowRequestNotifications((open) => !open); loadIncomingRequests(user.id); }}
           >
-            <span aria-hidden="true">♧</span>
+            <span aria-hidden="true">🔔</span>
             {incomingRequests.length > 0 && <span className="requestNotificationCount">{incomingRequests.length > 99 ? "99+" : incomingRequests.length}</span>}
           </button>
           {showRequestNotifications && (
