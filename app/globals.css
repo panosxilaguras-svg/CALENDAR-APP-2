@@ -7336,3 +7336,37 @@ html[data-theme="dark"] .hero {
   .exploreInfo {padding: 12px 11px}
   .exploreFooter {align-items:flex-start;flex-direction:column;gap:7px}
 }
+
+
+/* ORIVATIS profile overview redesign */
+.profileRedesigned {overflow:hidden;padding-top:0 !important}
+.profileRedesigned .profileCover {
+  height:clamp(145px,28vw,225px);
+  margin:0 -1px 0;
+  border-radius:20px 20px 0 0;
+  position:relative;
+  background:linear-gradient(180deg,rgba(12,36,26,.04),rgba(12,36,26,.4)),url('/images/hero-hiking.jpg') center 48% / cover,linear-gradient(120deg,#294c3a,#c5a977);
+}
+.profileRedesigned .profileEditButton {
+  position:absolute;top:14px;right:14px;border:1px solid rgba(255,255,255,.8);border-radius:99px;
+  background:#fff;color:#173327;font-weight:800;padding:11px 15px;cursor:pointer;z-index:1;
+}
+.profileRedesigned .profileHeroEditable {margin-top:-45px;position:relative;z-index:1;align-items:flex-end;padding:0 22px 8px;gap:16px}
+.profileRedesigned .avatarUpload {border:4px solid #fff;box-shadow:0 5px 18px rgba(0,0,0,.12);flex-shrink:0}
+.profileRedesigned .profileHero h2 {font-size:clamp(25px,5vw,33px);line-height:1.12}
+.profileRedesigned .profileHero p {line-height:1.4}
+.profileRedesigned .profileAbout {padding:8px 23px 0;margin:8px 0;color:var(--muted,#65706a);line-height:1.6;white-space:pre-wrap}
+.profileRedesigned .profileSocialLink {display:inline-flex;margin:12px 23px 5px;color:#173327;font-weight:750;text-decoration:none}
+.profileRedesigned .badgeRow {padding:15px 22px 8px;display:flex;flex-wrap:wrap;gap:8px}
+.profileRedesigned .appearancePanel,.profileRedesigned .profileForm,.profileRedesigned .profileLegalLinks,.profileRedesigned .requestPanel {margin-left:22px;margin-right:22px}
+@media(max-width:600px) {
+ .profileRedesigned .profileCover {height:180px}
+ .profileRedesigned .profileHeroEditable {margin-top:-40px;padding-left:17px;padding-right:17px;align-items:flex-end}
+ .profileRedesigned .profileHeroEditable > div:last-child {min-width:0;padding-bottom:6px}
+ .profileRedesigned .profileHero h2 {font-size:27px}
+ .profileRedesigned .profileHero p {overflow-wrap:anywhere}
+ .profileRedesigned .badgeRow {padding-left:17px;padding-right:17px}
+ .profileRedesigned .profileAbout {padding-left:17px;padding-right:17px}
+ .profileRedesigned .profileSocialLink {margin-left:17px}
+ .profileRedesigned .appearancePanel,.profileRedesigned .profileForm,.profileRedesigned .profileLegalLinks,.profileRedesigned .requestPanel {margin-left:17px;margin-right:17px}
+}
