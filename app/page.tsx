@@ -1537,6 +1537,14 @@ export default function Home() {
     showToast("Το προφίλ αποθηκεύτηκε ✓");
   }
 
+  const profileGalleryUrls = user ? realHikes.filter((hike) => hike.organizerId === user.id).flatMap((hike) => hike.photoUrls?.length ? hike.photoUrls : hike.coverPhoto ? [hike.coverPhoto] : []) : [];
+  function stepProfileGallery(direction: number) {
+    if (profileGalleryIndex === null || !profileGalleryUrls.length) return;
+    const next = (profileGalleryIndex + direction + profileGalleryUrls.length) % profileGalleryUrls.length;
+    setProfileGalleryIndex(next);
+    setProfilePhotoViewerUrl(profileGalleryUrls[next]);
+  }
+
   async function uploadProfileCover(file?: File) {
     if (!user || !file) return;
     if (!file.type.startsWith("image/") || file.size > 20 * 1024 * 1024) { showToast("Επίλεξε φωτογραφία έως 20 MB."); return; }
@@ -2679,12 +2687,6 @@ export default function Home() {
                   </div>
                   {profile?.bio && <p className="profileAbout">{profile.bio}</p>}
                   {profile?.instagramUsername && <a className="profileSocialLink" href={`https://www.instagram.com/${encodeURIComponent(profile.instagramUsername)}/`} target="_blank" rel="noopener noreferrer">◎ @{profile.instagramUsername}</a>}
-                  <div className="badgeRow">
-                    <span className="infoBadge">🥾 {realHikes.filter((hike) => hike.organizerId === user.id).length} παρέες ξεκίνησες</span>
-                    <span className="infoBadge">📨 {incomingRequests.length} νέα αιτήματα</span>
-                    <span className="infoBadge">💬 {chatGroups.length} groups</span>
-                  </div>
-
                   <section className="profileHighlights">
                     <div className="profileSectionHeading"><h3>Φωτογραφίες εξορμήσεων</h3><span>Από τις πεζοπορίες σου</span></div>
                     {realHikes.filter((hike) => hike.organizerId === user.id && (hike.photoUrls?.length || hike.coverPhoto)).some(Boolean) ? (
@@ -2911,7 +2913,12 @@ export default function Home() {
       {profilePhotoViewerUrl && profileGalleryIndex !== null && (
         <div className="photoViewer" role="dialog" aria-modal="true" aria-label="Φωτογραφίες εξορμήσεων" onClick={() => { setProfilePhotoViewerUrl(null); setProfileGalleryIndex(null); }}>
           <button type="button" className="photoViewerClose" aria-label="Κλείσιμο" onClick={() => { setProfilePhotoViewerUrl(null); setProfileGalleryIndex(null); }}>×</button>
-          <div className="photoViewerImageWrap" onClick={(event) => event.stopPropagation()}><img src={profilePhotoViewerUrl} alt="Φωτογραφία εξόρμησης" /></div>
+          <div className="profileGalleryViewer" onClick={(event) => event.stopPropagation()}>
+            {profileGalleryUrls.length > 1 && <button type="button" className="profileGalleryArrow" aria-label="Προηγούμενη φωτογραφία" onClick={() => stepProfileGallery(-1)}>‹</button>}
+            <img src={profilePhotoViewerUrl} alt="Φωτογραφία εξόρμησης" />
+            {profileGalleryUrls.length > 1 && <button type="button" className="profileGalleryArrow" aria-label="Επόμενη φωτογραφία" onClick={() => stepProfileGallery(1)}>›</button>}
+          </div>
+          <div className="profileGalleryCounter">{profileGalleryIndex + 1} / {profileGalleryUrls.length}</div>
         </div>
       )}
       {profilePhotoViewerUrl && profileGalleryIndex === null && (
