@@ -2740,6 +2740,13 @@ export default function Home() {
                       <div className="profileEditAction"><button type="button" onClick={() => setEditingProfile((current) => !current)} aria-expanded={editingProfile}>{editingProfile ? "Κλείσιμο επεξεργασίας" : "✎ Επεξεργασία"}</button></div>
                     </div>
                   </div>
+                  {user.id === "68352bbc-0d79-47ae-b931-e6e8633c1e23" && (
+                    <a className="profileAdminDashboardLink" href="/admin" aria-label="Άνοιγμα πίνακα διαχείρισης">
+                      <span className="profileAdminDashboardIcon" aria-hidden="true">▦</span>
+                      <span className="profileAdminDashboardText"><strong>Πίνακας διαχείρισης</strong><small>Μέλη, πεζοπορίες και στατιστικά</small></span>
+                      <span className="profileAdminDashboardArrow" aria-hidden="true">›</span>
+                    </a>
+                  )}
                   {profile?.bio && <p className="profileAbout">{profile.bio}</p>}
                   {profile?.instagramUsername && <a className="profileSocialLink" href={`https://www.instagram.com/${encodeURIComponent(profile.instagramUsername)}/`} target="_blank" rel="noopener noreferrer">◎ @{profile.instagramUsername}</a>}
 
