@@ -2036,7 +2036,7 @@ export default function Home() {
                           </span>
                           <span>{hike.organizerName || (hike.demo ? "Πεζοπόρος" : "Πεζοπόρος")}</span>
                         </button>
-                        <span className="exploreLocation"><span aria-hidden="true">📍</span> {hike.location}</span>
+                        <span className="exploreLocation" title={hike.location}><span aria-hidden="true">📍</span><span className="exploreLocationText">{hike.location}</span></span>
                       </div>
                     </div>
                   </article>
