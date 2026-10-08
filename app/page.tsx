@@ -1865,7 +1865,7 @@ export default function Home() {
                     >
                       <div
                         className="cardVisual"
-                        style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(15,25,18,.06), rgba(15,25,18,.20)), url("${hike.coverPhoto}")`, backgroundPosition: hike.coverPosition ?? "50% 50%", backgroundSize: `${(hike.coverZoom ?? 1) * 100}%` } : undefined}
+                        style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(15,25,18,.06), rgba(15,25,18,.20)), url("${hike.coverPhoto}")`, backgroundPosition: hike.coverPosition ?? "50% 50%", backgroundSize: hike.coverZoom && hike.coverZoom > 1 ? `${hike.coverZoom * 100}% auto` : "cover", backgroundRepeat: "no-repeat" } : undefined}
                       >
                         <span className="cardBadge">{hike.demo ? `Demo · ${hike.difficulty}` : `Live · ${hike.difficulty}`}</span>
                         <span className="cardDate"><strong>{hike.day}</strong>{hike.month}</span>
