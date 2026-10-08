@@ -2665,6 +2665,33 @@ export default function Home() {
                     <span className="infoBadge">💬 {chatGroups.length} groups</span>
                   </div>
 
+                  <section className="profileHighlights">
+                    <div className="profileSectionHeading"><h3>Φωτογραφίες εξορμήσεων</h3><span>Από τις πεζοπορίες σου</span></div>
+                    {realHikes.filter((hike) => hike.organizerId === user.id && (hike.photoUrls?.length || hike.coverPhoto)).some(Boolean) ? (
+                      <div className="profilePhotoGrid">
+                        {realHikes.filter((hike) => hike.organizerId === user.id).flatMap((hike) => (hike.photoUrls?.length ? hike.photoUrls : hike.coverPhoto ? [hike.coverPhoto] : []).map((url) => ({ url, hike }))).slice(0, 6).map(({ url, hike }, index) => (
+                          <button type="button" key={`${hike.id ?? hike.title}-${index}`} onClick={() => openHikeDetails(hike)} aria-label={`Δες την πεζοπορία ${hike.title}`}>
+                            <img src={url} alt={hike.title} loading="lazy" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : <p className="profileEmptyNote">Οι φωτογραφίες από τις πεζοπορίες που οργανώνεις θα εμφανίζονται εδώ.</p>}
+                  </section>
+                  <section className="profileHighlights">
+                    <div className="profileSectionHeading"><h3>Οι πεζοπορίες μου</h3><span>{realHikes.filter((hike) => hike.organizerId === user.id).length} οργανώσεις</span></div>
+                    {realHikes.filter((hike) => hike.organizerId === user.id).length ? (
+                      <div className="profileHikeList">
+                        {realHikes.filter((hike) => hike.organizerId === user.id).slice(0, 4).map((hike) => (
+                          <button type="button" key={hike.id ?? hike.title} className="profileHikeRow" onClick={() => openHikeDetails(hike)}>
+                            {hike.coverPhoto || hike.photoUrls?.[0] ? <img src={hike.coverPhoto || hike.photoUrls?.[0]} alt="" loading="lazy" /> : <span className="profileHikeFallback">⛰</span>}
+                            <span className="profileHikeText"><strong>{hike.title}</strong><small>{hike.day} {hike.month} · {hike.location}</small></span>
+                            <span aria-hidden="true">›</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : <p className="profileEmptyNote">Μόλις οργανώσεις την πρώτη σου πεζοπορία, θα εμφανιστεί εδώ.</p>}
+                  </section>
+                  <div className="profileSettingsTitle">Ρυθμίσεις λογαριασμού</div>
                   <section className="appearancePanel">
                     <div className="appearancePanelCopy">
                       <span className="appearanceIcon">{theme === "dark" ? "☾" : "☀"}</span>
