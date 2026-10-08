@@ -7548,3 +7548,31 @@ html[data-theme="dark"] .hero {
   cursor:pointer;
 }
 .profileRedesigned .profileEditAction button:active{background:#e9f0e8!important}
+
+/* Edit action belongs to the identity block, not a floating row */
+.profileRedesigned .profileHeroEditable > div:last-child .profileEditAction{
+  display:flex!important;justify-content:flex-start!important;
+  align-items:center!important;width:auto!important;
+  margin:9px 0 0!important;padding:0!important;
+}
+.profileRedesigned .profileHeroEditable > div:last-child .profileEditAction button{
+  min-height:31px!important;padding:5px 12px!important;
+  font-size:12px!important;font-weight:650!important;
+  background:transparent!important;border:1px solid #dce3da!important;
+  border-radius:999px!important;color:#496651!important;
+}
+.profileRedesigned .profileHeroEditable{margin-bottom:0!important}
+.profileRedesigned .profileHeroEditable > div:last-child{padding-bottom:5px!important}
+/* Always show the hike organizer avatar as a proper round portrait */
+.detailOrganizerCard .detailOrganizerAvatar{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:48px!important;height:48px!important;min-width:48px!important;
+  flex:0 0 48px!important;overflow:hidden!important;border-radius:50%!important;
+  background:#e6ede2!important;color:#244a35!important;
+  font-size:17px!important;font-weight:800!important;
+  border:2px solid #fff!important;box-shadow:0 0 0 1px #e2e8df!important;
+}
+.detailOrganizerCard .detailOrganizerAvatar img{
+  display:block!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;border-radius:50%!important;
+}
