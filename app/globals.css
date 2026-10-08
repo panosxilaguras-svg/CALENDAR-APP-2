@@ -7388,3 +7388,19 @@ html[data-theme="dark"] .hero {
 .profileRedesigned .profileHikeText small{color:#777f79;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .profileRedesigned .profileSettingsTitle{margin:29px 22px 12px;padding-top:19px;border-top:1px solid #e4e6df;font-weight:850;color:#173327;font-size:18px}
 @media(max-width:600px){.profileRedesigned .profileHighlights{margin-left:17px;margin-right:17px}.profileRedesigned .profileSettingsTitle{margin-left:17px;margin-right:17px}}
+
+/* Profile mobile alignment and minimal gallery */
+.profileRedesigned .profileHeroEditable{display:flex!important;align-items:center!important;gap:14px!important;margin-top:-38px!important;padding-bottom:12px!important}
+.profileRedesigned .profileHeroEditable > div:last-child{padding-top:43px!important;padding-bottom:0!important;flex:1;min-width:0}
+.profileRedesigned .profileHeroEditable h2{margin:0 0 5px!important;line-height:1.2!important}
+.profileRedesigned .profileHeroEditable p{margin:0!important}
+.profileRedesigned .profileCoverUpload{position:absolute;left:14px;top:14px;z-index:2;background:rgba(255,255,255,.94);color:#173327;border-radius:99px;padding:10px 12px;font-weight:750;font-size:12px;cursor:pointer}
+.profileRedesigned .profileCoverUpload input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.profileRedesigned .profileMorePhotos{display:block;margin:12px 22px 0;width:calc(100% - 44px);padding:12px 14px;border:1px solid #d9e1d9;border-radius:13px;background:#f7f9f5;color:#214d38;font-weight:800;cursor:pointer}
+@media(max-width:600px){
+.profileRedesigned .profileHeroEditable{padding-left:17px!important;padding-right:17px!important}
+.profileRedesigned .profileHeroEditable > div:last-child{padding-top:42px!important}
+.profileRedesigned .profileCoverUpload{top:auto;bottom:12px;left:auto;right:12px;font-size:11px}
+.profileRedesigned .profileEditButton{top:12px;right:12px}
+.profileRedesigned .profileMorePhotos{margin-left:17px;margin-right:17px;width:calc(100% - 34px)}
+}
