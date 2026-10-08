@@ -1,3 +1,44 @@
+
+/* ORIVATIS notification dropdown integrated in home header */
+.mobileBrandActions .requestNotificationWidget{
+ position:relative!important;inset:auto!important;top:auto!important;right:auto!important;
+ z-index:2000!important;display:flex!important;align-items:center!important;
+}
+.mobileBrandActions .requestNotificationBell{
+ position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;
+ width:43px!important;height:43px!important;min-width:43px!important;
+ padding:0!important;margin:0!important;
+ border:1px solid rgba(255,255,255,.7)!important;border-radius:50%!important;
+ background:#fffefa!important;color:#173b29!important;
+ box-shadow:0 3px 12px #0b24131c!important;font-size:20px!important;
+}
+.mobileBrandActions .requestNotificationCount{
+ position:absolute!important;top:-5px!important;right:-5px!important;
+ background:#e54b3b!important;color:#fff!important;min-width:20px!important;
+ height:20px!important;border:2px solid #fff!important;border-radius:99px!important;
+ display:grid!important;place-items:center!important;font-size:11px!important;
+}
+.mobileBrandActions .requestNotificationDropdown{
+ position:fixed!important;top:calc(env(safe-area-inset-top,0px) + 70px)!important;
+ left:12px!important;right:12px!important;width:auto!important;
+ max-width:420px!important;margin-left:auto!important;margin-right:auto!important;
+ z-index:2500!important;background:#fffefa!important;
+ border:1px solid #e0e6dd!important;border-radius:19px!important;
+ box-shadow:0 18px 55px #10251c40!important;padding:17px!important;
+ max-height:min(65dvh,520px)!important;overflow:auto!important;
+ color:#1b3224!important;text-align:left!important;
+}
+.mobileBrandActions .requestNotificationHeading{display:flex!important;align-items:center!important;justify-content:space-between!important}
+.mobileBrandActions .requestNotificationHeading button{width:32px!important;height:32px!important;display:grid!important;place-items:center!important}
+.mobileBrandActions .requestNotificationEmpty{margin:14px 0 4px!important}
+.mobileBrandActions .requestNotificationActions button{width:auto!important;height:auto!important;border-radius:9px!important}
+.sidebarNotificationButton{width:100%;border:1px solid #dce6da;background:#f7faf5;color:#214531;padding:11px 13px;border-radius:12px;margin:6px 0 12px;text-align:left;font-weight:700;cursor:pointer}
+@media(max-width:700px){
+ .mobileBrandActions{display:flex!important;align-items:center!important;gap:8px!important}
+ .mobileBrandActions .requestNotificationBell{width:39px!important;height:39px!important;min-width:39px!important}
+ .sidebarNotificationButton{display:none!important}
+}
+
 * {
   box-sizing: border-box;
 }
