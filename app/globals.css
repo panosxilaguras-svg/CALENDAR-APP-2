@@ -7665,3 +7665,28 @@ html[data-theme="dark"] .hero {
     padding:47px 0 0!important;
   }
 }
+
+/* Chat inbox: recognizable hiking conversations */
+.groupChatListTitle{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.groupChatListTitle span{font-size:12px;font-weight:500;color:var(--muted)}
+.groupChatIcon{overflow:hidden;flex-shrink:0;border-radius:14px!important}
+.groupChatIcon img{display:block;width:100%;height:100%;object-fit:cover}
+.groupChatRole span{font-size:20px;vertical-align:middle}
+.chatMobileBack{display:none}
+@media(max-width:700px){
+  .messagesPage .groupChatShell{display:block!important}
+  .messagesPage .groupChatList{display:flex!important;flex-direction:column!important;width:100%!important;max-width:none!important;min-width:0!important;border:0!important;gap:9px!important;padding:10px 0 18px!important}
+  .messagesPage .groupChatListTitle{padding:8px 4px 12px!important;font-size:17px!important;font-weight:800!important}
+  .messagesPage .groupChatItem{display:flex!important;width:100%!important;min-height:82px!important;align-items:center!important;text-align:left!important;padding:12px!important;gap:12px!important;border:1px solid #e5e8e0!important;border-radius:17px!important;background:#fffefa!important}
+  .messagesPage .groupChatItem.active{border-color:#a8c3af!important;background:#f5f9f3!important}
+  .messagesPage .groupChatIcon{width:58px!important;height:58px!important;flex:0 0 58px!important;display:grid!important;place-items:center!important}
+  .messagesPage .groupChatItemText{flex:1!important;min-width:0!important}
+  .messagesPage .groupChatItemText strong{display:block!important;white-space:normal!important;line-height:1.25!important}
+  .messagesPage .groupChatRole{font-size:10px!important;white-space:nowrap!important}
+  .messagesPage .groupChatPane{display:none!important;width:100%!important;min-width:0!important}
+  .messagesPage .groupChatShell.chatMobileOpen .groupChatList{display:none!important}
+  .messagesPage .groupChatShell.chatMobileOpen .groupChatPane{display:flex!important;flex-direction:column!important}
+  .messagesPage .chatMobileBack{display:grid!important;place-items:center!important;flex:0 0 36px!important;width:36px!important;height:36px!important;border:1px solid #e1e5df!important;border-radius:50%!important;background:transparent!important;color:var(--ink)!important;font-size:29px!important}
+  .messagesPage .groupChatHeader{display:flex!important;align-items:center!important;gap:10px!important}
+  .messagesPage .groupChatHeader>div{flex:1!important;min-width:0!important}
+}
