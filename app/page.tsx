@@ -211,6 +211,9 @@ function dbHikeToCard(hike: DbHike): Hike {
 export default function Home() {
   const [view, setView] = useState<View>("home");
   const [editingProfile, setEditingProfile] = useState(false);
+  const [showAllProfilePhotos, setShowAllProfilePhotos] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [profileCoverPath, setProfileCoverPath] = useState<string | null>(null);
   const [filter, setFilter] = useState("Όλες");
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
@@ -1533,6 +1536,21 @@ export default function Home() {
     showToast("Το προφίλ αποθηκεύτηκε ✓");
   }
 
+  async function uploadProfileCover(file?: File) {
+    if (!user || !file) return;
+    if (!file.type.startsWith("image/") || file.size > 20 * 1024 * 1024) { showToast("Επίλεξε φωτογραφία έως 20 MB."); return; }
+    setUploadingCover(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${user.id}/cover-${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { cacheControl: "3600", upsert: false });
+    if (uploadError) { setUploadingCover(false); showToast(`Δεν ανέβηκε το εξώφυλλο: ${uploadError.message}`); return; }
+    const { error } = await supabase.auth.updateUser({ data: { profile_cover_path: path } });
+    setUploadingCover(false);
+    if (error) { showToast(`Δεν αποθηκεύτηκε το εξώφυλλο: ${error.message}`); return; }
+    setProfileCoverPath(path);
+    showToast("Το εξώφυλλο άλλαξε ✓");
+  }
+
   async function uploadAvatar(file?: File) {
     if (!user || !file) return;
 
@@ -2637,7 +2655,8 @@ export default function Home() {
                 </>
               ) : (
                 <>
-                  <div className="profileCover">
+                  <div className="profileCover" style={profileCoverPath || user.user_metadata?.profile_cover_path ? { backgroundImage: `linear-gradient(180deg,rgba(12,36,26,.04),rgba(12,36,26,.3)),url("${avatarPublicUrl(profileCoverPath || String(user.user_metadata?.profile_cover_path))}")` } : undefined}>
+                    <label className="profileCoverUpload">📷 {uploadingCover ? "Ανέβασμα..." : "Αλλαγή εξωφύλλου"}<input type="file" accept="image/*" disabled={uploadingCover} onChange={(event) => uploadProfileCover(event.target.files?.[0])} /></label>
                     <button type="button" className="profileEditButton" onClick={() => setEditingProfile((current) => !current)}>
                       {editingProfile ? "Κλείσιμο επεξεργασίας" : "✎ Επεξεργασία"}
                     </button>
@@ -2669,7 +2688,7 @@ export default function Home() {
                     <div className="profileSectionHeading"><h3>Φωτογραφίες εξορμήσεων</h3><span>Από τις πεζοπορίες σου</span></div>
                     {realHikes.filter((hike) => hike.organizerId === user.id && (hike.photoUrls?.length || hike.coverPhoto)).some(Boolean) ? (
                       <div className="profilePhotoGrid">
-                        {realHikes.filter((hike) => hike.organizerId === user.id).flatMap((hike) => (hike.photoUrls?.length ? hike.photoUrls : hike.coverPhoto ? [hike.coverPhoto] : []).map((url) => ({ url, hike }))).slice(0, 6).map(({ url, hike }, index) => (
+                        {realHikes.filter((hike) => hike.organizerId === user.id).flatMap((hike) => (hike.photoUrls?.length ? hike.photoUrls : hike.coverPhoto ? [hike.coverPhoto] : []).map((url) => ({ url, hike }))).slice(0, showAllProfilePhotos ? 18 : 3).map(({ url, hike }, index) => (
                           <button type="button" key={`${hike.id ?? hike.title}-${index}`} onClick={() => openHikeDetails(hike)} aria-label={`Δες την πεζοπορία ${hike.title}`}>
                             <img src={url} alt={hike.title} loading="lazy" />
                           </button>
@@ -2677,6 +2696,11 @@ export default function Home() {
                       </div>
                     ) : <p className="profileEmptyNote">Οι φωτογραφίες από τις πεζοπορίες που οργανώνεις θα εμφανίζονται εδώ.</p>}
                   </section>
+                  {realHikes.filter((hike) => hike.organizerId === user.id).flatMap((hike) => hike.photoUrls?.length ? hike.photoUrls : hike.coverPhoto ? [hike.coverPhoto] : []).length > 3 && (
+                    <button type="button" className="profileMorePhotos" onClick={() => setShowAllProfilePhotos((value) => !value)}>
+                      {showAllProfilePhotos ? "Εμφάνιση λιγότερων ↑" : "Δες περισσότερες φωτογραφίες ↓"}
+                    </button>
+                  )}
                   <section className="profileHighlights">
                     <div className="profileSectionHeading"><h3>Οι πεζοπορίες μου</h3><span>{realHikes.filter((hike) => hike.organizerId === user.id).length} οργανώσεις</span></div>
                     {realHikes.filter((hike) => hike.organizerId === user.id).length ? (
