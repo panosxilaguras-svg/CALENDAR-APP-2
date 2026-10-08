@@ -210,6 +210,7 @@ function dbHikeToCard(hike: DbHike): Hike {
 
 export default function Home() {
   const [view, setView] = useState<View>("home");
+  const [editingProfile, setEditingProfile] = useState(false);
   const [filter, setFilter] = useState("Όλες");
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
@@ -2622,7 +2623,7 @@ export default function Home() {
           )}
 
           {view === "profile" && (
-            <section className="profileCard">
+            <section className="profileCard profileRedesigned">
               {!user ? (
                 <>
                   <div className="profileHero">
@@ -2636,6 +2637,11 @@ export default function Home() {
                 </>
               ) : (
                 <>
+                  <div className="profileCover">
+                    <button type="button" className="profileEditButton" onClick={() => setEditingProfile((current) => !current)}>
+                      {editingProfile ? "Κλείσιμο επεξεργασίας" : "✎ Επεξεργασία"}
+                    </button>
+                  </div>
                   <div className="profileHero profileHeroEditable">
                     <label className="avatarUpload">
                       {profile?.avatarUrl ? (
@@ -2643,20 +2649,16 @@ export default function Home() {
                       ) : (
                         <span>{initials(profile?.displayName || user.email?.split("@")[0]).toUpperCase()}</span>
                       )}
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/heic"
-                        disabled={uploadingAvatar}
-                        onChange={(event) => uploadAvatar(event.target.files?.[0])}
-                      />
-                      <small>{uploadingAvatar ? "Ανέβασμα..." : "Αλλαγή"}</small>
+                      <input type="file" accept="image/jpeg,image/png,image/webp,image/heic" disabled={uploadingAvatar} onChange={(event) => uploadAvatar(event.target.files?.[0])} />
+                      <small>{uploadingAvatar ? "Ανέβασμα..." : "📷"}</small>
                     </label>
                     <div>
                       <h2>{profile?.displayName || "Το προφίλ σου"}</h2>
                       <p>{profile?.city || "Βάλε περιοχή"} · {experienceLabel(profile?.experienceLevel ?? null)}</p>
                     </div>
                   </div>
-
+                  {profile?.bio && <p className="profileAbout">{profile.bio}</p>}
+                  {profile?.instagramUsername && <a className="profileSocialLink" href={`https://www.instagram.com/${encodeURIComponent(profile.instagramUsername)}/`} target="_blank" rel="noopener noreferrer">◎ @{profile.instagramUsername}</a>}
                   <div className="badgeRow">
                     <span className="infoBadge">🥾 {realHikes.filter((hike) => hike.organizerId === user.id).length} παρέες ξεκίνησες</span>
                     <span className="infoBadge">📨 {incomingRequests.length} νέα αιτήματα</span>
@@ -2682,6 +2684,7 @@ export default function Home() {
                     </button>
                   </section>
 
+                  {editingProfile && (
                   <form className="profileForm" onSubmit={saveProfile} key={profile?.id ?? user.id}>
                     <div className="formGrid">
                       <div className="field">
@@ -2732,6 +2735,7 @@ export default function Home() {
                       </button>
                     </div>
                   </form>
+                  )}
 
                   <div className="profileLegalLinks">
                     <a href="/terms">Όροι χρήσης</a>
