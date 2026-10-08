@@ -8399,3 +8399,72 @@ html[data-theme="dark"] .hero {
   min-width: 0 !important;
   z-index: 1 !important;
 }
+
+/* Browse-card organizer and location: consistent single-line footer */
+.exploreList .exploreCard .exploreFooter {
+  display: grid !important;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  row-gap: 0 !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin-top: auto !important;
+  padding-top: 10px !important;
+}
+.exploreList .exploreCard .exploreOrganizer {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  max-width: 135px !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  white-space: nowrap !important;
+}
+.exploreList .exploreCard .exploreOrganizerAvatar {
+  width: 30px !important;
+  height: 30px !important;
+  flex: 0 0 30px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+}
+.exploreList .exploreCard .exploreOrganizerAvatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+.exploreList .exploreCard .exploreOrganizer > span:last-child {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.exploreList .exploreCard .exploreLocation {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 4px !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+}
+.exploreList .exploreCard .exploreLocationText {
+  display: block !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.exploreList .exploreCard .exploreLocation > span:first-child {
+  flex: 0 0 auto !important;
+}
