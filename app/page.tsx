@@ -1891,9 +1891,13 @@ export default function Home() {
                             {hike.organizerName || (hike.demo ? "Demo organizer" : "Πεζοπόρος")}
                           </button>
                         </div>
-                        <div className="cardMeta">
-                          📍 {hike.location}<br />
-                          ↗ {hike.distance} · ⏰ {hike.start} · 👥 {hike.people}{hike.maxParticipants ? `/${hike.maxParticipants}` : ""}
+                        <div className="cardMeta cardMetaStructured">
+                          <div className="cardLocation"><span className="cardMetaLabel">Τοποθεσία</span><strong>{hike.location}</strong></div>
+                          <div className="cardMetaFacts">
+                            <span><small>Απόσταση</small><strong>{hike.distance}</strong></span>
+                            <span><small>Αναχώρηση</small><strong>{hike.start}</strong></span>
+                            <span><small>Συμμετοχές</small><strong>{hike.people}{hike.maxParticipants ? `/${hike.maxParticipants}` : ""}</strong></span>
+                          </div>
                         </div>
                         <div className="peopleRow">
                           <button className="detailsButton" onClick={(event) => { event.stopPropagation(); openHikeDetails(hike); }}>
@@ -2008,10 +2012,10 @@ export default function Home() {
                       <div className="exploreDate">{hike.day} {hike.month} · {hike.start}</div>
                       <h3 className="exploreTitle">{hike.title}</h3>
 
-                      <div className="exploreMeta">
-                        <span>↗ {hike.distance}</span>
-                        <span>◷ {hike.start}</span>
-                        <span>♙ {hike.people}{hike.maxParticipants ? `/${hike.maxParticipants}` : ""}</span>
+                      <div className="exploreMeta exploreMetaStructured">
+                        <span><small>Απόσταση</small><strong>{hike.distance}</strong></span>
+                        <span><small>Ώρα</small><strong>{hike.start}</strong></span>
+                        <span><small>Συμμετοχές</small><strong>{hike.people}{hike.maxParticipants ? `/${hike.maxParticipants}` : ""}</strong></span>
                       </div>
 
                       <div className="exploreFooter">
@@ -2032,7 +2036,7 @@ export default function Home() {
                           </span>
                           <span>{hike.organizerName || (hike.demo ? "Πεζοπόρος" : "Πεζοπόρος")}</span>
                         </button>
-                        <span className="exploreLocation">⌖ {hike.location}</span>
+                        <span className="exploreLocation">{hike.location}</span>
                       </div>
                     </div>
                   </article>
