@@ -1537,7 +1537,8 @@ export default function Home() {
     showToast("Το προφίλ αποθηκεύτηκε ✓");
   }
 
-  const profileGalleryUrls = user ? realHikes.filter((hike) => hike.organizerId === user.id).flatMap((hike) => hike.photoUrls?.length ? hike.photoUrls : hike.coverPhoto ? [hike.coverPhoto] : []) : [];
+  const profileGalleryOwnerId = selectedProfile?.id ?? user?.id;
+  const profileGalleryUrls = profileGalleryOwnerId ? realHikes.filter((hike) => hike.organizerId === profileGalleryOwnerId).flatMap((hike) => hike.photoUrls?.length ? hike.photoUrls : hike.coverPhoto ? [hike.coverPhoto] : []) : [];
   function stepProfileGallery(direction: number) {
     if (profileGalleryIndex === null || !profileGalleryUrls.length) return;
     const next = (profileGalleryIndex + direction + profileGalleryUrls.length) % profileGalleryUrls.length;
