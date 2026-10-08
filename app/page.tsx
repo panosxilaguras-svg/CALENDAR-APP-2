@@ -1684,40 +1684,6 @@ export default function Home() {
 
   return (
     <div className="appShell">
-      {user && (
-        <div className="requestNotificationWidget">
-          <button
-            type="button"
-            className="requestNotificationBell"
-            aria-label={`Ειδοποιήσεις συμμετοχής: ${incomingRequests.length} εκκρεμή αιτήματα`}
-            aria-expanded={showRequestNotifications}
-            onClick={() => { setShowRequestNotifications((open) => !open); loadIncomingRequests(user.id); }}
-          >
-            <span aria-hidden="true">🔔</span>
-            {incomingRequests.length > 0 && <span className="requestNotificationCount">{incomingRequests.length > 99 ? "99+" : incomingRequests.length}</span>}
-          </button>
-          {showRequestNotifications && (
-            <div className="requestNotificationDropdown" role="region" aria-label="Αιτήματα συμμετοχής">
-              <div className="requestNotificationHeading">
-                <strong>Ειδοποιήσεις</strong>
-                <button type="button" onClick={() => setShowRequestNotifications(false)} aria-label="Κλείσιμο">×</button>
-              </div>
-              {incomingRequests.length === 0 ? (
-                <p className="requestNotificationEmpty">Δεν έχεις νέα αιτήματα συμμετοχής.</p>
-              ) : incomingRequests.map((request) => (
-                <div className="requestNotificationEntry" key={request.id}>
-                  <p><strong>{request.displayName}</strong> θέλει να συμμετάσχει στην πεζοπορία «{request.hikeTitle}».</p>
-                  <div className="requestNotificationActions">
-                    <button type="button" onClick={() => openPublicProfile(request.userId)}>Προφίλ</button>
-                    <button type="button" disabled={handlingRequestId === request.id} onClick={() => handleJoinRequest(request, "accepted")}>Έγκριση</button>
-                    <button type="button" disabled={handlingRequestId === request.id} onClick={() => handleJoinRequest(request, "rejected")}>Απόρριψη</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
       <div className="desktopFrame">
         <aside className="sidebar">
           <div className="brand">
@@ -1728,7 +1694,8 @@ export default function Home() {
             </div>
           </div>
 
-          <nav className="sideNav">
+{user && <button type="button" className="sidebarNotificationButton" onClick={() => { setView("home"); setShowRequestNotifications(true); loadIncomingRequests(user.id); }}>🔔 Ειδοποιήσεις {incomingRequests.length > 0 ? `(${incomingRequests.length})` : ""}</button>}
+                    <nav className="sideNav">
             {nav.map((item) => (
               <button
                 className={`navButton ${view === item.id ? "active" : ""}`}
@@ -1775,6 +1742,41 @@ export default function Home() {
                     <span className="mobileWordmark">ORIVATIS</span>
                   </div>
                   <div className="mobileBrandActions">
+      {user && (
+        <div className="requestNotificationWidget">
+          <button
+            type="button"
+            className="requestNotificationBell"
+            aria-label={`Ειδοποιήσεις συμμετοχής: ${incomingRequests.length} εκκρεμή αιτήματα`}
+            aria-expanded={showRequestNotifications}
+            onClick={() => { setShowRequestNotifications((open) => !open); loadIncomingRequests(user.id); }}
+          >
+            <span aria-hidden="true">🔔</span>
+            {incomingRequests.length > 0 && <span className="requestNotificationCount">{incomingRequests.length > 99 ? "99+" : incomingRequests.length}</span>}
+          </button>
+          {showRequestNotifications && (
+            <div className="requestNotificationDropdown" role="region" aria-label="Αιτήματα συμμετοχής">
+              <div className="requestNotificationHeading">
+                <strong>Ειδοποιήσεις</strong>
+                <button type="button" onClick={() => setShowRequestNotifications(false)} aria-label="Κλείσιμο">×</button>
+              </div>
+              {incomingRequests.length === 0 ? (
+                <p className="requestNotificationEmpty">Δεν έχεις νέα αιτήματα συμμετοχής.</p>
+              ) : incomingRequests.map((request) => (
+                <div className="requestNotificationEntry" key={request.id}>
+                  <p><strong>{request.displayName}</strong> θέλει να συμμετάσχει στην πεζοπορία «{request.hikeTitle}».</p>
+                  <div className="requestNotificationActions">
+                    <button type="button" onClick={() => openPublicProfile(request.userId)}>Προφίλ</button>
+                    <button type="button" disabled={handlingRequestId === request.id} onClick={() => handleJoinRequest(request, "accepted")}>Έγκριση</button>
+                    <button type="button" disabled={handlingRequestId === request.id} onClick={() => handleJoinRequest(request, "rejected")}>Απόρριψη</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
                     <button aria-label="Αναζήτηση" onClick={() => document.getElementById("hikes")?.scrollIntoView({ behavior: "smooth" })}>
                       <svg viewBox="0 0 24 24" aria-hidden="true">
                         <circle cx="11" cy="11" r="6.2" fill="none" stroke="currentColor" strokeWidth="2"/>
