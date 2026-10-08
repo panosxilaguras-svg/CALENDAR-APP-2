@@ -7421,3 +7421,12 @@ html[data-theme="dark"] .hero {
 }
 .profileRedesigned .requestPanel h3,.profileRedesigned .requestPanel .emptyNote{text-align:center}
 .profileRedesigned .profileSettingsTitle{text-align:center}
+
+/* Minimal profile: remove decorative stats and navigate full-size photos */
+.profileRedesigned .profileHeroEditable{margin-bottom:10px!important}
+.profileRedesigned .profileHighlights:first-of-type{margin-top:10px}
+.profileGalleryViewer{display:flex;align-items:center;justify-content:center;gap:8px;width:min(96vw,980px);max-height:82vh;padding:0 12px}
+.profileGalleryViewer img{display:block;max-width:calc(100% - 100px);max-height:78vh;width:auto;height:auto;object-fit:contain;border-radius:8px}
+.profileGalleryArrow{flex:0 0 43px;width:43px;height:43px;border:1px solid rgba(255,255,255,.55);border-radius:50%;background:rgba(255,255,255,.17);color:#fff;font-size:34px;line-height:1;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(7px)}
+.profileGalleryCounter{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:#fff;background:rgba(0,0,0,.4);padding:6px 13px;border-radius:99px;font-size:13px}
+@media(max-width:600px){.profileGalleryViewer{width:100vw;padding:0 5px;gap:4px}.profileGalleryViewer img{max-width:calc(100% - 92px);max-height:75vh}.profileGalleryArrow{flex-basis:40px;width:40px;height:40px}}
