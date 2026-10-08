@@ -7978,3 +7978,22 @@ html[data-theme="dark"] .hero {
     border-top:1px solid #e7e7e0!important;
   }
 }
+
+/* Persistent organizer request notifications */
+.requestNotificationWidget{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:18px;z-index:1500}
+.requestNotificationBell{width:44px;height:44px;border:1px solid #e1e6de;border-radius:50%;background:#fffefa;box-shadow:0 3px 16px #18332319;display:grid;place-items:center;font-size:21px;cursor:pointer;position:relative}
+.requestNotificationCount{position:absolute;right:-5px;top:-6px;min-width:20px;height:20px;padding:0 4px;border-radius:999px;background:#d94338;color:white;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid white}
+.requestNotificationDropdown{position:absolute;right:0;top:53px;width:min(355px,calc(100vw - 30px));max-height:min(65dvh,530px);overflow-y:auto;border:1px solid #e2e7de;border-radius:18px;background:#fffefa;box-shadow:0 15px 55px #10291d30;padding:15px}
+.requestNotificationHeading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid #e7eae5}
+.requestNotificationHeading strong{font-size:17px;color:#173b29}
+.requestNotificationHeading button{border:0;background:transparent;font-size:24px;color:#59665e;cursor:pointer}
+.requestNotificationEmpty{font-size:14px;color:#69746d;padding:12px 0 3px}
+.requestNotificationEntry{padding:13px 0;border-bottom:1px solid #e9ece6}
+.requestNotificationEntry:last-child{border-bottom:0}
+.requestNotificationEntry p{font-size:13px;line-height:1.5;margin:0 0 10px;color:#243b2c}
+.requestNotificationActions{display:flex;gap:6px;flex-wrap:wrap}
+.requestNotificationActions button{border:1px solid #d9e3d9;background:#f4f7f2;border-radius:9px;padding:8px 10px;font-size:12px;font-weight:700;color:#244734;cursor:pointer}
+.requestNotificationActions button:nth-child(2){background:#1a402b;color:white;border-color:#1a402b}
+.requestNotificationActions button:nth-child(3){background:#fff4f1;color:#994f44;border-color:#f3ded7}
+.requestNotificationActions button:disabled{opacity:.5;cursor:wait}
+@media(max-width:700px){.requestNotificationWidget{top:calc(env(safe-area-inset-top,0px) + 8px);right:12px}.requestNotificationBell{width:38px;height:38px;font-size:18px}.requestNotificationDropdown{top:46px}}
