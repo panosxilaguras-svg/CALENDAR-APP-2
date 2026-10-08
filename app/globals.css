@@ -7233,3 +7233,14 @@ html[data-theme="dark"] .hero {
     margin-top: 32px !important;
   }
 }
+
+
+/* Group chat: sender avatar and tappable profile, mobile-friendly */
+.groupMessageWithAvatar{display:flex;align-items:flex-end;gap:9px;max-width:100%}
+.groupMessageAvatarButton{width:34px;height:34px;flex:0 0 34px;border:0;border-radius:50%;padding:0;overflow:hidden;background:#e4e9df;color:#173321;display:grid;place-items:center;cursor:pointer;font-size:11px;font-weight:850}
+.groupMessageAvatarButton img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
+.groupMessageContent{min-width:0;flex:1}
+.groupMessageNameButton{border:0;background:transparent;padding:0;color:inherit;font:inherit;font-weight:850;cursor:pointer;text-align:left}
+.groupMessageNameButton:focus-visible,.groupMessageAvatarButton:focus-visible{outline:2px solid #ef6a3a;outline-offset:2px}
+.groupMessage.mine .groupMessageWithAvatar{flex-direction:row-reverse}
+.groupMessage.mine .groupMessageMeta{justify-content:flex-end}
