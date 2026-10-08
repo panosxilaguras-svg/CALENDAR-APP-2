@@ -7494,3 +7494,19 @@ html[data-theme="dark"] .hero {
 #hikes > .sectionHeader > div:first-child p{margin-inline:auto;text-align:center;max-width:540px}
 #hikes > .sectionHeader{align-items:center}
 #hikes > .sectionHeader .browseControls{width:100%}
+
+/* Center all homepage statistic numbers and captions */
+.stats .stat{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:center!important;
+  text-align:center!important;
+}
+.stats .stat strong,.stats .stat span{
+  display:block!important;
+  width:100%!important;
+  text-align:center!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
