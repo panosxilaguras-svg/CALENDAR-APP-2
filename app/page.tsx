@@ -1772,8 +1772,8 @@ export default function Home() {
                   <span>Άτομα<br />στις ομάδες</span>
                 </div>
                 <div className="stat">
-                  <strong>{user ? "✓" : "—"}</strong>
-                  <span>{user ? "Συνδεδεμένος" : "Γίνε μέλος"}</span>
+                  <strong>{new Set(realHikes.map((hike) => hike.title.split("—")[0].trim().toLocaleLowerCase("el-GR"))).size}</strong>
+                  <span>Βουνά για<br />εξερεύνηση</span>
                 </div>
               </section>
 
