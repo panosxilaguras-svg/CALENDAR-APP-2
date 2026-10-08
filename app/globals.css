@@ -8657,3 +8657,35 @@ html[data-theme="dark"] .hero {
 .hikeCard .cardHeadingCompact + .cardMetaStructured {
   border-bottom: 0 !important;
 }
+
+/* Private admin shortcut visible only in the owner's profile */
+.profileAdminDashboardLink {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px;
+  margin: 18px 0;
+  border: 1px solid #d9e4d9;
+  border-radius: 16px;
+  background: #edf4ed;
+  color: #173e2b;
+  text-decoration: none;
+  transition: background .15s ease;
+}
+.profileAdminDashboardLink:hover { background: #e4efe4; }
+.profileAdminDashboardIcon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #d7e8d8;
+  color: #1a5036;
+  font-size: 25px;
+  font-weight: 700;
+}
+.profileAdminDashboardText { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.profileAdminDashboardText strong { font-size: 15px; font-weight: 800; }
+.profileAdminDashboardText small { font-size: 12px; color: #5b7162; }
+.profileAdminDashboardArrow { font-size: 28px; line-height: 1; color: #58715e; }
