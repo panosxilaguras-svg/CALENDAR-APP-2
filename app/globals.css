@@ -8652,3 +8652,8 @@ html[data-theme="dark"] .hero {
     min-width: 44px !important;
   }
 }
+
+/* Remove the redundant lower separator beneath homepage hike facts. */
+.hikeCard .cardHeadingCompact + .cardMetaStructured {
+  border-bottom: 0 !important;
+}
