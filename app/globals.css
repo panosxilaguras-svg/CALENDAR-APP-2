@@ -8528,3 +8528,19 @@ html[data-theme="dark"] .hero {
     min-width: 42px !important;
   }
 }
+
+/* Homepage cards: visually center the location label across the card body */
+.hikeCard .cardMetaStructured .cardLocation {
+  display: flex !important;
+  width: 100% !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 7px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.hikeCard .cardMetaStructured .cardLocation strong {
+  text-align: center !important;
+  max-width: calc(100% - 28px) !important;
+}
