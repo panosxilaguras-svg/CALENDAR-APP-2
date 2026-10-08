@@ -8052,3 +8052,31 @@ html[data-theme="dark"] .hero {
 }
 
 /* ORIVATIS notification deployment sync 2026-10-08: trigger production build after Vercel team transfer. */
+
+
+/* Notification popover contrast: readable text on warm-white surface */
+.requestNotificationDropdown,
+.mobileBrandActions .requestNotificationDropdown,
+.hero .mobileHomeBrand .mobileBrandActions .requestNotificationDropdown {
+  color: #193627 !important;
+  background: #fffefa !important;
+}
+.requestNotificationDropdown .requestNotificationEmpty,
+.mobileBrandActions .requestNotificationEmpty,
+.hero .mobileHomeBrand .mobileBrandActions .requestNotificationEmpty {
+  color: #43594b !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #43594b !important;
+  text-shadow: none !important;
+  font-weight: 500 !important;
+}
+.requestNotificationDropdown .requestNotificationEntry,
+.requestNotificationDropdown .requestNotificationEntry p,
+.requestNotificationDropdown .requestNotificationEntry strong,
+.requestNotificationDropdown .requestNotificationHeading,
+.requestNotificationDropdown .requestNotificationHeading strong {
+  color: #193627 !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #193627 !important;
+  text-shadow: none !important;
+}
