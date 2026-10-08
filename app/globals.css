@@ -8468,3 +8468,63 @@ html[data-theme="dark"] .hero {
 .exploreList .exploreCard .exploreLocation > span:first-child {
   flex: 0 0 auto !important;
 }
+
+/* Homepage: compact heading with a prominent organizer avatar */
+.hikeCard .cardHeadingCompact {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+  margin-bottom: 10px !important;
+}
+.hikeCard .cardHeadingCompact .cardTitleButton {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  text-align: left !important;
+}
+.hikeCard .cardHeadingCompact .cardTitleButton h3 {
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+.hikeCard .cardHeadingCompact .organizerLine {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  margin: 0 !important;
+  max-width: 78px !important;
+  text-align: center !important;
+}
+.hikeCard .cardHeadingCompact .organizerLine img,
+.hikeCard .cardHeadingCompact .organizerLine > span {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  overflow: hidden !important;
+}
+.hikeCard .cardHeadingCompact .organizerLine button {
+  max-width: 76px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+.hikeCard .cardHeadingCompact + .cardMetaStructured {
+  margin-top: 6px !important;
+}
+@media (max-width: 820px) {
+  .hikeCard .cardHeadingCompact { gap: 10px !important; }
+  .hikeCard .cardHeadingCompact .organizerLine img,
+  .hikeCard .cardHeadingCompact .organizerLine > span {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+  }
+}
