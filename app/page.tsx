@@ -2911,7 +2911,7 @@ export default function Home() {
       </div></div>}
 
       {profilePhotoViewerUrl && profileGalleryIndex !== null && (
-        <div className="photoViewer" role="dialog" aria-modal="true" aria-label="Φωτογραφίες εξορμήσεων" onClick={() => { setProfilePhotoViewerUrl(null); setProfileGalleryIndex(null); }}>
+        <div className="photoViewer profileGalleryModal" role="dialog" aria-modal="true" aria-label="Φωτογραφίες εξορμήσεων" onClick={() => { setProfilePhotoViewerUrl(null); setProfileGalleryIndex(null); }}>
           <button type="button" className="photoViewerClose" aria-label="Κλείσιμο" onClick={() => { setProfilePhotoViewerUrl(null); setProfileGalleryIndex(null); }}>×</button>
           <div className="profileGalleryViewer" onClick={(event) => event.stopPropagation()}>
             {profileGalleryUrls.length > 1 && <button type="button" className="profileGalleryArrow" aria-label="Προηγούμενη φωτογραφία" onClick={() => stepProfileGallery(-1)}>‹</button>}
