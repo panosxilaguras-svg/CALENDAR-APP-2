@@ -7795,3 +7795,41 @@ html[data-theme="dark"] .hero {
  .messagesPage .groupChatListTitle{font-size:12px!important;padding:13px 10px!important}
  .messagesPage .groupChatListTitle span{font-size:11px!important;letter-spacing:normal!important;text-transform:none!important}
 }
+
+/* Align mobile inbox headings and content without changing compact row heights */
+@media(max-width:700px){
+ .messagesPage .messagesPageHeader{
+   display:flex!important;justify-content:center!important;
+   align-items:center!important;position:relative!important;
+   text-align:center!important;
+ }
+ .messagesPage .messagesPageHeader>div{
+   width:100%!important;text-align:center!important;
+ }
+ .messagesPage .messagesPageHeader h2,
+ .messagesPage .messagesPageHeader p{text-align:center!important}
+ .messagesPage .messagesLiveBadge{
+   position:absolute!important;right:0!important;top:50%!important;
+   transform:translateY(-50%)!important;
+ }
+ .messagesPage .groupChatListTitle{
+   position:relative!important;
+   display:flex!important;justify-content:center!important;
+   align-items:center!important;text-align:center!important;
+   padding:14px 8px!important;
+ }
+ .messagesPage .groupChatListTitle span{
+   position:absolute!important;right:8px!important;
+   top:50%!important;transform:translateY(-50%)!important;
+ }
+ .messagesPage .groupChatShell:not(.chatMobileOpen) .groupChatItem{
+   align-items:center!important;
+ }
+ .messagesPage .groupChatShell:not(.chatMobileOpen) .groupChatItemText{
+   display:flex!important;flex-direction:column!important;
+   justify-content:center!important;align-items:flex-start!important;
+ }
+ .messagesPage .groupChatShell:not(.chatMobileOpen) .groupChatRole{
+   align-self:center!important;
+ }
+}
