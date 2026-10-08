@@ -2002,7 +2002,7 @@ export default function Home() {
                     <div
                       className="exploreThumb"
                       aria-hidden="true"
-                      style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(14,25,18,.04), rgba(14,25,18,.14)), url("${hike.coverPhoto}")`, backgroundPosition: hike.coverPosition ?? "50% 50%", backgroundSize: `${(hike.coverZoom ?? 1) * 100}%` } : undefined}
+                      style={hike.coverPhoto ? { backgroundImage: `linear-gradient(180deg, rgba(14,25,18,.04), rgba(14,25,18,.14)), url("${hike.coverPhoto}")`, backgroundPosition: hike.coverPosition ?? "50% 50%", backgroundSize: hike.coverZoom && hike.coverZoom > 1 ? `${hike.coverZoom * 100}% auto` : "cover", backgroundRepeat: "no-repeat" } : undefined}
                     >
                       <span className={`exploreDifficulty difficulty-${hike.difficulty}`}>{hike.difficulty}</span>
                       <span className="exploreHeart">♡</span>
