@@ -223,6 +223,7 @@ export default function Home() {
   const [loadingHikes, setLoadingHikes] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
+  const [showRequestNotifications, setShowRequestNotifications] = useState(false);
   const [handlingRequestId, setHandlingRequestId] = useState<string | null>(null);
   const [deletingHikeId, setDeletingHikeId] = useState<string | null>(null);
   const [editingHike, setEditingHike] = useState<Hike | null>(null);
@@ -1683,6 +1684,40 @@ export default function Home() {
 
   return (
     <div className="appShell">
+      {user && (
+        <div className="requestNotificationWidget">
+          <button
+            type="button"
+            className="requestNotificationBell"
+            aria-label={`Ειδοποιήσεις συμμετοχής: ${incomingRequests.length} εκκρεμή αιτήματα`}
+            aria-expanded={showRequestNotifications}
+            onClick={() => { setShowRequestNotifications((open) => !open); loadIncomingRequests(user.id); }}
+          >
+            <span aria-hidden="true">♧</span>
+            {incomingRequests.length > 0 && <span className="requestNotificationCount">{incomingRequests.length > 99 ? "99+" : incomingRequests.length}</span>}
+          </button>
+          {showRequestNotifications && (
+            <div className="requestNotificationDropdown" role="region" aria-label="Αιτήματα συμμετοχής">
+              <div className="requestNotificationHeading">
+                <strong>Ειδοποιήσεις</strong>
+                <button type="button" onClick={() => setShowRequestNotifications(false)} aria-label="Κλείσιμο">×</button>
+              </div>
+              {incomingRequests.length === 0 ? (
+                <p className="requestNotificationEmpty">Δεν έχεις νέα αιτήματα συμμετοχής.</p>
+              ) : incomingRequests.map((request) => (
+                <div className="requestNotificationEntry" key={request.id}>
+                  <p><strong>{request.displayName}</strong> θέλει να συμμετάσχει στην πεζοπορία «{request.hikeTitle}».</p>
+                  <div className="requestNotificationActions">
+                    <button type="button" onClick={() => openPublicProfile(request.userId)}>Προφίλ</button>
+                    <button type="button" disabled={handlingRequestId === request.id} onClick={() => handleJoinRequest(request, "accepted")}>Έγκριση</button>
+                    <button type="button" disabled={handlingRequestId === request.id} onClick={() => handleJoinRequest(request, "rejected")}>Απόρριψη</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <div className="desktopFrame">
         <aside className="sidebar">
           <div className="brand">
