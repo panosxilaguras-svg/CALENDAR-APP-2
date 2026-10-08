@@ -7874,3 +7874,50 @@ html[data-theme="dark"] .hero {
     text-align:center!important;
   }
 }
+
+/* Mobile conversation: immersive chat area, more messages and less dead space */
+@media(max-width:700px){
+  .messagesPage:has(.groupChatShell.chatMobileOpen){
+    width:calc(100% + 28px)!important;
+    max-width:none!important;
+    margin-left:-14px!important;
+    margin-right:-14px!important;
+  }
+  .messagesPage:has(.groupChatShell.chatMobileOpen) .messagesPageHeader{
+    padding:0 14px!important;
+    margin-bottom:10px!important;
+  }
+  .messagesPage .groupChatShell.chatMobileOpen{
+    width:100%!important;
+    min-height:calc(100dvh - 260px)!important;
+    height:calc(100dvh - 260px)!important;
+    max-height:none!important;
+    overflow:hidden!important;
+    border-radius:16px!important;
+  }
+  .messagesPage .groupChatShell.chatMobileOpen .groupChatPane{
+    height:100%!important;
+    min-height:0!important;
+    max-height:none!important;
+    grid-template-rows:auto minmax(0,1fr) auto!important;
+    overflow:hidden!important;
+  }
+  .messagesPage .groupChatShell.chatMobileOpen .groupChatHeader{
+    padding:10px 12px!important;
+    min-height:62px!important;
+  }
+  .messagesPage .groupChatShell.chatMobileOpen .groupChatMessages{
+    height:100%!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    padding:12px 11px 16px!important;
+    gap:9px!important;
+    overscroll-behavior:contain!important;
+  }
+  .messagesPage .groupChatShell.chatMobileOpen .groupChatComposer{
+    padding:10px 11px!important;
+    flex-shrink:0!important;
+  }
+}
