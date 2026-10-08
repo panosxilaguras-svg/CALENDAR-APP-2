@@ -2666,9 +2666,6 @@ export default function Home() {
                 <>
                   <div className="profileCover" style={profileCoverPath || user.user_metadata?.profile_cover_path ? { backgroundImage: `linear-gradient(180deg,rgba(12,36,26,.04),rgba(12,36,26,.3)),url("${avatarPublicUrl(profileCoverPath || String(user.user_metadata?.profile_cover_path))}")` } : undefined}>
                     <label className="profileCoverUpload">📷 {uploadingCover ? "Ανέβασμα..." : "Αλλαγή εξωφύλλου"}<input type="file" accept="image/*" disabled={uploadingCover} onChange={(event) => uploadProfileCover(event.target.files?.[0])} /></label>
-                    <button type="button" className="profileEditButton" aria-label={editingProfile ? "Κλείσιμο επεξεργασίας" : "Επεξεργασία προφίλ"} title={editingProfile ? "Κλείσιμο" : "Επεξεργασία προφίλ"} onClick={() => setEditingProfile((current) => !current)}>
-                      {editingProfile ? "✕" : "✎"}
-                    </button>
                   </div>
                   <div className="profileHero profileHeroEditable">
                     <label className="avatarUpload">
