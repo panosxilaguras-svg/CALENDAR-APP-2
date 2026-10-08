@@ -7487,3 +7487,10 @@ html[data-theme="dark"] .hero {
 .publicProfileSection .profileHikeText strong,.publicProfileSection .profileHikeText small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .publicProfileSection .profileHikeText small{font-size:12px;color:#7b817c}
 @media(max-width:600px){.publicProfilePageInner{padding-left:12px;padding-right:12px}.publicProfileCover{height:185px}.publicProfileIdentity{margin-left:16px;margin-right:16px}.publicProfileIdentity h2{font-size:25px}.publicProfileSection{margin-left:16px;margin-right:16px}}
+
+/* Center the upcoming-hikes introduction without moving the search controls */
+#hikes > .sectionHeader > div:first-child{width:100%;text-align:center;margin-inline:auto}
+#hikes > .sectionHeader > div:first-child h2{margin-inline:auto;text-align:center}
+#hikes > .sectionHeader > div:first-child p{margin-inline:auto;text-align:center;max-width:540px}
+#hikes > .sectionHeader{align-items:center}
+#hikes > .sectionHeader .browseControls{width:100%}
