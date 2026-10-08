@@ -1673,7 +1673,7 @@ export default function Home() {
         </aside>
 
         <main className={`main ${view === "home" ? "mainHomeView" : ""} ${view === "map" ? "mainMapView" : ""} ${view === "new" ? "mainCreateView" : ""}`}>
-          {view !== "detail" && view !== "explore" && view !== "home" && view !== "map" && view !== "messages" && (
+          {view !== "detail" && view !== "explore" && view !== "home" && view !== "map" && view !== "messages" && view !== "profile" && (
             <header className="topbar">
               <div>
                 <div className="eyebrow">Η παρέα σου είναι εκεί έξω</div>
