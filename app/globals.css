@@ -8128,3 +8128,16 @@ html[data-theme="dark"] .hero {
   background: #fff4f1 !important;
   border: 1px solid #f3ded7 !important;
 }
+
+/* Notification alert: tint the bell itself red, never show an external counter */
+.hero .mobileHomeBrand .mobileBrandActions .requestNotificationBell.hasNotifications {
+  color: #c9332d !important;
+  border-color: #f1b7b0 !important;
+  background: #fff0ed !important;
+}
+.hero .mobileHomeBrand .mobileBrandActions .requestNotificationBell.hasNotifications svg {
+  stroke: #d63d34 !important;
+}
+.hero .mobileHomeBrand .mobileBrandActions .requestNotificationBell .requestNotificationCount {
+  display: none !important;
+}
