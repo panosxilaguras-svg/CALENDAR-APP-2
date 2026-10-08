@@ -2694,6 +2694,58 @@ export default function Home() {
                   </div>
                   {profile?.bio && <p className="profileAbout">{profile.bio}</p>}
                   {profile?.instagramUsername && <a className="profileSocialLink" href={`https://www.instagram.com/${encodeURIComponent(profile.instagramUsername)}/`} target="_blank" rel="noopener noreferrer">◎ @{profile.instagramUsername}</a>}
+                  <div className="profileEditAction"><button type="button" onClick={() => setEditingProfile((current) => !current)} aria-expanded={editingProfile}>{editingProfile ? "✕ Κλείσιμο επεξεργασίας" : "✎ Επεξεργασία προφίλ"}</button></div>
+                  {editingProfile && (
+                  <form className="profileForm" onSubmit={saveProfile} key={profile?.id ?? user.id}>
+                    <div className="formGrid">
+                      <div className="field">
+                        <label>Όνομα</label>
+                        <input name="displayName" required defaultValue={profile?.displayName ?? ""} placeholder="π.χ. Πάνος" />
+                      </div>
+                      <div className="field">
+                        <label>Περιοχή</label>
+                        <input name="city" defaultValue={profile?.city ?? ""} placeholder="π.χ. Αθήνα" />
+                      </div>
+                      <div className="field full">
+                        <label>Εμπειρία</label>
+                        <select name="experienceLevel" defaultValue={profile?.experienceLevel ?? ""}>
+                          <option value="">Δεν έχω επιλέξει</option>
+                          <option value="beginner">Αρχάριος</option>
+                          <option value="intermediate">Μέτριος</option>
+                          <option value="advanced">Προχωρημένος</option>
+                        </select>
+                      </div>
+                      <div className="field full">
+                        <label>Instagram <span style={{ fontWeight: 500, opacity: .65 }}>(προαιρετικό)</span></label>
+                        <input
+                          name="instagramUsername"
+                          maxLength={30}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          defaultValue={profile?.instagramUsername ?? ""}
+                          placeholder="@username"
+                        />
+                      </div>
+                      <div className="field full">
+                        <label>Λίγα λόγια για σένα</label>
+                        <textarea
+                          name="bio"
+                          rows={4}
+                          maxLength={500}
+                          defaultValue={profile?.bio ?? ""}
+                          placeholder="Τι βουνά σου αρέσουν, τι ρυθμό προτιμάς, τι εμπειρία έχεις..."
+                        />
+                      </div>
+                    </div>
+                    <div className="profileSaveRow">
+                      <button className="submit" type="submit" disabled={savingProfile}>
+                        {savingProfile ? "Αποθήκευση..." : "Αποθήκευση προφίλ"}
+                      </button>
+                      <button className="signOutButton" type="button" onClick={() => setEditingProfile(false)}>Ακύρωση</button>
+                    </div>
+                  </form>
+                  )}
+
                   <section className="profileHighlights">
                     <div className="profileSectionHeading"><h3>Φωτογραφίες εξορμήσεων</h3><span>Από τις πεζοπορίες σου</span></div>
                     {realHikes.filter((hike) => hike.organizerId === user.id && (hike.photoUrls?.length || hike.coverPhoto)).some(Boolean) ? (
@@ -2744,59 +2796,6 @@ export default function Home() {
                       <span />
                     </button>
                   </section>
-
-                  {editingProfile && (
-                  <form className="profileForm" onSubmit={saveProfile} key={profile?.id ?? user.id}>
-                    <div className="formGrid">
-                      <div className="field">
-                        <label>Όνομα</label>
-                        <input name="displayName" required defaultValue={profile?.displayName ?? ""} placeholder="π.χ. Πάνος" />
-                      </div>
-                      <div className="field">
-                        <label>Περιοχή</label>
-                        <input name="city" defaultValue={profile?.city ?? ""} placeholder="π.χ. Αθήνα" />
-                      </div>
-                      <div className="field full">
-                        <label>Εμπειρία</label>
-                        <select name="experienceLevel" defaultValue={profile?.experienceLevel ?? ""}>
-                          <option value="">Δεν έχω επιλέξει</option>
-                          <option value="beginner">Αρχάριος</option>
-                          <option value="intermediate">Μέτριος</option>
-                          <option value="advanced">Προχωρημένος</option>
-                        </select>
-                      </div>
-                      <div className="field full">
-                        <label>Instagram <span style={{ fontWeight: 500, opacity: .65 }}>(προαιρετικό)</span></label>
-                        <input
-                          name="instagramUsername"
-                          maxLength={30}
-                          autoCapitalize="none"
-                          autoCorrect="off"
-                          defaultValue={profile?.instagramUsername ?? ""}
-                          placeholder="@username"
-                        />
-                      </div>
-                      <div className="field full">
-                        <label>Λίγα λόγια για σένα</label>
-                        <textarea
-                          name="bio"
-                          rows={4}
-                          maxLength={500}
-                          defaultValue={profile?.bio ?? ""}
-                          placeholder="Τι βουνά σου αρέσουν, τι ρυθμό προτιμάς, τι εμπειρία έχεις..."
-                        />
-                      </div>
-                    </div>
-                    <div className="profileSaveRow">
-                      <button className="submit" type="submit" disabled={savingProfile}>
-                        {savingProfile ? "Αποθήκευση..." : "Αποθήκευση προφίλ"}
-                      </button>
-                      <button className="signOutButton" type="button" onClick={signOut}>
-                        Αποσύνδεση
-                      </button>
-                    </div>
-                  </form>
-                  )}
 
                   <div className="profileLegalLinks">
                     <a href="/terms">Όροι χρήσης</a>
