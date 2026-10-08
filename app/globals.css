@@ -8544,3 +8544,24 @@ html[data-theme="dark"] .hero {
   text-align: center !important;
   max-width: calc(100% - 28px) !important;
 }
+
+/* iPhone home: eliminate the dark strip between hero and stats.
+   Fade the hero photograph into the same cream used by the stats. */
+@media (max-width: 820px) {
+  .main.mainHomeView > .hero {
+    background-image:
+      linear-gradient(180deg,
+        rgba(247,244,237,.34) 0%,
+        rgba(247,244,237,.12) 25%,
+        rgba(10,22,15,.08) 53%,
+        rgba(10,22,15,.22) 85%,
+        #f7f4ed 100%),
+      url("/IMG_4738.png") !important;
+    padding-bottom: 0 !important;
+  }
+  .main.mainHomeView > .stats {
+    margin-top: 0 !important;
+    border-top: 0 !important;
+    background-color: #f7f4ed !important;
+  }
+}
