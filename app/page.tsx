@@ -228,6 +228,7 @@ export default function Home() {
   const [editingHike, setEditingHike] = useState<Hike | null>(null);
   const [chatGroups, setChatGroups] = useState<ChatGroup[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [chatMobileOpen, setChatMobileOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [profile, setProfile] = useState<PublicProfile | null>(null);
@@ -2559,29 +2560,30 @@ export default function Home() {
                   <button className="createPrimaryButton" onClick={() => setView("explore")}>Βρες πεζοπορία</button>
                 </div>
               ) : (
-                <div className="groupChatShell">
+                <div className={`groupChatShell ${chatMobileOpen ? "chatMobileOpen" : ""}`}>
                   <aside className="groupChatList">
-                    <div className="groupChatListTitle">Οι ομάδες μου</div>
+                    <div className="groupChatListTitle">Οι ομάδες μου <span>{chatGroups.length} συνομιλίες</span></div>
                     {chatGroups.map((group) => (
                       <button
                         key={group.id}
                         className={`groupChatItem ${selectedChatId === group.id ? "active" : ""}`}
-                        onClick={() => setSelectedChatId(group.id)}
+                        onClick={() => { setSelectedChatId(group.id); setChatMobileOpen(true); }}
                       >
-                        <span className="groupChatIcon">▲</span>
+                        <span className="groupChatIcon">{realHikes.find((hike) => hike.id === group.id)?.coverPhoto ? <img src={realHikes.find((hike) => hike.id === group.id)?.coverPhoto ?? ""} alt="" /> : "▲"}</span>
                         <span className="groupChatItemText">
                           <strong>{group.title}</strong>
                           <small>
                             {group.memberCount} μέλη · {new Date(group.startsAt).toLocaleDateString("el-GR", { day: "numeric", month: "short" })}
                           </small>
                         </span>
-                        <span className="groupChatRole">{group.role === "organizer" ? "Ξεκίνησες την παρέα" : "Μέλος"}</span>
+                        <span className="groupChatRole">{group.role === "organizer" ? "Διοργανωτής" : "Μέλος"} <span aria-hidden="true">›</span></span>
                       </button>
                     ))}
                   </aside>
 
                   <section className="groupChatPane">
                     <header className="groupChatHeader">
+                      <button className="chatMobileBack" type="button" onClick={() => setChatMobileOpen(false)} aria-label="Πίσω στις συνομιλίες">‹</button>
                       <div>
                         <small>Ομαδική συνομιλία</small>
                         <strong>{chatGroups.find((group) => group.id === selectedChatId)?.title ?? "Πεζοπορία"}</strong>
