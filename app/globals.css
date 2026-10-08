@@ -8141,3 +8141,20 @@ html[data-theme="dark"] .hero {
 .hero .mobileHomeBrand .mobileBrandActions .requestNotificationBell .requestNotificationCount {
   display: none !important;
 }
+
+/* Mobile homepage edge-to-edge hero: remove inherited outer spacing and bottom gutter */
+@media (max-width: 820px) {
+  .main.mainHomeView {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .main.mainHomeView > .hero {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+  }
+}
