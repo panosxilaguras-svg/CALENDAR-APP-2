@@ -234,6 +234,7 @@ export default function Home() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<PublicProfile | null>(null);
   const [profilePhotoViewerUrl, setProfilePhotoViewerUrl] = useState<string | null>(null);
+  const [profileGalleryIndex, setProfileGalleryIndex] = useState<number | null>(null);
   const [deletingExistingPhoto, setDeletingExistingPhoto] = useState<string | null>(null);
   const [newPhotoPreviews, setNewPhotoPreviews] = useState<{ file: File; url: string }[]>([]);
   const [newCoverIndex, setNewCoverIndex] = useState(0);
@@ -2657,8 +2658,8 @@ export default function Home() {
                 <>
                   <div className="profileCover" style={profileCoverPath || user.user_metadata?.profile_cover_path ? { backgroundImage: `linear-gradient(180deg,rgba(12,36,26,.04),rgba(12,36,26,.3)),url("${avatarPublicUrl(profileCoverPath || String(user.user_metadata?.profile_cover_path))}")` } : undefined}>
                     <label className="profileCoverUpload">📷 {uploadingCover ? "Ανέβασμα..." : "Αλλαγή εξωφύλλου"}<input type="file" accept="image/*" disabled={uploadingCover} onChange={(event) => uploadProfileCover(event.target.files?.[0])} /></label>
-                    <button type="button" className="profileEditButton" onClick={() => setEditingProfile((current) => !current)}>
-                      {editingProfile ? "Κλείσιμο επεξεργασίας" : "✎ Επεξεργασία"}
+                    <button type="button" className="profileEditButton" aria-label={editingProfile ? "Κλείσιμο επεξεργασίας" : "Επεξεργασία προφίλ"} title={editingProfile ? "Κλείσιμο" : "Επεξεργασία προφίλ"} onClick={() => setEditingProfile((current) => !current)}>
+                      {editingProfile ? "✕" : "✎"}
                     </button>
                   </div>
                   <div className="profileHero profileHeroEditable">
@@ -2689,7 +2690,7 @@ export default function Home() {
                     {realHikes.filter((hike) => hike.organizerId === user.id && (hike.photoUrls?.length || hike.coverPhoto)).some(Boolean) ? (
                       <div className="profilePhotoGrid">
                         {realHikes.filter((hike) => hike.organizerId === user.id).flatMap((hike) => (hike.photoUrls?.length ? hike.photoUrls : hike.coverPhoto ? [hike.coverPhoto] : []).map((url) => ({ url, hike }))).slice(0, showAllProfilePhotos ? 18 : 3).map(({ url, hike }, index) => (
-                          <button type="button" key={`${hike.id ?? hike.title}-${index}`} onClick={() => openHikeDetails(hike)} aria-label={`Δες την πεζοπορία ${hike.title}`}>
+                          <button type="button" key={`${hike.id ?? hike.title}-${index}`} onClick={() => { setProfileGalleryIndex(index); setProfilePhotoViewerUrl(url); }} aria-label={`Άνοιγμα φωτογραφίας ${index + 1}`}>
                             <img src={url} alt={hike.title} loading="lazy" />
                           </button>
                         ))}
@@ -2907,7 +2908,13 @@ export default function Home() {
         <button type="button" className="coverEditorDone" onClick={()=>void saveCoverEditor()}>Χρήση ως εξώφυλλο</button>
       </div></div>}
 
-      {profilePhotoViewerUrl && (
+      {profilePhotoViewerUrl && profileGalleryIndex !== null && (
+        <div className="photoViewer" role="dialog" aria-modal="true" aria-label="Φωτογραφίες εξορμήσεων" onClick={() => { setProfilePhotoViewerUrl(null); setProfileGalleryIndex(null); }}>
+          <button type="button" className="photoViewerClose" aria-label="Κλείσιμο" onClick={() => { setProfilePhotoViewerUrl(null); setProfileGalleryIndex(null); }}>×</button>
+          <div className="photoViewerImageWrap" onClick={(event) => event.stopPropagation()}><img src={profilePhotoViewerUrl} alt="Φωτογραφία εξόρμησης" /></div>
+        </div>
+      )}
+      {profilePhotoViewerUrl && profileGalleryIndex === null && (
         <div className="photoViewer" role="dialog" aria-modal="true" aria-label="Φωτογραφία προφίλ" onClick={() => setProfilePhotoViewerUrl(null)}>
           <button className="photoViewerClose" type="button" onClick={() => setProfilePhotoViewerUrl(null)} aria-label="Κλείσιμο">×</button>
           <div className="photoViewerImageWrap" onClick={(event) => event.stopPropagation()}>
