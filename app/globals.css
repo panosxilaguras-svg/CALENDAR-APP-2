@@ -7517,3 +7517,34 @@ html[data-theme="dark"] .hero {
 .profileRedesigned .profileForm{margin:8px 20px 25px;padding:20px;border:1px solid #dfe8df;border-radius:17px;background:#f9fbf8}
 .profileRedesigned .profileSaveRow{display:flex;flex-wrap:wrap;gap:10px}
 @media(max-width:600px){.profileRedesigned .profileEditAction{margin:12px 16px 18px}.profileRedesigned .profileForm{margin:8px 12px 22px;padding:15px}}
+
+/* Refined centered profile edit action */
+.profileRedesigned .profileEditAction{
+  display:flex!important;
+  width:100%!important;
+  justify-content:center!important;
+  align-items:center!important;
+  margin:17px 0 23px!important;
+  padding:0 16px!important;
+  box-sizing:border-box!important;
+}
+.profileRedesigned .profileEditAction button{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  max-width:100%!important;
+  min-height:43px!important;
+  padding:10px 20px!important;
+  border:1px solid #dce4da!important;
+  border-radius:999px!important;
+  background:#f7f9f5!important;
+  color:#315640!important;
+  box-shadow:none!important;
+  font-size:13px!important;
+  font-weight:700!important;
+  letter-spacing:.01em!important;
+  line-height:1.25!important;
+  cursor:pointer;
+}
+.profileRedesigned .profileEditAction button:active{background:#e9f0e8!important}
