@@ -7188,3 +7188,35 @@ html[data-theme="dark"] .hero {
     margin-top: 0 !important;
   }
 }
+
+
+/* Mobile homepage polish: flush hero and properly cropped circular profile photo. */
+@media (max-width: 820px) {
+  .main.mainHomeView {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+  .main.mainHomeView > .hero {
+    margin-top: 0 !important;
+    border-top: 0 !important;
+  }
+  .mobileBrandActions button[aria-label="Προφίλ"] {
+    box-sizing: border-box;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    flex-shrink: 0;
+    aspect-ratio: 1 / 1;
+    line-height: 1;
+  }
+  .mobileBrandActions button[aria-label="Προφίλ"] img {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100%;
+    min-height: 100%;
+    object-fit: cover !important;
+    object-position: center;
+    border-radius: 50%;
+  }
+}
