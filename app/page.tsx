@@ -1758,7 +1758,7 @@ export default function Home() {
             onClick={() => { setShowRequestNotifications((open) => !open); loadIncomingRequests(user.id); }}
           >
             <svg aria-hidden="true" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#173b2b" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
-            {incomingRequests.length > 0 && <span className="requestNotificationCount" style={{ position: "absolute", top: -5, right: -5, display: "grid", placeItems: "center", minWidth: 21, height: 21, padding: "0 4px", borderRadius: 20, border: "2px solid white", background: "#e44e3b", color: "white", fontSize: 11, fontWeight: 800 }}>{incomingRequests.length > 99 ? "99+" : incomingRequests.length}</span>}
+            {incomingRequests.length > 0 && <span className="requestNotificationCount" style={{ position: "absolute", top: 3, right: 3, display: "grid", placeItems: "center", minWidth: 21, height: 21, padding: "0 4px", borderRadius: 20, border: "2px solid white", background: "#e44e3b", color: "white", fontSize: 11, fontWeight: 800 }}>{incomingRequests.length > 99 ? "99+" : incomingRequests.length}</span>}
           </button>
           {showRequestNotifications && (
             <div className="requestNotificationDropdown" style={{ position: "fixed", top: "calc(env(safe-area-inset-top, 0px) + 72px)", left: 12, right: 12, width: "auto", maxWidth: 420, margin: "0 auto", padding: 17, maxHeight: "min(65dvh, 520px)", overflowY: "auto", borderRadius: 20, border: "1px solid #e1e7df", background: "#fffefa", color: "#183426", boxShadow: "0 18px 55px #10251c45", zIndex: 3000 }} role="region" aria-label="Αιτήματα συμμετοχής">
