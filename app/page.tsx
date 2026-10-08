@@ -219,6 +219,7 @@ export default function Home() {
   const [toast, setToast] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [realHikes, setRealHikes] = useState<Hike[]>([]);
+  const [registeredMemberCount, setRegisteredMemberCount] = useState<number | null>(null);
   const [loadingHikes, setLoadingHikes] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
@@ -276,6 +277,14 @@ export default function Home() {
     window.localStorage.setItem("orivatis-theme", nextTheme);
     document.documentElement.dataset.theme = nextTheme;
   }
+
+  useEffect(() => {
+    let active = true;
+    supabase.from("profiles").select("id", { count: "exact", head: true }).then(({ count, error }) => {
+      if (active && !error && count !== null) setRegisteredMemberCount(count);
+    });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -1772,8 +1781,8 @@ export default function Home() {
                   <span>Άτομα<br />στις ομάδες</span>
                 </div>
                 <div className="stat">
-                  <strong>{new Set(realHikes.map((hike) => hike.title.split("—")[0].trim().toLocaleLowerCase("el-GR"))).size}</strong>
-                  <span>Βουνά για<br />εξερεύνηση</span>
+                  <strong>{registeredMemberCount ?? "—"}</strong>
+                  <span>Εγγεγραμμένα<br />μέλη</span>
                 </div>
               </section>
 
@@ -1781,7 +1790,7 @@ export default function Home() {
                 <div className="sectionHeader">
                   <div>
                     <h2>Επόμενες πεζοπορίες</h2>
-                    <p>{loadingHikes ? "Φορτώνουμε τις πραγματικές πεζοπορίες..." : "Οι νέες δημοσιεύσεις έρχονται live από το Supabase."}</p>
+                    
                   </div>
                   <div className="browseControls">
                     <input
