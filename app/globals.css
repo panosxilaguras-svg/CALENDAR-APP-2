@@ -8307,3 +8307,69 @@ html[data-theme="dark"] .hero {
     font-size: 13px !important;
   }
 }
+
+/* Compact, centered hiking facts with familiar pictograms */
+.cardMeta.cardMetaStructured {
+  gap: 12px !important;
+  margin: 12px 0 !important;
+}
+.cardMetaStructured .cardLocation {
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  text-align: center !important;
+  max-width: 100% !important;
+}
+.cardMetaStructured .cardLocation strong {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  font-weight: 600 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.cardMetaStructured .cardMetaFacts,
+.exploreMeta.exploreMetaStructured {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+  width: 100% !important;
+}
+.cardMetaStructured .cardMetaFacts > span,
+.exploreMetaStructured > span {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  text-align: center !important;
+}
+.cardMetaStructured .cardMetaFacts small,
+.exploreMetaStructured small {
+  display: block !important;
+  font-size: 16px !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0 !important;
+}
+.cardMetaStructured .cardMetaFacts strong,
+.exploreMetaStructured strong {
+  display: block !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+.exploreInfo .exploreMetaStructured {
+  margin: 14px 0 !important;
+  padding: 12px 0 !important;
+}
+.exploreInfo .exploreLocation {
+  display: inline-block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
