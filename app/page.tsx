@@ -2690,11 +2690,12 @@ export default function Home() {
                     <div>
                       <h2>{profile?.displayName || "Το προφίλ σου"}</h2>
                       <p>{profile?.city || "Βάλε περιοχή"} · {experienceLabel(profile?.experienceLevel ?? null)}</p>
+                      <div className="profileEditAction"><button type="button" onClick={() => setEditingProfile((current) => !current)} aria-expanded={editingProfile}>{editingProfile ? "Κλείσιμο επεξεργασίας" : "✎ Επεξεργασία"}</button></div>
                     </div>
                   </div>
                   {profile?.bio && <p className="profileAbout">{profile.bio}</p>}
                   {profile?.instagramUsername && <a className="profileSocialLink" href={`https://www.instagram.com/${encodeURIComponent(profile.instagramUsername)}/`} target="_blank" rel="noopener noreferrer">◎ @{profile.instagramUsername}</a>}
-                  <div className="profileEditAction"><button type="button" onClick={() => setEditingProfile((current) => !current)} aria-expanded={editingProfile}>{editingProfile ? "✕ Κλείσιμο επεξεργασίας" : "✎ Επεξεργασία προφίλ"}</button></div>
+
                   {editingProfile && (
                   <form className="profileForm" onSubmit={saveProfile} key={profile?.id ?? user.id}>
                     <div className="formGrid">
