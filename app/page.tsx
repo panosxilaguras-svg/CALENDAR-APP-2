@@ -1871,6 +1871,7 @@ export default function Home() {
                         <span className="cardDate"><strong>{hike.day}</strong>{hike.month}</span>
                       </div>
                       <div className="cardBody">
+                        <div className="cardHeadingCompact">
                         <button className="cardTitleButton" onClick={(event) => { event.stopPropagation(); openHikeDetails(hike); }}>
                           <h3>{hike.title}</h3>
                         </button>
@@ -1890,6 +1891,7 @@ export default function Home() {
                           >
                             {hike.organizerName || (hike.demo ? "Demo organizer" : "Πεζοπόρος")}
                           </button>
+                        </div>
                         </div>
                         <div className="cardMeta cardMetaStructured">
                           <div className="cardLocation"><span aria-hidden="true">📍</span><strong>{hike.location}</strong></div>
