@@ -1854,7 +1854,7 @@ export default function Home() {
                 <div className="hikeGrid">
                   {visibleHikes.map((hike, index) => (
                     <article
-                      className="hikeCard"
+                      className="hikeCard hikeCardPremium"
                       key={hike.id ?? `demo-${hike.title}`}
                       role="button"
                       tabIndex={0}
@@ -1876,7 +1876,7 @@ export default function Home() {
                             <button className="cardTitleButton" onClick={(event) => { event.stopPropagation(); openHikeDetails(hike); }}>
                               <h3>{hike.title}</h3>
                             </button>
-                            <div className="cardLocation"><span aria-hidden="true">📍</span><strong>{hike.location.split(",").slice(0, 2).join(",").trim()}</strong></div>
+                            <div className="cardLocation"><span aria-hidden="true">⌖</span><strong>{hike.location.split(",").slice(0, 2).join(",").trim()}</strong></div>
                           </div>
                           <div className="organizerLine">
                             {hike.organizerAvatar ? (
@@ -1898,47 +1898,29 @@ export default function Home() {
                         </div>
                         <div className="cardMeta cardMetaStructured">
                           <div className="cardMetaFacts">
-                            <span><small aria-hidden="true">🥾</small><strong>{hike.distance}</strong><em>Απόσταση</em></span>
-                            <span><small aria-hidden="true">🕒</small><strong>{hike.start}</strong><em>Αναχώρηση</em></span>
-                            <span><small aria-hidden="true">👥</small><strong>{hike.people}{hike.maxParticipants ? `/${hike.maxParticipants}` : ""}</strong><em>Συμμετοχές</em></span>
+                            <span><small aria-hidden="true">⌁</small><strong>{hike.distance}</strong><em>Απόσταση</em></span>
+                            <span><small aria-hidden="true">◷</small><strong>{hike.start}</strong><em>Αναχώρηση</em></span>
+                            <span><small aria-hidden="true">♙</small><strong>{hike.people}{hike.maxParticipants ? `/${hike.maxParticipants}` : ""}</strong><em>Συμμετοχές</em></span>
                           </div>
                         </div>
-                        <div className="peopleRow">
+                        <div className="peopleRow premiumActions">
                           <button className="detailsButton" onClick={(event) => { event.stopPropagation(); openHikeDetails(hike); }}>
-                            Λεπτομέρειες
+                            Δες πεζοπορία <span aria-hidden="true">→</span>
                           </button>
                           {hike.organizerId === user?.id && hike.id ? (
-                            <div className="ownerActions">
-                              <button
-                                className="editHikeButton"
-                                onClick={(event) => { event.stopPropagation(); startEditHike(hike); }}
-                              >
-                                Επεξεργασία
-                              </button>
-                              <button
-                                className="deleteHikeButton"
-                                disabled={deletingHikeId === hike.id}
-                                onClick={(event) => { event.stopPropagation(); deleteHike(hike); }}
-                              >
-                                {deletingHikeId === hike.id ? "Διαγραφή..." : "Διαγραφή"}
-                              </button>
-                            </div>
+                            <details className="premiumOwnerMenu" onClick={(event) => event.stopPropagation()}>
+                              <summary aria-label="Επιλογές διαχείρισης πεζοπορίας">•••</summary>
+                              <div className="premiumOwnerMenuItems">
+                                <button type="button" onClick={(event) => { event.stopPropagation(); startEditHike(hike); }}>Επεξεργασία</button>
+                                <button type="button" disabled={deletingHikeId === hike.id} onClick={(event) => { event.stopPropagation(); deleteHike(hike); }}>{deletingHikeId === hike.id ? "Διαγραφή..." : "Διαγραφή"}</button>
+                              </div>
+                            </details>
                           ) : hike.id && myJoinRequests[hike.id]?.status === "pending" ? (
-                            <button className="pendingButton" onClick={(event) => { event.stopPropagation(); cancelJoinRequest(hike); }}>
-                              Αναμονή · Ακύρωση
-                            </button>
+                            <button className="premiumSecondaryAction" onClick={(event) => { event.stopPropagation(); cancelJoinRequest(hike); }}>Ακύρωση αίτησης</button>
                           ) : hike.id && myJoinRequests[hike.id]?.status === "accepted" ? (
-                            <button className="memberButton" onClick={(event) => { event.stopPropagation(); setView("messages"); }}>
-                              Μέλος · Chat
-                            </button>
+                            <button className="premiumSecondaryAction" onClick={(event) => { event.stopPropagation(); setView("messages"); }}>Chat</button>
                           ) : (
-                            <button
-                              className="joinButton"
-                              disabled={Boolean(hike.maxParticipants && hike.people >= hike.maxParticipants)}
-                              onClick={(event) => { event.stopPropagation(); requestJoin(hike); }}
-                            >
-                              {hike.maxParticipants && hike.people >= hike.maxParticipants ? "Γεμάτη" : "Μπες στην παρέα"}
-                            </button>
+                            <button className="premiumSecondaryAction" disabled={Boolean(hike.maxParticipants && hike.people >= hike.maxParticipants)} onClick={(event) => { event.stopPropagation(); requestJoin(hike); }}>{hike.maxParticipants && hike.people >= hike.maxParticipants ? "Γεμάτη" : "Συμμετοχή"}</button>
                           )}
                         </div>
                       </div>
