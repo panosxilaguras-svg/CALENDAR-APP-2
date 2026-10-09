@@ -8689,3 +8689,31 @@ html[data-theme="dark"] .hero {
 .profileAdminDashboardText strong { font-size: 15px; font-weight: 800; }
 .profileAdminDashboardText small { font-size: 12px; color: #5b7162; }
 .profileAdminDashboardArrow { font-size: 28px; line-height: 1; color: #58715e; }
+
+/* Premium compact hike cards - homepage only */
+.hikeCardPremium { overflow: visible; border-radius: 22px; background: #fffdf9; box-shadow: 0 7px 24px rgba(19,42,29,.07); }
+.hikeCardPremium .cardVisual { height: 190px !important; min-height: 190px !important; border-radius: 22px 22px 0 0; overflow: hidden; }
+.hikeCardPremium .cardBadge { background: rgba(19,35,28,.88); color: white; border-radius: 100px; }
+.hikeCardPremium .cardDate { background: #fffdf8; color: #172c22; border-radius: 14px; }
+.hikeCardPremium .cardBody { padding: 15px 17px 17px !important; }
+.hikeCardPremium .cardHeadingCompact { gap: 10px; }
+.hikeCardPremium .cardTitleButton h3 { font-size: clamp(19px, 4.4vw, 24px); line-height: 1.2; }
+.hikeCardPremium .cardLocation { margin-top: 5px; }
+.hikeCardPremium .cardLocation span { font-size: 21px; font-weight: 800; color: #214635; }
+.hikeCardPremium .cardMetaStructured { margin-top: 13px; padding-top: 12px; padding-bottom: 12px; border-top: 1px solid #e9eae3; }
+.hikeCardPremium .cardMetaFacts { gap: 4px; }
+.hikeCardPremium .cardMetaFacts > span { gap: 3px; }
+.hikeCardPremium .cardMetaFacts small { font-family: system-ui,sans-serif; font-size: 25px !important; line-height: 1.1; font-style: normal; color: #183b2c; }
+.hikeCardPremium .cardMetaFacts strong { font-size: 16px; }
+.hikeCardPremium .cardMetaFacts em { font-size: 12px; }
+.hikeCardPremium .premiumActions { display: flex; align-items: stretch; gap: 10px; margin-top: 3px; padding: 0; border: 0; }
+.hikeCardPremium .premiumActions .detailsButton { flex: 1; width: auto; min-height: 47px; border: none; border-radius: 14px; background: #193d2c; color: #fff; font-weight: 800; font-size: 15px; text-transform: none; letter-spacing: 0; }
+.hikeCardPremium .premiumActions .detailsButton span { margin-left: 9px; font-size: 19px; }
+.hikeCardPremium .premiumOwnerMenu { position: relative; flex: 0 0 48px; }
+.hikeCardPremium .premiumOwnerMenu summary { display: grid; place-items: center; height: 47px; width: 48px; border: 1px solid #e2e5dd; border-radius: 14px; background: #fafaf7; cursor: pointer; list-style: none; font-size: 20px; font-weight: 800; }
+.hikeCardPremium .premiumOwnerMenu summary::-webkit-details-marker { display: none; }
+.hikeCardPremium .premiumOwnerMenuItems { position: absolute; right: 0; bottom: 54px; z-index: 20; display: flex; flex-direction: column; width: 170px; padding: 6px; border: 1px solid #e1e6de; border-radius: 12px; background: white; box-shadow: 0 10px 26px rgba(0,0,0,.13); }
+.hikeCardPremium .premiumOwnerMenuItems button { padding: 12px; text-align: left; border: 0; background: transparent; color: #183b2c; border-radius: 8px; font-size: 14px; }
+.hikeCardPremium .premiumOwnerMenuItems button:last-child { color: #a43c3c; }
+.hikeCardPremium .premiumSecondaryAction { border: 1px solid #dce5db; background: #f3f7f1; color: #214635; border-radius: 14px; padding: 0 12px; font-size: 12px; font-weight: 700; }
+@media (max-width: 600px) { .hikeCardPremium .cardVisual { height: 180px !important; min-height: 180px !important; } .hikeCardPremium .cardBody { padding: 14px 15px 16px !important; } }
