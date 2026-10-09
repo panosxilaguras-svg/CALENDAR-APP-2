@@ -8717,3 +8717,29 @@ html[data-theme="dark"] .hero {
 .hikeCardPremium .premiumOwnerMenuItems button:last-child { color: #a43c3c; }
 .hikeCardPremium .premiumSecondaryAction { border: 1px solid #dce5db; background: #f3f7f1; color: #214635; border-radius: 14px; padding: 0 12px; font-size: 12px; font-weight: 700; }
 @media (max-width: 600px) { .hikeCardPremium .cardVisual { height: 180px !important; min-height: 180px !important; } .hikeCardPremium .cardBody { padding: 14px 15px 16px !important; } }
+
+/* ORIVATIS orange action palette: override legacy button styles */
+.hikeCardPremium .premiumActions .detailsButton,
+.hikeCardPremium .premiumActions button.detailsButton {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  background: #ff6127 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+  border: 0 !important;
+  box-shadow: 0 4px 10px rgba(255,97,39,.17) !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+}
+.hikeCardPremium .premiumActions .detailsButton span { color: #fff !important; -webkit-text-fill-color: #fff !important; }
+.hikeCardPremium .premiumActions .detailsButton:hover { background: #ee541e !important; }
+.hikeCardPremium .cardMetaStructured .cardMetaFacts small,
+.hikeCardPremium .cardHeadingText .cardLocation span { color: #ff6127 !important; }
+.hikeCardPremium .cardDate strong { color: #ff6127 !important; }
+.hikeCardPremium .premiumSecondaryAction { color: #f05a22 !important; border-color: #ffd5c4 !important; background: #fff6f0 !important; }
